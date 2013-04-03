@@ -1,0 +1,12 @@
+*.gch
+*.o
+bin/
+*.kdev4
+lib/glog/
+lib/lua/
+lib/hiredis/
+lib/glog_install/
+src/fconvert
+src/fserv
+src/facceptor
+utils/facceptor_stress

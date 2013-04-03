@@ -1,0 +1,50 @@
+-- Redis configuration
+enableredis=true
+redishost="127.0.0.1"
+redisport=1234
+redispass="alongandcomplicatedrandomizedpassword"
+
+-- General daemon configuration
+bindaddr="0.0.0.0"
+version="0.8.6-Lua"
+port=9722
+maxusers=2000
+loginslots=30
+saveinterval=300
+websocketorigin="http://www.f-list.net"
+websockethost="www.f-list.net"
+
+--- Enable Real-Time Bridge
+enablertb=true
+--- Address that RTB messages can come from.
+rtbaddress="127.0.0.1"
+--- RTB MAC secret.
+rtbsecret="anotherlongandcomplicatedrandomizedpassword"
+
+--Login (CURL)
+logintimeout=30
+loginurl="http://www.f-list.net/json/verifyLogin.php"
+
+-- Lua
+--- Should lua time out event handlers.
+luaenabletimeout=true
+--- The number of seconds before handlers initially time out in the event loop
+luatimeout=0.25
+--- The number of seconds before a handler times out if one has already timed out that event loop
+luarepeattimeout=0.05
+
+
+-- Chat limits
+max_per_ip=3
+msg_max=4096
+priv_max=50000
+lfrp_max=50000
+
+-- Chat throttles
+msg_flood=0.5
+lfrp_flood=600
+kinks_flood=10
+profile_flood=10
+find_flood=10
+staffcall_flood=120
+ignore_flood=30
