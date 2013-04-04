@@ -108,8 +108,4 @@ src/redis.cpp:
 	
 Debugging notes:
 	gdb works well for debugging this application. Disabling tcmalloc and the JIT section of LuaJIT should greatly assist in debugging crashes(tcmalloc can hide some minor heap corruption.)
-	To disable the JIT in LuaJIT comment out in server.cpp:
-		lua_pushcfunction(sL, luaopen_base);
-		lua_pushstring(sL, "");
-		lua_pcall(sL, 1, 0, 0);
 	The memory profiling tools in tcmalloc are quite nice. Refer to the tcmalloc documentation for more information on how to use it.
