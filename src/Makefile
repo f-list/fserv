@@ -37,8 +37,6 @@ install_folders:
 install: fserv facceptor install_folders $(FSERV_SCRIPTS)
 	@echo "INSTALL fserv"
 	@cp fserv ../bin/fserv
-	@echo "INSTALL fconvert"
-	@cp fconvert ../bin/fconvert
 	@echo "INSTALL facceptor"
 	@cp facceptor ../bin/facceptor
 
