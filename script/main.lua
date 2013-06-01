@@ -46,6 +46,8 @@ function partChannel(chan, con, is_disconnect)
 
 	if (chantype == "private") and (c.canDestroy(chan) == true) and (c.getUserCount(chan) <= 0) then
 		c.destroyChannel(lcname)
+	elseif (chantype == "pubprivate") and (c.getUserCount(chan) <= 0) and (c.getTopUserCount(chan) < 5) then
+		c.destroyChannel(lcname)
 	end
 end
 
