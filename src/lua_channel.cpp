@@ -369,6 +369,7 @@ int LuaChannel::destroyChannel(lua_State* L)
 			free((void*)leavestr);
 			json_decref(root);
 			(*i)->send(msg);
+			chan->part((*i));
 		}
 		ServerState::removeChannel(name);
 		if(type == CT_PUBLIC)
