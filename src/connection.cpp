@@ -34,7 +34,7 @@
 #include "lua_constants.h"
 #include "channel.h"
 
-#define MAX_SEND_QUEUE_ITEMS 75
+#define MAX_SEND_QUEUE_ITEMS 150
 // This sets the size at which long messages are split into multiple pieces.
 // No more than this amount will ever be sent to a single send() call at once.
 #define MAX_SEND_QUEUE_ITEM_SIZE 8192
