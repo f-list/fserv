@@ -213,7 +213,8 @@ Uses an input queue to receive commands.
 Commands are run in a periodic fashion and have no guarantee of reliability.
 Can be disabled, and ignores input when disabled.
 	
-### Debugging notes
+Debugging notes
+---------------
 
 gdb works well for debugging this application. Disabling tcmalloc and the JIT
 section of LuaJIT should greatly assist in debugging crashes (tcmalloc can hide
