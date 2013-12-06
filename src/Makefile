@@ -1,6 +1,6 @@
 CXXFLAGS=	-g -O2 -Wall -Werror -fno-strict-aliasing -I/usr/local/include -I../lib/lua/src
 LDFLAGS=	-g -L/usr/local/lib -L../lib/lua/src -L../lib/glog_install/lib -lpthread -lrt -lev -lm -lluajit -lglog -ljansson -lcurl -lhiredis -licuuc -licudata -ltcmalloc
-FSERV_O=	channel.o connection.o fserv.o login_curl.o lua_channel.o lua_chat.o lua_connection.o lua_constants.o native_command.o redis.o server.o server_state.o startup_config.o unicode_tools.o websocket.o base64.o modp_b64.o sha1.o
+FSERV_O=	channel.o connection.o fserv.o login_curl.o lua_channel.o lua_chat.o lua_connection.o lua_constants.o native_command.o redis.o server.o server_state.o startup_config.o unicode_tools.o websocket.o base64.o md5.o modp_b64.o sha1.o
 PRECOMP_GCH=	precompiled_headers.h.gch
 FACCEPTOR_O=	facceptor.o
 FACCEPTOR_LDFLAGS=	-lev
