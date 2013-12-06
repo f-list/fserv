@@ -33,7 +33,6 @@
 
 enum ProtocolVersion
 {
-	PROTOCOL_HIXIE, //0x00 prefix, 0xff postfix
 	PROTOCOL_HYBI, //Complex framing!
 	PROTOCOL_BAD, //Fatal handshake failure.
 	PROTOCOL_INCOMPLETE, //Incomplete handshake.
@@ -66,19 +65,6 @@ namespace Websocket
 	private:
 		Acceptor() {}
 		~Acceptor() {}
-	};
-
-	class Hixie
-	{
-	public:
-		static WebSocketResult accept(std::string& key1, std::string& key2, std::string& key3, std::string& host, std::string& origin, std::string& output);
-		static WebSocketResult receive(std::string& input, std::string& output);
-		static void send(std::string& input, std::string& output);
-	private:
-		Hixie() {}
-		~Hixie() {}
-
-		static unsigned int handshakeKey(std::string& input);
 	};
 
 	class Hybi

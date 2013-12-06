@@ -30,7 +30,6 @@
 
 #include "websocket.h"
 #include "sha1.h"
-#include "md5.h"
 #include "base64.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -96,43 +95,9 @@ namespace Websocket
 					ret = PROTOCOL_HYBI;
 				}
 			}
-			else if(headers.count("Sec-WebSocket-Key1") != 0 && headers.count("Sec-WebSocket-Key2") != 0)
-			{
-				DLOG(INFO) << "Found a Hixie websocket header.";
-				std::string::size_type pos = input.find("\r\n\r\n");
-				if((pos - input.length()) > 8)
-				{
-					string key3 = input.substr(pos+4, 8);
-					if(Hixie::accept(headers["Sec-WebSocket-Key1"], headers["Sec-WebSocket-Key2"], key3, headers["Host"], headers["Origin"], outbuffer) != WS_RESULT_OK)
-					{
-						ret = PROTOCOL_BAD;
-					}
-					else
-					{
-						ret = PROTOCOL_HIXIE;
-					}
-				}
-				else
-				{
-					ret = PROTOCOL_INCOMPLETE;
-				}
-			}
 			else
 			{
-				DLOG(INFO) << "Found a Draft-78 websocket header.";
-				char buf[4096];
-				bzero(&buf[0], sizeof(buf));
-				int len = snprintf(&buf[0], sizeof(buf),
-						"HTTP/1.1 101 Web Socket Protocol Handshake\r\n"
-						"Upgrade: WebSocket\r\n"
-						"Connection: Upgrade\r\n"
-						"WebSocket-Origin: %s\r\n"
-						"WebSocket-Location: ws://%s:%d/\r\n\r\n",
-						StartupConfig::getString("websocketorigin").c_str(), StartupConfig::getString("websockethost").c_str(), static_cast<int>(StartupConfig::getDouble("port"))
-					);
-				string temp(&buf[0], len);
-				outbuffer.swap(temp);
-				ret = PROTOCOL_HIXIE;
+				ret = PROTOCOL_BAD;
 			}
 			output = outbuffer;
 		}
@@ -147,112 +112,6 @@ namespace Websocket
 			ret = PROTOCOL_BAD;
 		}
 		return ret;
-
-	}
-
-	unsigned int Hixie::handshakeKey(std::string& input)
-	{
-		const char* p = input.c_str();
-		int len = input.length();
-		std::string number;
-		int spaces = 0;
-		for(int i = 0;i<len;++i)
-		{
-			char c = p[i];
-			if(c <= '9' && c >= '0')
-			{
-				number += c;
-			}
-			else if (c == ' ')
-			{
-				++spaces;
-			}
-		}
-		if(spaces == 0)
-			return 0;
-		long long ret = atoll(number.c_str());
-		return htonl(static_cast<unsigned int>(ret/spaces));
-	}
-
-	WebSocketResult Hixie::accept(string& key1, string& key2, string& key3, string& host, string& origin, string& output)
-	{
-		if(key1.empty() || key2.empty() || key3.empty())
-			return WS_RESULT_ERROR;
-
-		bool useport=true;
-		string wshost = host;
-		if(wshost.empty())
-			wshost = StartupConfig::getString("websockethost");
-
-		if(wshost.find(':') != string::npos)
-			useport=false;
-//		if(origin.find("f-list.net") == string::npos)
-//		{
-//			return WS_RESULT_ERROR;
-//		}
-
-		unsigned int ikey1 = handshakeKey(key1);
-		unsigned int ikey2 = handshakeKey(key2);
-
-		char hash[16];
-		memcpy(hash, &ikey1, 4);
-		memcpy(hash+4, &ikey2, 4);
-		memcpy(hash+8, key3.c_str(), 8);
-
-		thirdparty::MD5Digest md5;
-		thirdparty::MD5Sum(hash, 16, &md5);
-		char buf[4096];
-		bzero(&buf[0], sizeof(buf));
-
-		int len = -1;
-		if(useport)
-		{
-			len = snprintf(&buf[0], sizeof(buf),
-				"HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
-				"Upgrade: WebSocket\r\n"
-				"Connection: Upgrade\r\n"
-				"Sec-WebSocket-Origin: %s\r\n"
-				"Sec-WebSocket-Location: ws://%s:%d/\r\n\r\n",
-					origin.c_str(),
-					wshost.c_str(),
-					static_cast<int>(StartupConfig::getDouble("port"))
-				);
-		}
-		else
-		{
-			len = snprintf(&buf[0], sizeof(buf),
-				"HTTP/1.1 101 WebSocket Protocol Handshake\r\n"
-				"Upgrade: WebSocket\r\n"
-				"Connection: Upgrade\r\n"
-				"Sec-WebSocket-Origin: %s\r\n"
-				"Sec-WebSocket-Location: ws://%s/\r\n\r\n",
-					origin.c_str(),
-					wshost.c_str()
-				);
-		}
-		string tmp(&buf[0], len);
-		tmp.append(reinterpret_cast<char*>(md5.a), 16);
-		output.swap(tmp);
-		return WS_RESULT_OK;
-	}
-
-
-	WebSocketResult Hixie::receive(std::string& input, std::string& output)
-	{
-		if(input[0] != 0)
-			return WS_RESULT_ERROR;
-
-		std::string::size_type pos = input.find(static_cast<char>(-1));
-		if(pos == std::string::npos)
-			return WS_RESULT_INCOMPLETE;
-		output = input.substr(1, pos-1);
-		input = input.substr(pos+1);
-		return WS_RESULT_OK;
-	}
-
-	void Hixie::send(std::string& input, std::string& output)
-	{
-		output = static_cast<char>(0) + input + static_cast<char>(-1);
 	}
 
 	static const unsigned int wsHeaderSize = 2;

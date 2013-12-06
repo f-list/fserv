@@ -91,9 +91,6 @@ bool ConnectionInstance::send(string& message)
 	string buffer;
 	switch (protocol)
 	{
-		case PROTOCOL_HIXIE:
-			Websocket::Hixie::send(message, buffer);
-			break;
 		case PROTOCOL_HYBI:
 			Websocket::Hybi::send(message, buffer);
 			break;

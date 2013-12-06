@@ -142,9 +142,6 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
 			{
 				switch(con->protocol)
 				{
-					case PROTOCOL_HIXIE:
-						ret = Websocket::Hixie::receive(con->readBuffer, message);
-						break;
 					case PROTOCOL_HYBI:
 						ret = Websocket::Hybi::receive(con->readBuffer, message);
 						break;
@@ -365,51 +362,32 @@ void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents)
 			con->lastActivity = ev_now(loop);
 			con->readBuffer.append(&recvbuffer[0], received);
 
-			if(con->readBuffer.find("WSH\xFF") != string::npos)
+			string buffer;
+			ProtocolVersion ver = Websocket::Acceptor::accept(con->readBuffer, buffer);
+			switch(ver)
 			{
-				con->readBuffer.clear();
-				con->protocol = PROTOCOL_HIXIE;
-				ev_io* read = new ev_io;
-				ev_io_init(read, Server::connectionReadCallback, w->fd, EV_READ);
-				read->data = con.get();
-				ev_io_stop(loop, w);
-				delete con->readEvent;
-				ev_io_start(server_loop, read);
-				con->readEvent = read;
-				static string WSHReply("WSH OK");
-				con->send(WSHReply);
-				ev_io_start(server_loop, con->writeEvent);
-			}
-			else
-			{
-				string buffer;
-				ProtocolVersion ver = Websocket::Acceptor::accept(con->readBuffer, buffer);
-				switch(ver)
-				{
-					case PROTOCOL_HIXIE:
-					case PROTOCOL_HYBI:
-						break;
-					case PROTOCOL_INCOMPLETE:
-						return;
-					case PROTOCOL_UNKNOWN:
-					case PROTOCOL_BAD:
-					default:
-						prepareShutdownConnection(con.get());
-						close(w->fd);
-						return;
+				case PROTOCOL_HYBI:
+					break;
+				case PROTOCOL_INCOMPLETE:
+					return;
+				case PROTOCOL_UNKNOWN:
+				case PROTOCOL_BAD:
+				default:
+					prepareShutdownConnection(con.get());
+					close(w->fd);
+					return;
 
-				}
-				con->send(buffer);
-				con->protocol = ver;
-				con->readBuffer.clear();
-				ev_io* read = new ev_io;
-				ev_io_init(read, Server::connectionReadCallback, w->fd, EV_READ);
-				read->data = con.get();
-				ev_io_stop(loop, w);
-				delete con->readEvent;
-				ev_io_start(server_loop, read);
-				con->readEvent = read;
 			}
+			con->send(buffer);
+			con->protocol = ver;
+			con->readBuffer.clear();
+			ev_io* read = new ev_io;
+			ev_io_init(read, Server::connectionReadCallback, w->fd, EV_READ);
+			read->data = con.get();
+			ev_io_stop(loop, w);
+			delete con->readEvent;
+			ev_io_start(server_loop, read);
+			con->readEvent = read;
 		}
 	}
 }
