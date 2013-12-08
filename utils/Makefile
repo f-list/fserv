@@ -10,7 +10,7 @@ all: facceptor_stress
 
 facceptor_stress: $(FACCEPTOR__STRESS_O)
 	@echo "LD $@"
-	@$(CXX) $(LDFLAGS) $(FACCEPTOR__STRESS_O) -o $@
+	@$(CXX) $(FACCEPTOR__STRESS_O) $(LDFLAGS) -o $@
 
 clean:
 	@echo "CLEAN *~ *.o facceptor_stress"
