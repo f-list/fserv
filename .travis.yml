@@ -13,8 +13,8 @@ install:
   - lua_src=f-list/fserv/lib/lua/src
   - mkdir -p $lua_src
   - cp /usr/include/luajit-2.0/* $lua_src
-  - cp /usr/lib/x86_64-linux-gnu/libluajit-5.1.a $lua_src
-  - cp /usr/lib/x86_64-linux-gnu/libluajit-5.1.so $lua_src
+  - cp /usr/lib/x86_64-linux-gnu/libluajit-5.1.a $lua_src/libluajit.a
+  - cp /usr/lib/x86_64-linux-gnu/libluajit-5.1.so $lua_src/libluajit.so
   
   # Get libjansson version 2.5, the one in Ubuntu 12.04's repos is way outdated.
   - cd ~/build
