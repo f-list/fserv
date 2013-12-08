@@ -26,7 +26,7 @@
 #ifndef LUA_CHANNEL_H
 #define LUA_CHANNEL_H
 
-#include "lua_chat.h"
+#include "lua_chat.hpp"
 
 class LuaChannel
 {

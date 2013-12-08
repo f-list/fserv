@@ -28,12 +28,12 @@
  * @author Kira
  */
 
-#include "precompiled_headers.h"
-#include "lua_chat.h"
-#include "server_state.h"
-#include "unicode_tools.h"
-#include "startup_config.h"
-#include "server.h"
+#include "precompiled_headers.hpp"
+#include "lua_chat.hpp"
+#include "server_state.hpp"
+#include "unicode_tools.hpp"
+#include "startup_config.hpp"
+#include "server.hpp"
 #include <time.h>
 #include <stdio.h>
 #include <string>

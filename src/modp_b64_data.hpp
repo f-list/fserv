@@ -1,4 +1,4 @@
-#include "stdint.h"
+#include "stdint.hpp"
 #define CHAR62 '+'
 #define CHAR63 '/'
 #define CHARPAD '='

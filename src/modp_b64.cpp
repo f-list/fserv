@@ -41,10 +41,10 @@
  * </PRE>
  */
 
-#include "precompiled_headers.h"
+#include "precompiled_headers.hpp"
 
 /* public header */
-#include "modp_b64.h"
+#include "modp_b64.hpp"
 
 /*
  * If you are ripping this out of the library, comment out the next
@@ -57,7 +57,7 @@
 /* else for Intel, Amd; uncomment this */
 /* #undef WORDS_BIGENDIAN */
 
-#include "modp_b64_data.h"
+#include "modp_b64_data.hpp"
 
 #define BADCHAR 0x01FFFFFF
 
