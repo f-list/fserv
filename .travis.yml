@@ -5,7 +5,7 @@ before-install:
   - sudo apt-get update
 
 install: 
-  - sudo apt-get install libev-dev libgoogle-perftools-dev libjansson-dev libhiredis-dev libicu-dev libcurl4-openssl-dev libboost-dev
+  - sudo apt-get install libev-dev libgoogle-perftools-dev libjansson-dev libhiredis-dev libicu-dev libcurl4-openssl-dev libboost-dev libluajit-5.1-dev
   
   # We need to get and build libglog because Ubuntu 12.04 doesn't have that in its repos.
   - cd ~/build
