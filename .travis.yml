@@ -12,8 +12,8 @@ install:
   - cd ~/build
   - mkdir -p f-list/lib/lua/src
   - cp /usr/include/luajit-2.0/* f-list/lib/lua/src
-  - cp /usr/lib/libluajit-5.1.a f-list/lib/lua/src/luajit.a
-  - cp /usr/lib/libluajit-5.1.so f-list/lib/lua/src/luajit.so
+  - cp /usr/lib/x86_64-linux-gnu/libluajit-5.1.a f-list/lib/lua/src/luajit.a
+  - cp /usr/lib/x86_64-linux-gnu/libluajit-5.1.so f-list/lib/lua/src/luajit.so
   
   # We need to get and build libglog because Ubuntu 12.04 doesn't have that in its repos.
   - cd ~/build
