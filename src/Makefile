@@ -10,7 +10,7 @@ FSERV_SCRIPTS=	startup_config.lua main.lua
 	@echo "CC $<"
 	@$(CXX) -c $(CXXFLAGS) $< -o $@
 
-%.h.gch: %.h
+%.hpp.gch: %.hpp
 	@echo "PRECOMPILE $@"
 	@${CXX} -g -I../lib/lua/src -Wall -Werror -fno-strict-aliasing -c $< -o $@
 
