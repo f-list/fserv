@@ -23,9 +23,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "precompiled_headers.h"
-#include "channel.h"
-#include "logging.h"
+#include "precompiled_headers.hpp"
+#include "channel.hpp"
+#include "logging.hpp"
 
 #include <time.h>
 

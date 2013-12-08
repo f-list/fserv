@@ -27,18 +27,18 @@
  * HERE BE DRAGONS! (and bad class design)
  */
 
-#include "precompiled_headers.h"
+#include "precompiled_headers.hpp"
 
-#include "server.h"
-#include "connection.h"
-#include "startup_config.h"
-#include "native_command.h"
-#include "lua_chat.h"
-#include "lua_channel.h"
-#include "lua_connection.h"
-#include "lua_constants.h"
-#include "server_state.h"
-#include "md5.h"
+#include "server.hpp"
+#include "connection.hpp"
+#include "startup_config.hpp"
+#include "native_command.hpp"
+#include "lua_chat.hpp"
+#include "lua_channel.hpp"
+#include "lua_connection.hpp"
+#include "lua_constants.hpp"
+#include "server_state.hpp"
+#include "md5.hpp"
 
 #include <time.h>
 #include <sys/types.h>

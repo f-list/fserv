@@ -1,8 +1,8 @@
-#include "precompiled_headers.h"
+#include "precompiled_headers.hpp"
 
-#include "base64.h"
+#include "base64.hpp"
 #include <string.h>
-#include "modp_b64.h"
+#include "modp_b64.hpp"
 
 
 // This is taken from the chromium source base, and is covered by the license in 3rdparty/LICENSE.chromium

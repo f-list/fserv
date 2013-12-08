@@ -33,9 +33,9 @@
 #include <list>
 #include <ev.h>
 #include <netinet/in.h>
-#include "websocket.h"
-#include "ferror.h"
-#include "lua_base.h"
+#include "websocket.hpp"
+#include "ferror.hpp"
+#include "lua_base.hpp"
 
 using std::string;
 using std::tr1::unordered_map;

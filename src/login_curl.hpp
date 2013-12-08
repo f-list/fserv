@@ -23,78 +23,54 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef REDIS_H
-#define REDIS_H
+#ifndef LOGIN_H
+#define LOGIN_H
 
 #include <queue>
-#include <string>
-#include "fthread.h"
-#include <hiredis/hiredis.h>
+#include "login_common.hpp"
+#include "fthread.hpp"
+#include <ev.h>
+#include <curl/curl.h>
 
-using std::string;
 using std::queue;
 
-#define REDIS_MUTEX_TIMEOUT 250000000
-
-enum RedisMethod
-{
-	REDIS_DEL,
-	REDIS_LPUSH,
-	REDIS_LREM,
-	REDIS_SADD,
-	REDIS_SREM,
-	REDIS_SET,
-	REDIX_MAX
-};
-
-enum RedisUpdateContext
-{
-	RCONTEXT_IGNORE,
-	RCONTEXT_ONLINE,
-	RCONTEXT_MAX
-};
-
-class RedisRequest
-{
-public:
-	string key;
-	queue<string> values;
-	RedisMethod method;
-	RedisUpdateContext updateContext;
-};
-
-class Redis
+class Login
 {
 public:
 	static void* runThread(void* param);
-	static bool addRequest(RedisRequest* newRequest);
+	static bool addRequest(LoginRequest* newRequest);
+	static LoginReply* getReply();
+
+	static void setMaxLoginSlots(unsigned int slots) { maxLoginSlots = slots; }
+	static unsigned int getMaxLoginSlots() { return maxLoginSlots; }
 
 	static void stopThread() { doRun = false; }
-	static bool isRunning() { return doRun; }
+	static void sendWakeup();
 
 	static pthread_mutex_t requestMutex;
-	static const string onlineUsersKey;
-	static const string lastCheckinKey;
+	static pthread_mutex_t replyMutex;
 private:
-	Redis() {}
-	~Redis() {}
+	Login() {}
+	~Login() {}
 
-	static void connectToRedis();
-	static void sendInitialUserList();
+	static bool addReply(LoginReply* newReply);
+	static LoginReply* processLogin(LoginRequest* request);
+	static LoginRequest* getRequest();
 
-	static RedisRequest* getRequest();
-
-	static void processRequest(RedisRequest* req);
-
+	static void processQueue(struct ev_loop* loop, ev_async* w, int revents);
 	static void timeoutCallback(struct ev_loop* loop, ev_timer* w, int revents);
 
-	static redisContext* context;
+	static bool setupCurlHandle();
+	static size_t curlWriteFunction(void* contents, size_t size, size_t nmemb, void* user);
 
-	static queue<RedisRequest*> requestQueue;
+	static queue<LoginReply*> replyQueue;
+	static queue<LoginRequest*> requestQueue;
+	static unsigned int maxLoginSlots;
 	static bool doRun;
-	static struct ev_loop* redis_loop;
-	static ev_timer* redis_timer;
-	static const __useconds_t REDIS_FAILURE_WAIT;
+	static struct ev_loop* login_loop;
+	static ev_async* login_async;
+	static ev_timer* login_timer;
+	static const __useconds_t CURL_FAILURE_WAIT;
+	static const float THREAD_WAIT_TIMEOUT;
 };
-
-#endif //REDIS_H
+#endif //LOGIN_H

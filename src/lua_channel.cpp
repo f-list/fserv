@@ -28,13 +28,13 @@
  * @author Kira
  */
 
-#include "precompiled_headers.h"
-#include "channel.h"
-#include "connection.h"
-#include "lua_channel.h"
-#include "server.h"
-#include "server_state.h"
-#include "sha1.h"
+#include "precompiled_headers.hpp"
+#include "channel.hpp"
+#include "connection.hpp"
+#include "lua_channel.hpp"
+#include "server.hpp"
+#include "server_state.hpp"
+#include "sha1.hpp"
 
 #include <string>
 #include <stdio.h>

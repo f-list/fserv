@@ -23,16 +23,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "precompiled_headers.h"
+#include "precompiled_headers.hpp"
 
-#include "connection.h"
-#include "logging.h"
-#include "ferror.h"
-#include "fjson.h"
-#include "flua.h"
-#include "server.h"
-#include "lua_constants.h"
-#include "channel.h"
+#include "connection.hpp"
+#include "logging.hpp"
+#include "ferror.hpp"
+#include "fjson.hpp"
+#include "flua.hpp"
+#include "server.hpp"
+#include "lua_constants.hpp"
+#include "channel.hpp"
 
 #define MAX_SEND_QUEUE_ITEMS 150
 // This sets the size at which long messages are split into multiple pieces.

@@ -23,8 +23,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "precompiled_headers.h"
-#include "unicode_tools.h"
+#include "precompiled_headers.hpp"
+#include "unicode_tools.hpp"
 
 #include <unicode/utypes.h>
 #include <unicode/ustring.h>

@@ -23,24 +23,30 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NATIVE_EVENT_H
-#define NATIVE_EVENT_H
+#ifndef LUA_CONSTANTS_H
+#define LUA_CONSTANTS_H
 
-#include <boost/intrusive_ptr.hpp>
+#include <tr1/unordered_map>
 #include <string>
-#include "ferror.h"
+#include <utility>
+#include "flua.hpp"
+#include "ferror.hpp"
 
+using std::pair;
 using std::string;
-using boost::intrusive_ptr;
-class ConnectionInstance;
+using std::tr1::unordered_map;
 
-class NativeCommand
+typedef unordered_map<int, pair<string, string> > lconstantmap_t;
+
+class LuaConstants
 {
 public:
-	static FReturnCode DebugCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
-	static FReturnCode IdentCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
-	static FReturnCode SearchCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
-private:
-};
+	static int openConstantsLib(lua_State* L);
+	static void initClass();
 
-#endif //NATIVE_EVENT_H
+	static int getErrorMessage(lua_State* L);
+	static const string& getErrorMessage(FReturnCode errorcode);
+private:
+	static lconstantmap_t errorMap;
+};
+#endif //LUA_CONSTANTS_H

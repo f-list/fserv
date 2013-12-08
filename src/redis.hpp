@@ -23,30 +23,78 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LUA_CONSTANTS_H
-#define LUA_CONSTANTS_H
+#ifndef REDIS_H
+#define REDIS_H
 
-#include <tr1/unordered_map>
+#include <queue>
 #include <string>
-#include <utility>
-#include "flua.h"
-#include "ferror.h"
+#include "fthread.hpp"
+#include <hiredis/hiredis.h>
 
-using std::pair;
 using std::string;
-using std::tr1::unordered_map;
+using std::queue;
 
-typedef unordered_map<int, pair<string, string> > lconstantmap_t;
+#define REDIS_MUTEX_TIMEOUT 250000000
 
-class LuaConstants
+enum RedisMethod
+{
+	REDIS_DEL,
+	REDIS_LPUSH,
+	REDIS_LREM,
+	REDIS_SADD,
+	REDIS_SREM,
+	REDIS_SET,
+	REDIX_MAX
+};
+
+enum RedisUpdateContext
+{
+	RCONTEXT_IGNORE,
+	RCONTEXT_ONLINE,
+	RCONTEXT_MAX
+};
+
+class RedisRequest
 {
 public:
-	static int openConstantsLib(lua_State* L);
-	static void initClass();
-
-	static int getErrorMessage(lua_State* L);
-	static const string& getErrorMessage(FReturnCode errorcode);
-private:
-	static lconstantmap_t errorMap;
+	string key;
+	queue<string> values;
+	RedisMethod method;
+	RedisUpdateContext updateContext;
 };
-#endif //LUA_CONSTANTS_H
+
+class Redis
+{
+public:
+	static void* runThread(void* param);
+	static bool addRequest(RedisRequest* newRequest);
+
+	static void stopThread() { doRun = false; }
+	static bool isRunning() { return doRun; }
+
+	static pthread_mutex_t requestMutex;
+	static const string onlineUsersKey;
+	static const string lastCheckinKey;
+private:
+	Redis() {}
+	~Redis() {}
+
+	static void connectToRedis();
+	static void sendInitialUserList();
+
+	static RedisRequest* getRequest();
+
+	static void processRequest(RedisRequest* req);
+
+	static void timeoutCallback(struct ev_loop* loop, ev_timer* w, int revents);
+
+	static redisContext* context;
+
+	static queue<RedisRequest*> requestQueue;
+	static bool doRun;
+	static struct ev_loop* redis_loop;
+	static ev_timer* redis_timer;
+	static const __useconds_t REDIS_FAILURE_WAIT;
+};
+
+#endif //REDIS_H

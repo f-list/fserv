@@ -23,8 +23,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "precompiled_headers.h"
-#include "lua_constants.h"
+#include "precompiled_headers.hpp"
+#include "lua_constants.hpp"
 
 lconstantmap_t LuaConstants::errorMap;
 

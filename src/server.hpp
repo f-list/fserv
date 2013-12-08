@@ -28,12 +28,12 @@
 
 #include <ev.h>
 
-#include "logging.h"
-#include "flua.h"
-#include "fthread.h"
-#include "login_curl.h"
-#include "redis.h"
-#include "ferror.h"
+#include "logging.hpp"
+#include "flua.hpp"
+#include "fthread.hpp"
+#include "login_curl.hpp"
+#include "redis.hpp"
+#include "ferror.hpp"
 
 #include <string>
 

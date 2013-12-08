@@ -23,16 +23,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "precompiled_headers.h"
+#include "precompiled_headers.hpp"
 
-#include "native_command.h"
-#include "logging.h"
-#include "connection.h"
-#include "fjson.h"
-#include "login_curl.h"
-#include "server.h"
-#include "startup_config.h"
-#include "server_state.h"
+#include "native_command.hpp"
+#include "logging.hpp"
+#include "connection.hpp"
+#include "fjson.hpp"
+#include "login_curl.hpp"
+#include "server.hpp"
+#include "startup_config.hpp"
+#include "server_state.hpp"
 
 FReturnCode NativeCommand::DebugCommand(ConnectionPtr& con, string& payload)
 {

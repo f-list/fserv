@@ -26,16 +26,16 @@
 // This code is HEAVILY based off of the Chromium websocket server source.
 // You may view the license for Chromium in 3rdparty/LICENSE.chromium
 
-#include "precompiled_headers.h"
+#include "precompiled_headers.hpp"
 
-#include "websocket.h"
-#include "sha1.h"
-#include "base64.h"
+#include "websocket.hpp"
+#include "sha1.hpp"
+#include "base64.hpp"
 #include <stdlib.h>
 #include <stdio.h>
 #include <exception>
-#include "startup_config.h"
-#include "logging.h"
+#include "startup_config.hpp"
+#include "logging.hpp"
 
 #include <map>
 #include <vector>

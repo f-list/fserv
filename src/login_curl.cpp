@@ -23,18 +23,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "precompiled_headers.h"
+#include "precompiled_headers.hpp"
 
-#include "login_curl.h"
+#include "login_curl.hpp"
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
 
-#include "logging.h"
-#include "startup_config.h"
-#include "server.h"
-#include "connection.h"
+#include "logging.hpp"
+#include "startup_config.hpp"
+#include "server.hpp"
+#include "connection.hpp"
 
 pthread_mutex_t Login::requestMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t Login::replyMutex = PTHREAD_MUTEX_INITIALIZER;

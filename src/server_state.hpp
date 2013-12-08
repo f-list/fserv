@@ -31,8 +31,8 @@
 #include <list>
 #include <time.h>
 
-#include "connection.h"
-#include "channel.h"
+#include "connection.hpp"
+#include "channel.hpp"
 
 using std::list;
 using std::tr1::unordered_map;

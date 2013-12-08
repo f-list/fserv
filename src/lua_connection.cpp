@@ -28,13 +28,13 @@
  * @author Kira
  */
 
-#include "precompiled_headers.h"
-#include "lua_connection.h"
-#include "connection.h"
-#include "lua_chat.h"
-#include "lua_constants.h"
-#include "server_state.h"
-#include "server.h"
+#include "precompiled_headers.hpp"
+#include "lua_connection.hpp"
+#include "connection.hpp"
+#include "lua_chat.hpp"
+#include "lua_constants.hpp"
+#include "server_state.hpp"
+#include "server.hpp"
 
 #define LUACONNECTION_MODULE_NAME "u"
 

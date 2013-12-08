@@ -31,9 +31,9 @@
 #include <string>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
-#include "connection.h"
-#include "fjson.h"
-#include "lua_base.h"
+#include "connection.hpp"
+#include "fjson.hpp"
+#include "lua_base.hpp"
 
 using std::string;
 using std::tr1::unordered_map;

@@ -48,7 +48,7 @@
 
 #include <ev.h>
 
-#include "flua.h"
-#include "fthread.h"
-#include "fjson.h"
+#include "flua.hpp"
+#include "fthread.hpp"
+#include "fjson.hpp"
 #endif //PRECOMPILED_HEADERS_H

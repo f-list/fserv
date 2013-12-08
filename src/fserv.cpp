@@ -23,19 +23,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "precompiled_headers.h"
+#include "precompiled_headers.hpp"
 
 #include <stdlib.h>
 #include <signal.h>
 #include <sys/resource.h>
 
 //Local project headers
-#include "logging.h"
-#include "fthread.h"
-#include "login_curl.h"
-#include "server.h"
-#include "startup_config.h"
-#include "lua_constants.h"
+#include "logging.hpp"
+#include "fthread.hpp"
+#include "login_curl.hpp"
+#include "server.hpp"
+#include "startup_config.hpp"
+#include "lua_constants.hpp"
 
 #define SHUTDOWN_WAIT 2000000
 

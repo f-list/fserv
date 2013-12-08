@@ -23,12 +23,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "precompiled_headers.h"
+#include "precompiled_headers.hpp"
 
-#include "redis.h"
+#include "redis.hpp"
 
-#include "logging.h"
-#include "startup_config.h"
+#include "logging.hpp"
+#include "startup_config.hpp"
 #include <time.h>
 
 

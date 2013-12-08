@@ -23,54 +23,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LOGIN_H
-#define LOGIN_H
+#ifndef NATIVE_EVENT_H
+#define NATIVE_EVENT_H
 
-#include <queue>
-#include "login_common.h"
-#include "fthread.h"
-#include <ev.h>
-#include <curl/curl.h>
+#include <boost/intrusive_ptr.hpp>
+#include <string>
+#include "ferror.hpp"
 
-using std::queue;
+using std::string;
+using boost::intrusive_ptr;
+class ConnectionInstance;
 
-class Login
+class NativeCommand
 {
 public:
-	static void* runThread(void* param);
-	static bool addRequest(LoginRequest* newRequest);
-	static LoginReply* getReply();
-
-	static void setMaxLoginSlots(unsigned int slots) { maxLoginSlots = slots; }
-	static unsigned int getMaxLoginSlots() { return maxLoginSlots; }
-
-	static void stopThread() { doRun = false; }
-	static void sendWakeup();
-
-	static pthread_mutex_t requestMutex;
-	static pthread_mutex_t replyMutex;
+	static FReturnCode DebugCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
+	static FReturnCode IdentCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
+	static FReturnCode SearchCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
 private:
-	Login() {}
-	~Login() {}
-
-	static bool addReply(LoginReply* newReply);
-	static LoginReply* processLogin(LoginRequest* request);
-	static LoginRequest* getRequest();
-
-	static void processQueue(struct ev_loop* loop, ev_async* w, int revents);
-	static void timeoutCallback(struct ev_loop* loop, ev_timer* w, int revents);
-
-	static bool setupCurlHandle();
-	static size_t curlWriteFunction(void* contents, size_t size, size_t nmemb, void* user);
-
-	static queue<LoginReply*> replyQueue;
-	static queue<LoginRequest*> requestQueue;
-	static unsigned int maxLoginSlots;
-	static bool doRun;
-	static struct ev_loop* login_loop;
-	static ev_async* login_async;
-	static ev_timer* login_timer;
-	static const __useconds_t CURL_FAILURE_WAIT;
-	static const float THREAD_WAIT_TIMEOUT;
 };
-#endif //LOGIN_H
+
+#endif //NATIVE_EVENT_H

@@ -21,9 +21,9 @@
  * will fill a supplied 16-byte array with the digest.
  */
 
-#include "precompiled_headers.h"
+#include "precompiled_headers.hpp"
 
-#include "md5.h"
+#include "md5.hpp"
 #include <string.h>
 #include <stdint.h>
 

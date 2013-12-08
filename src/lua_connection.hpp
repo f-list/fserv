@@ -26,9 +26,9 @@
 #ifndef LUA_CONNECTION_H
 #define LUA_CONNECTION_H
 
-#include "flua.h"
-#include "ferror.h"
-#include "fjson.h"
+#include "flua.hpp"
+#include "ferror.hpp"
+#include "fjson.hpp"
 
 class LuaConnection
 {

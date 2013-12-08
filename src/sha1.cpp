@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "precompiled_headers.h"
+#include "precompiled_headers.hpp"
 
-#include "sha1.h"
+#include "sha1.hpp"
 
 #include <string.h>
 #include <stdint.h>

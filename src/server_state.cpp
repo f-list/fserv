@@ -23,12 +23,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "precompiled_headers.h"
-#include "server_state.h"
-#include "channel.h"
-#include "fjson.h"
-#include "logging.h"
-#include "redis.h"
+#include "precompiled_headers.hpp"
+#include "server_state.hpp"
+#include "channel.hpp"
+#include "fjson.hpp"
+#include "logging.hpp"
+#include "redis.hpp"
 
 #include <string>
 #include <iostream>

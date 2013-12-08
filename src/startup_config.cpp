@@ -23,12 +23,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "precompiled_headers.h"
+#include "precompiled_headers.hpp"
 
-#include "startup_config.h"
+#include "startup_config.hpp"
 
-#include "logging.h"
-#include "flua.h"
+#include "logging.hpp"
+#include "flua.hpp"
 
 
 unordered_map<string, string> StartupConfig::stringMap;
