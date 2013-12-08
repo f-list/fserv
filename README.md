@@ -1,3 +1,5 @@
+![F-List](http://static.f-list.net/images/logo.png)
+
 F-List chat server 
 ==================
 
