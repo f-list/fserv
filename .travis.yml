@@ -16,19 +16,19 @@ install:
   - cp /usr/lib/x86_64-linux-gnu/libluajit-5.1.a $lua_src
   - cp /usr/lib/x86_64-linux-gnu/libluajit-5.1.so $lua_src
   
+  # Get libjansson version 2.5, the one in Ubuntu 12.04's repos is way outdated.
+  - cd ~/build
+  - wget http://www.digip.org/jansson/releases/jansson-2.5.tar.gz
+  - tar xvzf jansson-2.5.tar.gz
+  - cd jansson-2.5
+  - ./configure --prefix=/usr/ && make && sudo make install
+  
   # We need to get and build libglog because Ubuntu 12.04 doesn't have that in its repos.
   - cd ~/build
   - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
   - tar xvzf glog-0.3.3.tar.gz
   - cd glog-0.3.3
   - ./configure && make && sudo make install
-  
-  # Get libjansson version 2.5, the one in 12.04's repos is way outdated.
-  - cd ~/build
-  - wget http://www.digip.org/jansson/releases/jansson-2.5.tar.gz
-  - bunzip2 -c jansson-2.5.tar.bz2 | tar xf -
-  - cd jansson-2.5
-  - ./configure --prefix=/usr/ && make && make check && sudo make install
   
 script: 
   # Finally, build fserv.
