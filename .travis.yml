@@ -7,12 +7,12 @@ before-install:
 install: 
   - sudo apt-get install libev-dev libgoogle-perftools-dev libjansson-dev libhiredis-dev libicu-dev libcurl4-openssl-dev libboost-dev
   
-  - cd ../..
+  - cd ~
   - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
   - tar xvzf glog-0.3.3.tar.gz
   - cd glog-0.3.3
-  - ./configure && make && make install
+  - ./configure && make && sudo make install
   
 script: 
-  - cd f-list/fserv
+  - cd ~/f-list/fserv
   - make all
