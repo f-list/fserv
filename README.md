@@ -18,7 +18,7 @@ Required third party libraries
 * [LuaJIT](http://www.luajit.org/)
 * [libev](http://software.schmorp.de/pkg/libev.html)
 * [google-glog](https://code.google.com/p/google-glog/)
-* [google-pertools (tcmalloc)](https://code.google.com/p/gperftools/) - *Optional with minor source and makefile modifications*
+* [google-perftools (tcmalloc)](https://code.google.com/p/gperftools/) - *Optional with minor source and makefile modifications*
 * [libjansson](http://www.digip.org/jansson/)
 * [hiredis](https://github.com/antirez/hiredis)
 * libicu - see local package manager
