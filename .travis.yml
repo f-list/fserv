@@ -1,4 +1,6 @@
 language: cpp
 compiler: gcc
-# Change this to your needs
+
+before-install: sudo apt-get update
+install: sudo apt-get install libev-dev libgoogle-glog-dev libgoogle-perftools-dev libjansson-dev libhiredis-dev libicu-dev libcurl-dev libboost-dev
 script: make all
