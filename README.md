@@ -1,5 +1,7 @@
-F-List chat server
+F-List chat server 
 ==================
+
+[![Build Status](https://travis-ci.org/f-list/fserv.png?branch=master)](https://travis-ci.org/f-list/fserv)
 
 **Language:** C++ with Lua logic glue.
 
@@ -11,6 +13,9 @@ Gentoo x86_64 given the proper version of LuaJIT is used. Modifications to
 libjansson to remove the forced formatting of floats with .0 after whole 
 numbers was done to properly support "integers" and still have automatic 
 conversion from Lua, which only supports doubles.
+
+It also compiles on Ubuntu 12.04 LTS x86_64, given that libjansson and
+google-glog are manually built. 
 
 Required third party libraries
 ------------------------------
