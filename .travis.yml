@@ -5,7 +5,7 @@ before-install:
   - sudo apt-get update
 
 install: 
-  - sudo apt-get install libev-dev libgoogle-perftools-dev libhiredis-dev libicu-dev libcurl4-openssl-dev libboost-dev libluajit-5.1-dev
+  - sudo apt-get install libev-dev libgoogle-perftools-dev libhiredis-dev libicu-dev libcurl4-openssl-dev libboost-dev libluajit-5.1-dev libpth-dev
   
     
   # Make fserv use the system-provided LuaJIT headers. (This is dirty...)
