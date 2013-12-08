@@ -7,13 +7,22 @@ before-install:
 install: 
   - sudo apt-get install libev-dev libgoogle-perftools-dev libjansson-dev libhiredis-dev libicu-dev libcurl4-openssl-dev libboost-dev libluajit-5.1-dev
   
+    
+  # Make fserv use the system-provided LuaJIT headers. (This is dirty...)
+  - cd ~/build
+  - mkdir -p f-list/lib/lua/src
+  - cp /usr/include/luajit-2.0/* f-list/lib/lua/src
+  - cp /usr/lib/libluajit-5.1.a f-list/lib/lua/src/luajit.a
+  - cp /usr/lib/libluajit-5.1.so f-list/lib/lua/src/luajit.so
+  
   # We need to get and build libglog because Ubuntu 12.04 doesn't have that in its repos.
   - cd ~/build
   - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
   - tar xvzf glog-0.3.3.tar.gz
   - cd glog-0.3.3
   - ./configure && make && sudo make install
-
+  
 script: 
+  # Finally, build fserv.
   - cd ~/build/f-list/fserv
   - make all
