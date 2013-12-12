@@ -103,9 +103,10 @@ int LuaChat::broadcast(lua_State* L) {
     free((void*) jsonstr);
     json_decref(json);
     lua_pop(L, 2);
+    MessagePtr outMessage(MessageBuffer::FromString(message));
     const conptrmap_t conmap = ServerState::getConnections();
     for (conptrmap_t::const_iterator i = conmap.begin(); i != conmap.end(); ++i) {
-        ((*i).second)->send(message);
+        ((*i).second)->send(outMessage);
     }
     return 0;
 }
@@ -119,9 +120,10 @@ int LuaChat::broadcastRaw(lua_State* L) {
     luaL_checkany(L, 1);
     string message = luaL_checkstring(L, 1);
     lua_pop(L, 1);
+    MessagePtr outMessage(MessageBuffer::FromString(message));
     const conptrmap_t conmap = ServerState::getConnections();
     for (conptrmap_t::const_iterator i = conmap.begin(); i != conmap.end(); ++i) {
-        ((*i).second)->send(message);
+        ((*i).second)->send(outMessage);
     }
     return 0;
 }
@@ -139,6 +141,7 @@ int LuaChat::broadcastOps(lua_State* L) {
     free((void*) jsonstr);
     json_decref(json);
     lua_pop(L, 2);
+    MessagePtr outMessage(MessageBuffer::FromString(message));
     const oplist_t ops = ServerState::getOpList();
     for (oplist_t::const_iterator i = ops.begin(); i != ops.end(); ++i) {
         string name(*i);
@@ -148,7 +151,7 @@ int LuaChat::broadcastOps(lua_State* L) {
         }
         ConnectionPtr con = ServerState::getConnection(name);
         if (con != 0) {
-            con->send(message);
+            con->send(outMessage);
         }
     }
     return 0;
@@ -257,7 +260,8 @@ int LuaChat::sendUserList(lua_State* L) {
             string s = prefix;
             const char* message = json_dumps(rootnode, JSON_COMPACT);
             s += message;
-            con->send(s);
+            MessagePtr outMessage(MessageBuffer::FromString(s));
+            con->send(outMessage);
             free((void*) message);
             json_decref(rootnode);
             arraynode = json_array();
@@ -268,7 +272,8 @@ int LuaChat::sendUserList(lua_State* L) {
     string s = prefix;
     const char* message = json_dumps(rootnode, JSON_COMPACT);
     s += message;
-    con->send(s);
+    MessagePtr outMessage(MessageBuffer::FromString(s));
+    con->send(outMessage);
     free((void*) message);
     json_decref(rootnode);
     return 0;
@@ -598,7 +603,8 @@ int LuaChat::sendStaffCalls(lua_State* L) {
         }
         const char* sfcstring = json_dumps(rootnode, JSON_COMPACT);
         message += sfcstring;
-        con->send(message);
+        MessagePtr outMessage(MessageBuffer::FromString(message));
+        con->send(outMessage);
         free((void*) sfcstring);
         json_decref(rootnode);
     }
