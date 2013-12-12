@@ -31,20 +31,18 @@
 
 #include <string>
 
-enum ProtocolVersion
-{
-	PROTOCOL_HYBI, //Complex framing!
-	PROTOCOL_BAD, //Fatal handshake failure.
-	PROTOCOL_INCOMPLETE, //Incomplete handshake.
-	PROTOCOL_UNKNOWN //Something bad happened.
+enum ProtocolVersion {
+    PROTOCOL_HYBI, //Complex framing!
+    PROTOCOL_BAD, //Fatal handshake failure.
+    PROTOCOL_INCOMPLETE, //Incomplete handshake.
+    PROTOCOL_UNKNOWN //Something bad happened.
 };
 
-enum WebSocketResult
-{
-	WS_RESULT_OK,
-	WS_RESULT_ERROR,
-	WS_RESULT_INCOMPLETE,
-	WS_RESULT_CLOSE
+enum WebSocketResult {
+    WS_RESULT_OK,
+    WS_RESULT_ERROR,
+    WS_RESULT_INCOMPLETE,
+    WS_RESULT_CLOSE
 };
 
 // NOTE NOTE NOTE NOTE
@@ -56,26 +54,28 @@ enum WebSocketResult
 // and thus is beyond the scope of these functions. Input buffering is simple to implement here,
 // and saves passing around a size variable to then advance the input buffer only if needed.
 // NOTE NOTE NOTE NOTE
-namespace Websocket
-{
-	class Acceptor
-	{
-	public:
-		static ProtocolVersion accept(std::string& input, std::string& output);
-	private:
-		Acceptor() {}
-		~Acceptor() {}
-	};
+namespace Websocket {
 
-	class Hybi
-	{
-	public:
-		static WebSocketResult accept(std::string& key, std::string& origin, std::string& output);
-		static WebSocketResult receive(std::string& input, std::string& output);
-		static void send(std::string& input, std::string& output);
-	private:
-		Hybi() {}
-		~Hybi() {}
-	};
+    class Acceptor {
+    public:
+        static ProtocolVersion accept(std::string& input, std::string& output);
+    private:
+
+        Acceptor() { }
+
+        ~Acceptor() { }
+    };
+
+    class Hybi {
+    public:
+        static WebSocketResult accept(std::string& key, std::string& origin, std::string& output);
+        static WebSocketResult receive(std::string& input, std::string& output);
+        static void send(std::string& input, std::string& output);
+    private:
+
+        Hybi() { }
+
+        ~Hybi() { }
+    };
 }
 #endif //WEBSOCKET_H

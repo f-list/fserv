@@ -26,11 +26,12 @@
 #ifndef LUA_BASE_H
 #define LUA_BASE_H
 
-class LBase
-{
+class LBase {
 public:
-	LBase() {}
-	virtual ~LBase() {};
+
+    LBase() { }
+
+    virtual ~LBase() { };
 };
 
 #endif //LUA_BASE_H

@@ -30,13 +30,14 @@
 
 using std::string;
 
-class UnicodeTools
-{
+class UnicodeTools {
 public:
-	static string escapeHTML(string& input);
+    static string escapeHTML(string& input);
 private:
-	UnicodeTools() {}
-	~UnicodeTools() {}
+
+    UnicodeTools() { }
+
+    ~UnicodeTools() { }
 };
 
 #endif //UNICODE_TOOLS_H

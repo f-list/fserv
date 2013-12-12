@@ -48,83 +48,71 @@ static const char* host_name = "127.0.0.1";
 struct hostent* server;
 struct sockaddr_in serv_addr;
 
-static void* stress_acceptor_valid(void* loopcount)
-{
-	char buffer[1024];
-	long count = 0;
-	count = *(long*)loopcount;
-	char reuse = 1;
-	bzero(&buffer[0], sizeof(buffer));
-	for(int t = 0; t < count;++t)
-	{
-		int sock = socket(AF_INET, SOCK_STREAM, 0);
-		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, 1);
-		int ret = connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-		if ( ret < 0)
-		{
-			printf("Failed to connect to server. error: %s\n",  strerror(errno));
-			close(sock);
-			continue;
-		}
-		ret = send(sock, requesttext, requestlen, 0);
-		if ( ret != requestlen)
-		{
-			printf("Failed to send whole request to server.\n");
-			close(sock);
-			continue;
-		}
-		ret = recv(sock, &buffer[0], policylen, 0);
-		if ( ret == 0 )
-		{
-			printf("Server closed connection before we received any data.\n");
-			close(sock);
-			continue;
-		}
-		if ( ret != policylen )
-		{
-			printf("Failed to receive whole response from server. Len: %d:%d\n", ret, policylen);
-			close(sock);
-			continue;
-		}
-		if ( strncmp(&buffer[0], policytext, policylen) != 0)
-		{
-			printf("Received garbled response from server.\n");
-			close(sock);
-			continue;
-		}
-		else
-		{
-			//printf("Received valid response.\n");
-		}
-		close(sock);
-	}
-	printf("Finished thread.\n");
-	pthread_exit(0);
+static void* stress_acceptor_valid(void* loopcount) {
+    char buffer[1024];
+    long count = 0;
+    count = *(long*) loopcount;
+    char reuse = 1;
+    bzero(&buffer[0], sizeof (buffer));
+    for (int t = 0; t < count; ++t) {
+        int sock = socket(AF_INET, SOCK_STREAM, 0);
+        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, 1);
+        int ret = connect(sock, (struct sockaddr*) &serv_addr, sizeof (serv_addr));
+        if (ret < 0) {
+            printf("Failed to connect to server. error: %s\n", strerror(errno));
+            close(sock);
+            continue;
+        }
+        ret = send(sock, requesttext, requestlen, 0);
+        if (ret != requestlen) {
+            printf("Failed to send whole request to server.\n");
+            close(sock);
+            continue;
+        }
+        ret = recv(sock, &buffer[0], policylen, 0);
+        if (ret == 0) {
+            printf("Server closed connection before we received any data.\n");
+            close(sock);
+            continue;
+        }
+        if (ret != policylen) {
+            printf("Failed to receive whole response from server. Len: %d:%d\n", ret, policylen);
+            close(sock);
+            continue;
+        }
+        if (strncmp(&buffer[0], policytext, policylen) != 0) {
+            printf("Received garbled response from server.\n");
+            close(sock);
+            continue;
+        } else {
+            //printf("Received valid response.\n");
+        }
+        close(sock);
+    }
+    printf("Finished thread.\n");
+    pthread_exit(0);
 }
 
-int main(int argc, char* argv[])
-{
-	bzero(&serv_addr, sizeof(serv_addr));
-	server = gethostbyname(host_name);
-	serv_addr.sin_family = AF_INET;
-	memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
-	serv_addr.sin_port = htons(843);
+int main(int argc, char* argv[]) {
+    bzero(&serv_addr, sizeof (serv_addr));
+    server = gethostbyname(host_name);
+    serv_addr.sin_family = AF_INET;
+    memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
+    serv_addr.sin_port = htons(843);
 
-	pthread_t threads[NUM_THREADS];
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-	int loop_count = LOOP_COUNT;
-	long i = 0;
-	for(i = 0; i < NUM_THREADS; ++i)
-	{
-		pthread_create(&threads[i], &attr, stress_acceptor_valid, &loop_count);
-	}
+    pthread_t threads[NUM_THREADS];
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+    int loop_count = LOOP_COUNT;
+    long i = 0;
+    for (i = 0; i < NUM_THREADS; ++i) {
+        pthread_create(&threads[i], &attr, stress_acceptor_valid, &loop_count);
+    }
 
-	for(i = 0;i < NUM_THREADS; ++i)
-	{
-		void* status = 0;
-		pthread_join(threads[i], &status);
-	}
-	return 0;
+    for (i = 0; i < NUM_THREADS; ++i) {
+        void* status = 0;
+        pthread_join(threads[i], &status);
+    }
+    return 0;
 }

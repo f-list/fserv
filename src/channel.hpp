@@ -41,33 +41,29 @@ using std::tr1::unordered_set;
 using std::list;
 using boost::intrusive_ptr;
 
-enum ChannelType
-{
-	CT_PUBLIC,	//Global public channels.
-	CT_PRIVATE, //Invite only channels.
-	CT_PUBPRIVATE, //Public channels that are privately run.
-	CT_MAX
+enum ChannelType {
+    CT_PUBLIC, //Global public channels.
+    CT_PRIVATE, //Invite only channels.
+    CT_PUBPRIVATE, //Public channels that are privately run.
+    CT_MAX
 };
 
-enum ChannelMessageMode
-{
-	CMM_CHAT_ONLY,
-	CMM_ADS_ONLY,
-	CMM_BOTH,
-	CMM_MAX
+enum ChannelMessageMode {
+    CMM_CHAT_ONLY,
+    CMM_ADS_ONLY,
+    CMM_BOTH,
+    CMM_MAX
 };
 
-typedef struct
-{
-	string modder;
-	time_t time;
+typedef struct {
+    string modder;
+    time_t time;
 } ModRecord;
 
-typedef struct
-{
-	string banner;
-	time_t time;
-	time_t timeout;
+typedef struct {
+    string banner;
+    time_t time;
+    time_t timeout;
 } BanRecord;
 
 typedef list<ConnectionPtr> chconlist_t;
@@ -76,108 +72,155 @@ typedef unordered_map<string, BanRecord> chbanmap_t;
 typedef unordered_map<string, ModRecord> chmodmap_t;
 typedef unordered_map<string, double> chtimermap_t;
 
-class Channel : public LBase
-{
+class Channel : public LBase {
 public:
-	Channel(string channame, ChannelType chantype);
-	Channel(string channame, ChannelType chantype, ConnectionPtr creator);
-	virtual ~Channel();
+    Channel(string channame, ChannelType chantype);
+    Channel(string channame, ChannelType chantype, ConnectionPtr creator);
+    virtual ~Channel();
 
-	void sendToAll(string& message); //Sends to everyone, including source.
-	void sendToChannel(ConnectionPtr src, string& message); //Sends to everyone, excluding source.
+    void sendToAll(string& message); //Sends to everyone, including source.
+    void sendToChannel(ConnectionPtr src, string& message); //Sends to everyone, excluding source.
 
-	void join(ConnectionPtr con);
-	void part(ConnectionPtr con);
-	bool inChannel(ConnectionPtr con);
+    void join(ConnectionPtr con);
+    void part(ConnectionPtr con);
+    bool inChannel(ConnectionPtr con);
 
-	void kick(ConnectionPtr dest);
-	void ban(ConnectionPtr src, ConnectionPtr dest);
-	void ban(ConnectionPtr src, string dest);
-	void timeout(ConnectionPtr src, ConnectionPtr dest, long length);
-	void timeout(ConnectionPtr src, string dest, long length);
-	void unban(string& dest);
-	bool isBanned(ConnectionPtr con);
-	bool isBanned(string& name);
-	bool getBan(ConnectionPtr con, BanRecord& ban);
-	bool getBan(string& name, BanRecord& ban);
-	const chbanmap_t& getBanRecords() const { return bans; }
+    void kick(ConnectionPtr dest);
+    void ban(ConnectionPtr src, ConnectionPtr dest);
+    void ban(ConnectionPtr src, string dest);
+    void timeout(ConnectionPtr src, ConnectionPtr dest, long length);
+    void timeout(ConnectionPtr src, string dest, long length);
+    void unban(string& dest);
+    bool isBanned(ConnectionPtr con);
+    bool isBanned(string& name);
+    bool getBan(ConnectionPtr con, BanRecord& ban);
+    bool getBan(string& name, BanRecord& ban);
 
-	void addMod(ConnectionPtr src, string& dest);
-	void addMod(string& dest);
-	void remMod(string& dest);
-	const chmodmap_t& getModRecords() const { return moderators; }
-	bool isMod(ConnectionPtr con);
-	bool isMod(string& name);
+    const chbanmap_t& getBanRecords() const {
+        return bans;
+    }
 
-	const string& getOwner() const { return owner; }
-	bool isOwner(ConnectionPtr con);
-	bool isOwner(string& name);
-	void setOwner(string& name) { owner = name; }
+    void addMod(ConnectionPtr src, string& dest);
+    void addMod(string& dest);
+    void remMod(string& dest);
 
-	const string& getDescription() const { return description; }
-	void setDescription(string& newdesc) { description = newdesc; }
+    const chmodmap_t& getModRecords() const {
+        return moderators;
+    }
+    bool isMod(ConnectionPtr con);
+    bool isMod(string& name);
 
-	const string& getName() const { return name; }
+    const string& getOwner() const {
+        return owner;
+    }
+    bool isOwner(ConnectionPtr con);
+    bool isOwner(string& name);
 
-	const double getTimerEntry(ConnectionPtr con);
-	void setTimerEntry(ConnectionPtr con, double newvalue);
+    void setOwner(string& name) {
+        owner = name;
+    }
 
-	string getTypeString();
-	const ChannelType getType() const { return type; }
+    const string& getDescription() const {
+        return description;
+    }
 
-	const string getModeString() { return modeToString(); }
-	void setMode(ChannelMessageMode newmode) { chatMode = newmode; }
+    void setDescription(string& newdesc) {
+        description = newdesc;
+    }
 
-	const int getParticipantCount() const { return participantCount; }
-	void updateParticipantCount() { participantCount = participants.size(); }
+    const string& getName() const {
+        return name;
+    }
 
-	const chconlist_t& getParticipants() const { return participants; }
+    const double getTimerEntry(ConnectionPtr con);
+    void setTimerEntry(ConnectionPtr con, double newvalue);
 
-	const time_t getLastActivity() const { return lastActivity; }
+    string getTypeString();
 
-	bool getCanDestroy() const { return canDestroy; }
-	void setCanDestroy(bool destroyable) { canDestroy = destroyable; }
+    const ChannelType getType() const {
+        return type;
+    }
 
-	void invite(ConnectionPtr dest);
-	void removeInvite(string& dest);
-	bool isInvited(ConnectionPtr con);
+    const string getModeString() {
+        return modeToString();
+    }
 
-	void setPublic(bool newstatus);
+    void setMode(ChannelMessageMode newmode) {
+        chatMode = newmode;
+    }
 
-	const string& getTitle() const { return title; }
-	void setTitle(string newtitle) { title = newtitle; }
-	const int getTopUserCount() const { return topUsers; }
+    const int getParticipantCount() const {
+        return participantCount;
+    }
 
-	json_t* saveChannel();
-	void loadChannel(const json_t* channode);
+    void updateParticipantCount() {
+        participantCount = participants.size();
+    }
 
-	friend void intrusive_ptr_release(Channel* p);
-	friend void intrusive_ptr_add_ref(Channel* p);
+    const chconlist_t& getParticipants() const {
+        return participants;
+    }
+
+    const time_t getLastActivity() const {
+        return lastActivity;
+    }
+
+    bool getCanDestroy() const {
+        return canDestroy;
+    }
+
+    void setCanDestroy(bool destroyable) {
+        canDestroy = destroyable;
+    }
+
+    void invite(ConnectionPtr dest);
+    void removeInvite(string& dest);
+    bool isInvited(ConnectionPtr con);
+
+    void setPublic(bool newstatus);
+
+    const string& getTitle() const {
+        return title;
+    }
+
+    void setTitle(string newtitle) {
+        title = newtitle;
+    }
+
+    const int getTopUserCount() const {
+        return topUsers;
+    }
+
+    json_t* saveChannel();
+    void loadChannel(const json_t* channode);
+
+    friend void intrusive_ptr_release(Channel* p);
+    friend void intrusive_ptr_add_ref(Channel* p);
 protected:
-	string 				modeToString();
-	ChannelMessageMode 	stringToMode(string modestring);
-	string				typeToString();
-	ChannelType			stringToType(string typestring);
-	string 				name;
-	string 				description;
-	ChannelType 		type;
-	ChannelMessageMode 	chatMode;
-	chconlist_t 		participants;
-	chmodmap_t 			moderators;
-	string 				owner;
-	chbanmap_t 			bans;
-	int 				participantCount;
-	chtimermap_t 		timerMap;
-	time_t 				lastActivity;
-	bool 				canDestroy;
+    string modeToString();
+    ChannelMessageMode stringToMode(string modestring);
+    string typeToString();
+    ChannelType stringToType(string typestring);
+    string name;
+    string description;
+    ChannelType type;
+    ChannelMessageMode chatMode;
+    chconlist_t participants;
+    chmodmap_t moderators;
+    string owner;
+    chbanmap_t bans;
+    int participantCount;
+    chtimermap_t timerMap;
+    time_t lastActivity;
+    bool canDestroy;
 
-	string 				title;
-	chstringset_t 		invites;
-	int 				topUsers;
+    string title;
+    chstringset_t invites;
+    int topUsers;
 
-	volatile size_t				refCount; //Does this need to be volatile?
+    volatile size_t refCount; //Does this need to be volatile?
 private:
-	static string privChanDescriptionDefault;
+    static string privChanDescriptionDefault;
 };
 
 typedef intrusive_ptr<Channel> ChannelPtr;

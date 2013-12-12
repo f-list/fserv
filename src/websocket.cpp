@@ -52,219 +52,187 @@
 // and thus is beyond the scope of these functions. Input buffering is simple to implement here,
 // and saves passing around a size variable to then advance the input buffer only if needed.
 // NOTE NOTE NOTE NOTE
-namespace Websocket
-{
-	ProtocolVersion Acceptor::accept(std::string& input, std::string& output)
-	{
-		ProtocolVersion ret = PROTOCOL_INCOMPLETE;
-		try
-		{
-			DLOG(INFO) << "Attempting to parse a websocket header.";
-			if(input.find("\r\n\r\n") == std::string::npos)
-				return ret;
+namespace Websocket {
 
-			std::map<std::string, std::string> headers;
-			std::string line;
-			std::string remainder = input;
-			std::string::size_type end = remainder.find("\r\n");
-			while(end != std::string::npos)
-			{
-				line = remainder.substr(0, end);
-				remainder = remainder.substr(end+2);
+    ProtocolVersion Acceptor::accept(std::string& input, std::string& output) {
+        ProtocolVersion ret = PROTOCOL_INCOMPLETE;
+        try {
+            DLOG(INFO) << "Attempting to parse a websocket header.";
+            if (input.find("\r\n\r\n") == std::string::npos)
+                return ret;
 
-				std::string::size_type pos = line.find(": ");
-				if(pos != std::string::npos)
-				{
-					headers[line.substr(0, pos)] = line.substr(pos+2);
-				}
+            std::map<std::string, std::string> headers;
+            std::string line;
+            std::string remainder = input;
+            std::string::size_type end = remainder.find("\r\n");
+            while (end != std::string::npos) {
+                line = remainder.substr(0, end);
+                remainder = remainder.substr(end + 2);
 
-				end = remainder.find("\r\n");
-			}
+                std::string::size_type pos = line.find(": ");
+                if (pos != std::string::npos) {
+                    headers[line.substr(0, pos)] = line.substr(pos + 2);
+                }
 
-			std::string outbuffer;
+                end = remainder.find("\r\n");
+            }
 
-			if(headers.count("Sec-WebSocket-Version") != 0 && headers.count("Sec-WebSocket-Key") != 0)
-			{
-				DLOG(INFO) << "Found a Hybi websocket header.";
-				if(Hybi::accept(headers["Sec-WebSocket-Key"], headers["Sec-WebSocket-Origin"], outbuffer) != WS_RESULT_OK)
-				{
-					ret = PROTOCOL_BAD;
-				}
-				else
-				{
-					ret = PROTOCOL_HYBI;
-				}
-			}
-			else
-			{
-				ret = PROTOCOL_BAD;
-			}
-			output = outbuffer;
-		}
-		catch (std::exception e)
-		{
-			LOG(WARNING) << "Exception occurred in websocket accept. e.what: " << e.what();
-			ret = PROTOCOL_BAD;
-		}
-		catch (...)
-		{
-			LOG(WARNING) << "Unexpected exception occured in websocket accept.";
-			ret = PROTOCOL_BAD;
-		}
-		return ret;
-	}
+            std::string outbuffer;
 
-	static const unsigned int wsHeaderSize = 2;
-	static const unsigned int wsMaskingKeySize = 4;
-	static const unsigned int wsOpcodeMask = 0x0F;
-	static const unsigned int wsMaskedMask = 0x80;
-	static const unsigned int wsLengthMask = 0x7F;
-	static const unsigned int wsSingleByteLength = 125;
-	static const unsigned int wsTwoByteLength = 126;
-	static const unsigned int wsEightByteLength = 127;
-	static const unsigned int wsOpcodeText = 0x01;
-	static const unsigned int wsOpcodeClose = 0x08;
-	static const unsigned int wsMaximumClientFrameSize = 0x80000; //512kB should be sufficient for any client->server message.
-	static const char* const wsMagicalGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+            if (headers.count("Sec-WebSocket-Version") != 0 && headers.count("Sec-WebSocket-Key") != 0) {
+                DLOG(INFO) << "Found a Hybi websocket header.";
+                if (Hybi::accept(headers["Sec-WebSocket-Key"], headers["Sec-WebSocket-Origin"], outbuffer) != WS_RESULT_OK) {
+                    ret = PROTOCOL_BAD;
+                } else {
+                    ret = PROTOCOL_HYBI;
+                }
+            } else {
+                ret = PROTOCOL_BAD;
+            }
+            output = outbuffer;
+        } catch (std::exception e) {
+            LOG(WARNING) << "Exception occurred in websocket accept. e.what: " << e.what();
+            ret = PROTOCOL_BAD;
+        } catch (...) {
+            LOG(WARNING) << "Unexpected exception occured in websocket accept.";
+            ret = PROTOCOL_BAD;
+        }
+        return ret;
+    }
 
-	WebSocketResult Hybi::accept(string& key, string& origin, string& output)
-	{
-		if(key.empty())
-			return WS_RESULT_ERROR;
+    static const unsigned int wsHeaderSize = 2;
+    static const unsigned int wsMaskingKeySize = 4;
+    static const unsigned int wsOpcodeMask = 0x0F;
+    static const unsigned int wsMaskedMask = 0x80;
+    static const unsigned int wsLengthMask = 0x7F;
+    static const unsigned int wsSingleByteLength = 125;
+    static const unsigned int wsTwoByteLength = 126;
+    static const unsigned int wsEightByteLength = 127;
+    static const unsigned int wsOpcodeText = 0x01;
+    static const unsigned int wsOpcodeClose = 0x08;
+    static const unsigned int wsMaximumClientFrameSize = 0x80000; //512kB should be sufficient for any client->server message.
+    static const char* const wsMagicalGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
-//		if(origin.find("f-list.net") == string::npos)
-//		{
-//			return WS_RESULT_ERROR;
-//		}
+    WebSocketResult Hybi::accept(string& key, string& origin, string& output) {
+        if (key.empty())
+            return WS_RESULT_ERROR;
 
-		char buf[4096];
-		bzero(&buf[0], sizeof(buf));
-		int len = snprintf(&buf[0], sizeof(buf), "%s%s", key.c_str(), wsMagicalGUID);
-		string keystr(&buf[0], len);
-		bzero(&buf[0], sizeof(buf));
-		string encodedkey;
-		string hashkey = thirdparty::SHA1HashString(keystr);
-		thirdparty::Base64Encode(hashkey, encodedkey);
-		len = snprintf(&buf[0], sizeof(buf),
-					   "HTTP/1.1 101 Switching Protocols\r\n"
-					   "Upgrade: websocket\r\n"
-					   "Connection: Upgrade\r\n"
-					   "Sec-WebSocket-Accept: %s\r\n\r\n", encodedkey.c_str());
-		string tmp(&buf[0], len);
-		output.swap(tmp);
-		return WS_RESULT_OK;
-	}
+        //		if(origin.find("f-list.net") == string::npos)
+        //		{
+        //			return WS_RESULT_ERROR;
+        //		}
 
-	WebSocketResult Hybi::receive(std::string& input, std::string& output)
-	{
-		unsigned long  rlen = input.length();
-		if(rlen < wsHeaderSize)
-			return WS_RESULT_INCOMPLETE;
+        char buf[4096];
+        bzero(&buf[0], sizeof (buf));
+        int len = snprintf(&buf[0], sizeof (buf), "%s%s", key.c_str(), wsMagicalGUID);
+        string keystr(&buf[0], len);
+        bzero(&buf[0], sizeof (buf));
+        string encodedkey;
+        string hashkey = thirdparty::SHA1HashString(keystr);
+        thirdparty::Base64Encode(hashkey, encodedkey);
+        len = snprintf(&buf[0], sizeof (buf),
+                "HTTP/1.1 101 Switching Protocols\r\n"
+                "Upgrade: websocket\r\n"
+                "Connection: Upgrade\r\n"
+                "Sec-WebSocket-Accept: %s\r\n\r\n", encodedkey.c_str());
+        string tmp(&buf[0], len);
+        output.swap(tmp);
+        return WS_RESULT_OK;
+    }
 
-		const char* msg = input.c_str();
-		unsigned char b1 = *msg++;
-		unsigned char b2 = *msg++;
+    WebSocketResult Hybi::receive(std::string& input, std::string& output) {
+        unsigned long rlen = input.length();
+        if (rlen < wsHeaderSize)
+            return WS_RESULT_INCOMPLETE;
 
-		unsigned int opcode = b1 & wsOpcodeMask;
-		bool masked = b2 & wsMaskedMask;
-		unsigned int lengthhint = b2 & wsLengthMask;
+        const char* msg = input.c_str();
+        unsigned char b1 = *msg++;
+        unsigned char b2 = *msg++;
 
-		// Standard defines that all client to server communication must be masked.
-		if(!masked)
-			return WS_RESULT_ERROR;
+        unsigned int opcode = b1 & wsOpcodeMask;
+        bool masked = b2 & wsMaskedMask;
+        unsigned int lengthhint = b2 & wsLengthMask;
 
-		switch (opcode)
-		{
-			// Text
-			case wsOpcodeText:
-				break;
-			// Close
-			case wsOpcodeClose:
-				return WS_RESULT_CLOSE;
-			default:
-				return WS_RESULT_ERROR;
-		}
+        // Standard defines that all client to server communication must be masked.
+        if (!masked)
+            return WS_RESULT_ERROR;
 
-		uint64_t payload_length = 0;
-		int lengthsize = 0;
-		if(lengthhint > wsSingleByteLength)
-		{
-			lengthsize = 2;
-			if( lengthhint == wsEightByteLength )
-				lengthsize = 8;
+        switch (opcode) {
+                // Text
+            case wsOpcodeText:
+                break;
+                // Close
+            case wsOpcodeClose:
+                return WS_RESULT_CLOSE;
+            default:
+                return WS_RESULT_ERROR;
+        }
 
-			if(rlen < wsHeaderSize+lengthsize)
-				return WS_RESULT_INCOMPLETE;
+        uint64_t payload_length = 0;
+        int lengthsize = 0;
+        if (lengthhint > wsSingleByteLength) {
+            lengthsize = 2;
+            if (lengthhint == wsEightByteLength)
+                lengthsize = 8;
 
-			for(int i = 0;i<lengthsize;++i)
-			{
-				payload_length <<= 8;
-				payload_length |= static_cast<unsigned char>(*msg++);
-			}
-		}
-		else
-		{
-			payload_length = lengthhint;
-		}
+            if (rlen < wsHeaderSize + lengthsize)
+                return WS_RESULT_INCOMPLETE;
 
-		if(payload_length > wsMaximumClientFrameSize)
-			return WS_RESULT_ERROR;
+            for (int i = 0; i < lengthsize; ++i) {
+                payload_length <<= 8;
+                payload_length |= static_cast<unsigned char> (*msg++);
+            }
+        } else {
+            payload_length = lengthhint;
+        }
 
-		uint64_t totallen = (masked ? wsMaskingKeySize : 0) + payload_length;
-		if(rlen < (wsHeaderSize + lengthsize + totallen))
-			return WS_RESULT_INCOMPLETE;
+        if (payload_length > wsMaximumClientFrameSize)
+            return WS_RESULT_ERROR;
 
-		if(masked)
-		{
-			output.resize(payload_length);
-			const char* mask = msg;
-			msg += wsMaskingKeySize;
-			for(unsigned int i = 0; i < payload_length; ++i)
-			{
-				output[i] = msg[i] ^ mask[i % wsMaskingKeySize];
-			}
-		}
-		else
-		{
-			string tmp(msg, payload_length);
-			output.swap(tmp);
-		}
+        uint64_t totallen = (masked ? wsMaskingKeySize : 0) + payload_length;
+        if (rlen < (wsHeaderSize + lengthsize + totallen))
+            return WS_RESULT_INCOMPLETE;
+
+        if (masked) {
+            output.resize(payload_length);
+            const char* mask = msg;
+            msg += wsMaskingKeySize;
+            for (unsigned int i = 0; i < payload_length; ++i) {
+                output[i] = msg[i] ^ mask[i % wsMaskingKeySize];
+            }
+        } else {
+            string tmp(msg, payload_length);
+            output.swap(tmp);
+        }
 
 
-		input = input.substr(wsHeaderSize + lengthsize + totallen);
+        input = input.substr(wsHeaderSize + lengthsize + totallen);
 
-		return WS_RESULT_OK;
-	}
+        return WS_RESULT_OK;
+    }
 
-	void Hybi::send(string& input, string& output)
-	{
-		std::vector<char> frame;
-		unsigned int length = input.length();
+    void Hybi::send(string& input, string& output) {
+        std::vector<char> frame;
+        unsigned int length = input.length();
 
-		frame.push_back( 0x80 | wsOpcodeText );
+        frame.push_back(0x80 | wsOpcodeText);
 
-		if(length <= wsSingleByteLength)
-		{
-			frame.push_back(static_cast<char>(length));
-		}
-		else if(length <= 0xFFFF)
-		{
-			frame.push_back(wsTwoByteLength);
-			frame.push_back((length & 0xFF00) >> 8);
-			frame.push_back(length & 0xFF);
-		}
-		else
-		{
-			uint64_t qlength = length;
-			frame.push_back(wsEightByteLength);
-			for(size_t i=0;i<sizeof(qlength);++i)
-			{
-				frame.push_back(qlength & 0xFF);
-				qlength >>= 8;
-			}
-		}
-		frame.insert(frame.end(), input.c_str(), input.c_str() + length);
-		string tmp(frame.begin(), frame.end());
-		output.swap(tmp);
-	}
+        if (length <= wsSingleByteLength) {
+            frame.push_back(static_cast<char> (length));
+        } else if (length <= 0xFFFF) {
+            frame.push_back(wsTwoByteLength);
+            frame.push_back((length & 0xFF00) >> 8);
+            frame.push_back(length & 0xFF);
+        } else {
+            uint64_t qlength = length;
+            frame.push_back(wsEightByteLength);
+            for (size_t i = 0; i<sizeof (qlength); ++i) {
+                frame.push_back(qlength & 0xFF);
+                qlength >>= 8;
+            }
+        }
+        frame.insert(frame.end(), input.c_str(), input.c_str() + length);
+        string tmp(frame.begin(), frame.end());
+        output.swap(tmp);
+    }
 }

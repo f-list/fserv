@@ -28,75 +28,76 @@
 
 #include "lua_chat.hpp"
 
-class LuaChannel
-{
+class LuaChannel {
 public:
-	static int openChannelLib(lua_State* L);
+    static int openChannelLib(lua_State* L);
 
-	static int sendCHA(lua_State* L);
-	static int sendORS(lua_State* L);
+    static int sendCHA(lua_State* L);
+    static int sendORS(lua_State* L);
 
-	static int getChannel(lua_State* L);
-	static int getName(lua_State* L);
-	static int getUserCount(lua_State* L);
-	static int getTopUserCount(lua_State* L);
+    static int getChannel(lua_State* L);
+    static int getName(lua_State* L);
+    static int getUserCount(lua_State* L);
+    static int getTopUserCount(lua_State* L);
 
-	static int createChannel(lua_State* L);
-	static int createPrivateChannel(lua_State* L);
-	static int createSpecialPrivateChannel(lua_State* L);
-	static int destroyChannel(lua_State* L);
+    static int createChannel(lua_State* L);
+    static int createPrivateChannel(lua_State* L);
+    static int createSpecialPrivateChannel(lua_State* L);
+    static int destroyChannel(lua_State* L);
 
-	static int sendToAll(lua_State* L);
-	static int sendToAllRaw(lua_State* L);
-	static int sendToChannel(lua_State* L);
-	static int sendToChannelRaw(lua_State* L);
+    static int sendToAll(lua_State* L);
+    static int sendToAllRaw(lua_State* L);
+    static int sendToChannel(lua_State* L);
+    static int sendToChannelRaw(lua_State* L);
 
-	static int sendICH(lua_State* L);
+    static int sendICH(lua_State* L);
 
-	static int joinChannel(lua_State* L);
-	static int partChannel(lua_State* L);
+    static int joinChannel(lua_State* L);
+    static int partChannel(lua_State* L);
 
-	static int ban(lua_State* L);
-	static int timeout(lua_State* L);
-	static int unban(lua_State* L);
-	static int isBanned(lua_State* L);
-	static int getBan(lua_State* L);
-	static int getBanList(lua_State* L);
+    static int ban(lua_State* L);
+    static int timeout(lua_State* L);
+    static int unban(lua_State* L);
+    static int isBanned(lua_State* L);
+    static int getBan(lua_State* L);
+    static int getBanList(lua_State* L);
 
-	static int invite(lua_State* L);
-	static int removeInvite(lua_State* L);
-	static int isInvited(lua_State* L);
+    static int invite(lua_State* L);
+    static int removeInvite(lua_State* L);
+    static int isInvited(lua_State* L);
 
-	static int inChannel(lua_State* L);
+    static int inChannel(lua_State* L);
 
-	static int addMod(lua_State* L);
-	static int removeMod(lua_State* L);
-	static int isMod(lua_State* L);
-	static int isOwner(lua_State* L);
-	static int getModList(lua_State* L);
+    static int addMod(lua_State* L);
+    static int removeMod(lua_State* L);
+    static int isMod(lua_State* L);
+    static int isOwner(lua_State* L);
+    static int getModList(lua_State* L);
 
-	static int checkUpdateTimer(lua_State* L);
+    static int checkUpdateTimer(lua_State* L);
 
-	static int getType(lua_State* L);
-	static int getMode(lua_State* L);
-	static int setMode(lua_State* L);
+    static int getType(lua_State* L);
+    static int getMode(lua_State* L);
+    static int setMode(lua_State* L);
 
-	static int setPublic(lua_State* L);
+    static int setPublic(lua_State* L);
 
-	static int getDescription(lua_State* L);
-	static int setDescription(lua_State* L);
+    static int getDescription(lua_State* L);
+    static int setDescription(lua_State* L);
 
-	static int getTitle(lua_State* L);
-	static int setTitle(lua_State* L);
+    static int getTitle(lua_State* L);
+    static int setTitle(lua_State* L);
 
-	static int setOwner(lua_State* L);
+    static int setOwner(lua_State* L);
 
-	static int getBottleList(lua_State* L);
+    static int getBottleList(lua_State* L);
 
-	static int canDestroy(lua_State* L);
+    static int canDestroy(lua_State* L);
 private:
-	LuaChannel() {}
-	~LuaChannel() {}
+
+    LuaChannel() { }
+
+    ~LuaChannel() { }
 };
 
 #endif //LUA_CHANNEL_H

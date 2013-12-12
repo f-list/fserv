@@ -34,43 +34,51 @@
 
 using std::queue;
 
-class Login
-{
+class Login {
 public:
-	static void* runThread(void* param);
-	static bool addRequest(LoginRequest* newRequest);
-	static LoginReply* getReply();
+    static void* runThread(void* param);
+    static bool addRequest(LoginRequest* newRequest);
+    static LoginReply* getReply();
 
-	static void setMaxLoginSlots(unsigned int slots) { maxLoginSlots = slots; }
-	static unsigned int getMaxLoginSlots() { return maxLoginSlots; }
+    static void setMaxLoginSlots(unsigned int slots) {
+        maxLoginSlots = slots;
+    }
 
-	static void stopThread() { doRun = false; }
-	static void sendWakeup();
+    static unsigned int getMaxLoginSlots() {
+        return maxLoginSlots;
+    }
 
-	static pthread_mutex_t requestMutex;
-	static pthread_mutex_t replyMutex;
+    static void stopThread() {
+        doRun = false;
+    }
+    static void sendWakeup();
+
+    static pthread_mutex_t requestMutex;
+    static pthread_mutex_t replyMutex;
 private:
-	Login() {}
-	~Login() {}
 
-	static bool addReply(LoginReply* newReply);
-	static LoginReply* processLogin(LoginRequest* request);
-	static LoginRequest* getRequest();
+    Login() { }
 
-	static void processQueue(struct ev_loop* loop, ev_async* w, int revents);
-	static void timeoutCallback(struct ev_loop* loop, ev_timer* w, int revents);
+    ~Login() { }
 
-	static bool setupCurlHandle();
-	static size_t curlWriteFunction(void* contents, size_t size, size_t nmemb, void* user);
+    static bool addReply(LoginReply* newReply);
+    static LoginReply* processLogin(LoginRequest* request);
+    static LoginRequest* getRequest();
 
-	static queue<LoginReply*> replyQueue;
-	static queue<LoginRequest*> requestQueue;
-	static unsigned int maxLoginSlots;
-	static bool doRun;
-	static struct ev_loop* login_loop;
-	static ev_async* login_async;
-	static ev_timer* login_timer;
-	static const __useconds_t CURL_FAILURE_WAIT;
-	static const float THREAD_WAIT_TIMEOUT;
+    static void processQueue(struct ev_loop* loop, ev_async* w, int revents);
+    static void timeoutCallback(struct ev_loop* loop, ev_timer* w, int revents);
+
+    static bool setupCurlHandle();
+    static size_t curlWriteFunction(void* contents, size_t size, size_t nmemb, void* user);
+
+    static queue<LoginReply*> replyQueue;
+    static queue<LoginRequest*> requestQueue;
+    static unsigned int maxLoginSlots;
+    static bool doRun;
+    static struct ev_loop* login_loop;
+    static ev_async* login_async;
+    static ev_timer* login_timer;
+    static const __useconds_t CURL_FAILURE_WAIT;
+    static const float THREAD_WAIT_TIMEOUT;
 };
 #endif //LOGIN_H

@@ -33,69 +33,68 @@
 
 using std::string;
 
-class LuaChat
-{
+class LuaChat {
 public:
 
-	static int openChatLib(lua_State* L);
+    static int openChatLib(lua_State* L);
 
-	static int broadcast(lua_State* L);
-	static int broadcastRaw(lua_State* L);
-	static int broadcastOps(lua_State* L);
+    static int broadcast(lua_State* L);
+    static int broadcastRaw(lua_State* L);
+    static int broadcastOps(lua_State* L);
 
-	static int getConfigBool(lua_State* L);
-	//static int setConfigBool(lua_State* L);
-	static int getConfigDouble(lua_State* L);
-	//static int setConfigNumber(lua_State* L);
-	static int getConfigString(lua_State* L);
-	//static int setConfigString(lua_State* L);
+    static int getConfigBool(lua_State* L);
+    //static int setConfigBool(lua_State* L);
+    static int getConfigDouble(lua_State* L);
+    //static int setConfigNumber(lua_State* L);
+    static int getConfigString(lua_State* L);
+    //static int setConfigString(lua_State* L);
 
-	static int getTime(lua_State* L);
-	static int getUserCount(lua_State* L);
+    static int getTime(lua_State* L);
+    static int getUserCount(lua_State* L);
 
-	static int sendUserList(lua_State* L);
+    static int sendUserList(lua_State* L);
 
-	static int getOpList(lua_State* L);
-	static int isOp(lua_State* L);
-	static int addOp(lua_State* L);
-	static int removeOp(lua_State* L);
+    static int getOpList(lua_State* L);
+    static int isOp(lua_State* L);
+    static int addOp(lua_State* L);
+    static int removeOp(lua_State* L);
 
-	static int addBan(lua_State* L);
-	static int removeBan(lua_State* L);
-	static int isBanned(lua_State* L);
+    static int addBan(lua_State* L);
+    static int removeBan(lua_State* L);
+    static int isBanned(lua_State* L);
 
-	static int addTimeout(lua_State* L);
-	static int removeTimeout(lua_State* L);
-	static int isTimedOut(lua_State* L);
+    static int addTimeout(lua_State* L);
+    static int removeTimeout(lua_State* L);
+    static int isTimedOut(lua_State* L);
 
-	static int addAltWatch(lua_State* L);
-	static int removeAltWatch(lua_State* L);
-	static int getAltWatch(lua_State* L);
+    static int addAltWatch(lua_State* L);
+    static int removeAltWatch(lua_State* L);
+    static int getAltWatch(lua_State* L);
 
-	static int addStaffCall(lua_State* L);
-	static int removeStaffCall(lua_State* L);
-	static int getStaffCall(lua_State* L);
-	static int sendStaffCalls(lua_State* L);
+    static int addStaffCall(lua_State* L);
+    static int removeStaffCall(lua_State* L);
+    static int getStaffCall(lua_State* L);
+    static int sendStaffCalls(lua_State* L);
 
-	static int isChanOp(lua_State* L);
+    static int isChanOp(lua_State* L);
 
-	static int escapeHTML(lua_State* L);
+    static int escapeHTML(lua_State* L);
 
-	static int reload(lua_State* L);
-	static int shutdown(lua_State* L);
+    static int reload(lua_State* L);
+    static int shutdown(lua_State* L);
 
-	static int getStats(lua_State* L);
+    static int getStats(lua_State* L);
 
-	static int logAction(lua_State* L);
+    static int logAction(lua_State* L);
 
-	static int toJsonString(lua_State* L);
-	static int fromJsonString(lua_State* L);
+    static int toJsonString(lua_State* L);
+    static int fromJsonString(lua_State* L);
 
-	static json_t* luaToJson(lua_State* L);
-	static void jsonToLua(lua_State* L, json_t* json);
+    static json_t* luaToJson(lua_State* L);
+    static void jsonToLua(lua_State* L, json_t* json);
 private:
-	static json_t* l2jParseItem(lua_State* L, string& key);
-	static void j2lParseItem(lua_State* L, const char* key, json_t* json, int index = -1);
+    static json_t* l2jParseItem(lua_State* L, string& key);
+    static void j2lParseItem(lua_State* L, const char* key, json_t* json, int index = -1);
 };
 
 #endif //LUA_CHAT_H

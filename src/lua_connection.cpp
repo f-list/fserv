@@ -39,50 +39,49 @@
 #define LUACONNECTION_MODULE_NAME "u"
 
 static const luaL_Reg luaconnection_funcs[] = {
-	{"getConnection", LuaConnection::getConnection},
-	{"getIPCount", LuaConnection::getIPCount},
-	{"getByAccount", LuaConnection::getByAccount},
-	{"getByAccountID", LuaConnection::getByAccountID},
-	{"getName", LuaConnection::getName},
-	{"getChannels", LuaConnection::getChannels},
-	{"send", LuaConnection::send},
-	{"sendRaw", LuaConnection::sendRaw},
-	{"sendError", LuaConnection::sendError},
-	{"close", LuaConnection::close},
-	{"closef", LuaConnection::closef},
-	{"setIdent", LuaConnection::setIdent},
-	{"setAccountID", LuaConnection::setAccountID},
-	{"setAdmin", LuaConnection::setAdmin},
-	{"isAdmin", LuaConnection::isAdmin},
-	{"setGlobMod", LuaConnection::setGlobalModerator},
-	{"isGlobMod", LuaConnection::isGlobalModerator},
-	{"setFriends", LuaConnection::setFriends},
-	{"removeFriend", LuaConnection::removeFriend},
-	{"getFriendList", LuaConnection::getFriends},
-	{"setIgnores", LuaConnection::setIgnores},
-	{"addIgnore", LuaConnection::addIgnore},
-	{"removeIgnore", LuaConnection::removeIgnore},
-	{"getIgnoreList", LuaConnection::getIgnores},
-	{"setKinks", LuaConnection::setKinks},
-	{"getKinks", LuaConnection::getKinks},
-	{"setCustomKinks", LuaConnection::setCustomKinks},
-	{"getCustomKinks", LuaConnection::getCustomKinks},
-	{"setInfoTags", LuaConnection::setInfoTags},
-	{"getInfoTags", LuaConnection::getInfoTags},
-	{"setGender", LuaConnection::setGender},
-	{"getGender", LuaConnection::getGender},
-	{"setStatus", LuaConnection::setStatus},
-	{"getStatus", LuaConnection::getStatus},
-	{"setMiscData", LuaConnection::setMiscData},
-	{"getMiscData", LuaConnection::getMiscData},
-	{"checkUpdateTimer", LuaConnection::checkUpdateTimer},
-	{NULL, NULL}
+    {"getConnection", LuaConnection::getConnection},
+    {"getIPCount", LuaConnection::getIPCount},
+    {"getByAccount", LuaConnection::getByAccount},
+    {"getByAccountID", LuaConnection::getByAccountID},
+    {"getName", LuaConnection::getName},
+    {"getChannels", LuaConnection::getChannels},
+    {"send", LuaConnection::send},
+    {"sendRaw", LuaConnection::sendRaw},
+    {"sendError", LuaConnection::sendError},
+    {"close", LuaConnection::close},
+    {"closef", LuaConnection::closef},
+    {"setIdent", LuaConnection::setIdent},
+    {"setAccountID", LuaConnection::setAccountID},
+    {"setAdmin", LuaConnection::setAdmin},
+    {"isAdmin", LuaConnection::isAdmin},
+    {"setGlobMod", LuaConnection::setGlobalModerator},
+    {"isGlobMod", LuaConnection::isGlobalModerator},
+    {"setFriends", LuaConnection::setFriends},
+    {"removeFriend", LuaConnection::removeFriend},
+    {"getFriendList", LuaConnection::getFriends},
+    {"setIgnores", LuaConnection::setIgnores},
+    {"addIgnore", LuaConnection::addIgnore},
+    {"removeIgnore", LuaConnection::removeIgnore},
+    {"getIgnoreList", LuaConnection::getIgnores},
+    {"setKinks", LuaConnection::setKinks},
+    {"getKinks", LuaConnection::getKinks},
+    {"setCustomKinks", LuaConnection::setCustomKinks},
+    {"getCustomKinks", LuaConnection::getCustomKinks},
+    {"setInfoTags", LuaConnection::setInfoTags},
+    {"getInfoTags", LuaConnection::getInfoTags},
+    {"setGender", LuaConnection::setGender},
+    {"getGender", LuaConnection::getGender},
+    {"setStatus", LuaConnection::setStatus},
+    {"getStatus", LuaConnection::getStatus},
+    {"setMiscData", LuaConnection::setMiscData},
+    {"getMiscData", LuaConnection::getMiscData},
+    {"checkUpdateTimer", LuaConnection::checkUpdateTimer},
+    {NULL, NULL}
 };
 
-int LuaConnection::openConnectionLib(lua_State* L)
-{
-	luaL_register(L, LUACONNECTION_MODULE_NAME, luaconnection_funcs);
-	return 0;
+int LuaConnection::openConnectionLib(lua_State* L) {
+    luaL_register(L, LUACONNECTION_MODULE_NAME, luaconnection_funcs);
+    return 0;
 }
 
 /**
@@ -90,20 +89,18 @@ int LuaConnection::openConnectionLib(lua_State* L)
  * @param string name
  * @returns [LUD] connection object
  */
-int LuaConnection::getConnection(lua_State* L)
-{
-	luaL_checkany(L, 1);
-	string conname = luaL_checkstring(L, 1);
-	lua_pop(L, 1);
-	ConnectionPtr con = ServerState::getConnection(conname);
-	if(con == 0)
-	{
-		lua_pushboolean(L, false);
-		return 1;
-	}
-	lua_pushboolean(L, true);
-	lua_pushlightuserdata(L, con.get());
-	return 2;
+int LuaConnection::getConnection(lua_State* L) {
+    luaL_checkany(L, 1);
+    string conname = luaL_checkstring(L, 1);
+    lua_pop(L, 1);
+    ConnectionPtr con = ServerState::getConnection(conname);
+    if (con == 0) {
+        lua_pushboolean(L, false);
+        return 1;
+    }
+    lua_pushboolean(L, true);
+    lua_pushlightuserdata(L, con.get());
+    return 2;
 }
 
 /**
@@ -111,16 +108,15 @@ int LuaConnection::getConnection(lua_State* L)
  * @param LUD connection
  * @returns [number] number of connections on the same ip address.
  */
-int LuaConnection::getIPCount(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::getIPCount(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	lua_pushinteger(L, ServerState::getConnectionIPCount(con));
-	return 1;
+    lua_pushinteger(L, ServerState::getConnectionIPCount(con));
+    return 1;
 }
 
 /**
@@ -128,27 +124,24 @@ int LuaConnection::getIPCount(lua_State* L)
  * @param LUD connection
  * @returns [table of LUD] connections with same account, including provided.
  */
-int LuaConnection::getByAccount(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::getByAccount(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	lua_newtable(L);
-	int n = 1;
-	const conptrmap_t cons = ServerState::getConnections();
-	for(conptrmap_t::const_iterator i = cons.begin(); i != cons.end(); ++i)
-	{
-		if(i->second->accountID == con->accountID)
-		{
-			lua_pushlightuserdata(L, i->second.get());
-			lua_rawseti(L, -2, n++);
-		}
-	}
+    lua_newtable(L);
+    int n = 1;
+    const conptrmap_t cons = ServerState::getConnections();
+    for (conptrmap_t::const_iterator i = cons.begin(); i != cons.end(); ++i) {
+        if (i->second->accountID == con->accountID) {
+            lua_pushlightuserdata(L, i->second.get());
+            lua_rawseti(L, -2, n++);
+        }
+    }
 
-	return 1;
+    return 1;
 }
 
 /**
@@ -156,26 +149,23 @@ int LuaConnection::getByAccount(lua_State* L)
  * @param LUD connection
  * @returns [table of LUD] connections with same account, including provided.
  */
-int LuaConnection::getByAccountID(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::getByAccountID(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	long accountid = (long)luaL_checkinteger(L, 1);
-	lua_pop(L, 1);
+    long accountid = (long) luaL_checkinteger(L, 1);
+    lua_pop(L, 1);
 
-	lua_newtable(L);
-	int n = 1;
-	const conptrmap_t cons = ServerState::getConnections();
-	for(conptrmap_t::const_iterator i = cons.begin(); i != cons.end(); ++i)
-	{
-		if(i->second->accountID == accountid)
-		{
-			lua_pushlightuserdata(L, i->second.get());
-			lua_rawseti(L, -2, n++);
-		}
-	}
+    lua_newtable(L);
+    int n = 1;
+    const conptrmap_t cons = ServerState::getConnections();
+    for (conptrmap_t::const_iterator i = cons.begin(); i != cons.end(); ++i) {
+        if (i->second->accountID == accountid) {
+            lua_pushlightuserdata(L, i->second.get());
+            lua_rawseti(L, -2, n++);
+        }
+    }
 
-	return 1;
+    return 1;
 }
 
 /**
@@ -183,16 +173,15 @@ int LuaConnection::getByAccountID(lua_State* L)
  * @param LUD connection
  * @returns [string] character name.
  */
-int LuaConnection::getName(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::getName(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	lua_pushstring(L, con->characterName.c_str());
-	return 1;
+    lua_pushstring(L, con->characterName.c_str());
+    return 1;
 }
 
 /**
@@ -200,22 +189,20 @@ int LuaConnection::getName(lua_State* L)
  * @param LUD connection
  * @returns [table of LUD] list of channels
  */
-int LuaConnection::getChannels(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::getChannels(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	lua_newtable(L);
-	int i = 1;
-	for(chanlist_t::const_iterator itr = con->channelList.begin(); itr != con->channelList.end(); ++itr)
-	{
-		lua_pushlightuserdata(L, (*itr).get());
-		lua_rawseti(L, -2, i++);
-	}
-	return 1;
+    lua_newtable(L);
+    int i = 1;
+    for (chanlist_t::const_iterator itr = con->channelList.begin(); itr != con->channelList.end(); ++itr) {
+        lua_pushlightuserdata(L, (*itr).get());
+        lua_rawseti(L, -2, i++);
+    }
+    return 1;
 }
 
 /**
@@ -225,23 +212,22 @@ int LuaConnection::getChannels(lua_State* L)
  * @param table json
  * @returns Nothing.
  */
-int LuaConnection::send(lua_State* L)
-{
-	luaL_checkany(L, 3);
+int LuaConnection::send(lua_State* L) {
+    luaL_checkany(L, 3);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	string message = luaL_checkstring(L, 2);
-	message += " ";
-	json_t* json = LuaChat::luaToJson(L);
-	const char* jsonstr = json_dumps(json, JSON_COMPACT);
-	message += jsonstr;
-	free((void*)jsonstr);
-	json_decref(json);
-	lua_pop(L, 3);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    string message = luaL_checkstring(L, 2);
+    message += " ";
+    json_t* json = LuaChat::luaToJson(L);
+    const char* jsonstr = json_dumps(json, JSON_COMPACT);
+    message += jsonstr;
+    free((void*) jsonstr);
+    json_decref(json);
+    lua_pop(L, 3);
 
-	con->send(message);
-	return 0;
+    con->send(message);
+    return 0;
 }
 
 /**
@@ -250,17 +236,16 @@ int LuaConnection::send(lua_State* L)
  * @param string message
  * @returns Nothing.
  */
-int LuaConnection::sendRaw(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::sendRaw(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	string message = luaL_checkstring(L, 2);
-	lua_pop(L, 2);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    string message = luaL_checkstring(L, 2);
+    lua_pop(L, 2);
 
-	con->send(message);
-	return 0;
+    con->send(message);
+    return 0;
 }
 
 /**
@@ -273,25 +258,21 @@ int LuaConnection::sendRaw(lua_State* L)
  * @param string? message
  * @returns Nothing.
  */
-int LuaConnection::sendError(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::sendError(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	int code = luaL_checknumber(L, 2);
-	if(lua_gettop(L) == 3)
-	{
-		string message = luaL_checkstring(L, 3);
-		lua_pop(L, 3);
-		con->sendError(code, message);
-	}
-	else
-	{
-		con->sendError(code);
-		lua_pop(L, 2);
-	}
-	return 0;
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    int code = luaL_checknumber(L, 2);
+    if (lua_gettop(L) == 3) {
+        string message = luaL_checkstring(L, 3);
+        lua_pop(L, 3);
+        con->sendError(code, message);
+    } else {
+        con->sendError(code);
+        lua_pop(L, 2);
+    }
+    return 0;
 }
 
 /**
@@ -302,16 +283,15 @@ int LuaConnection::sendError(lua_State* L)
  * @param LUD connection
  * @returns Nothing.
  */
-int LuaConnection::close(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::close(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	con->setDelayClose();
-	return 0;
+    con->setDelayClose();
+    return 0;
 }
 
 /**
@@ -322,19 +302,18 @@ int LuaConnection::close(lua_State* L)
  * @param LUD connection
  * @returns Nothing.
  */
-int LuaConnection::closef(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::closef(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	con->setDelayClose();
-	con->identified = false;
-	ServerState::addUnidentified(con);
-	ServerState::removeConnection(con->characterNameLower);
-	return 0;
+    con->setDelayClose();
+    con->identified = false;
+    ServerState::addUnidentified(con);
+    ServerState::removeConnection(con->characterNameLower);
+    return 0;
 }
 
 /**
@@ -348,40 +327,36 @@ int LuaConnection::closef(lua_State* L)
  * @param string name lowercase
  * @returns [boolean] If the identification could be set.
  */
-int LuaConnection::setIdent(lua_State* L)
-{
-	bool ret = false;
-	luaL_checkany(L, 3);
+int LuaConnection::setIdent(lua_State* L) {
+    bool ret = false;
+    luaL_checkany(L, 3);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	string name = luaL_checkstring(L, 2);
-	string lowername = luaL_checkstring(L, 3);
-	lua_pop(L, 3);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    string name = luaL_checkstring(L, 2);
+    string lowername = luaL_checkstring(L, 3);
+    lua_pop(L, 3);
 
-	if(con->identified)
-	{
-		ret = false;
-	}
-	else
-	{
-		con->identified = true;
-		con->characterName = name;
-		con->characterNameLower = lowername;
-		ServerState::addConnection(lowername, con);
-		ServerState::removedUnidentified(con);
-		ret = true;
+    if (con->identified) {
+        ret = false;
+    } else {
+        con->identified = true;
+        con->characterName = name;
+        con->characterNameLower = lowername;
+        ServerState::addConnection(lowername, con);
+        ServerState::removedUnidentified(con);
+        ret = true;
 
-		RedisRequest* req = new RedisRequest;
-		req->key = Redis::onlineUsersKey;
-		req->method = REDIS_SADD;
-		req->updateContext = RCONTEXT_ONLINE;
-		req->values.push(con->characterName);
-		if(!Redis::addRequest(req))
-			delete req;
-	}
-	lua_pushboolean(L, ret);
-	return 1;
+        RedisRequest* req = new RedisRequest;
+        req->key = Redis::onlineUsersKey;
+        req->method = REDIS_SADD;
+        req->updateContext = RCONTEXT_ONLINE;
+        req->values.push(con->characterName);
+        if (!Redis::addRequest(req))
+            delete req;
+    }
+    lua_pushboolean(L, ret);
+    return 1;
 }
 
 /**
@@ -390,17 +365,16 @@ int LuaConnection::setIdent(lua_State* L)
  * @param int account id
  * @returns Nothing.
  */
-int LuaConnection::setAccountID(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::setAccountID(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	long accountid = luaL_checkinteger(L, 2);
-	lua_pop(L, 2);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    long accountid = luaL_checkinteger(L, 2);
+    lua_pop(L, 2);
 
-	con->accountID = accountid;
-	return 0;
+    con->accountID = accountid;
+    return 0;
 }
 
 /**
@@ -409,19 +383,18 @@ int LuaConnection::setAccountID(lua_State* L)
  * @param boolean admin status
  * @returns Nothing.
  */
-int LuaConnection::setAdmin(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::setAdmin(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	if(lua_type(L, 2) != LUA_TBOOLEAN)
-		return luaL_error(L, "Expected boolean for argument 2.");
-	bool newflag = lua_toboolean(L, 2);
-	lua_pop(L, 2);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    if (lua_type(L, 2) != LUA_TBOOLEAN)
+        return luaL_error(L, "Expected boolean for argument 2.");
+    bool newflag = lua_toboolean(L, 2);
+    lua_pop(L, 2);
 
-	con->admin = newflag;
-	return 0;
+    con->admin = newflag;
+    return 0;
 }
 
 /**
@@ -429,217 +402,198 @@ int LuaConnection::setAdmin(lua_State* L)
  * @param LUD connection
  * @returns [boolean] value of admin flag.
  */
-int LuaConnection::isAdmin(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::isAdmin(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	lua_pushboolean(L, con->admin);
-	return 1;
+    lua_pushboolean(L, con->admin);
+    return 1;
 }
 
-int LuaConnection::setGlobalModerator(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::setGlobalModerator(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	if(lua_type(L, 2) != LUA_TBOOLEAN)
-		return luaL_error(L, "Expected boolean for argument 2.");
-	bool newflag = lua_toboolean(L, 2);
-	lua_pop(L, 2);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    if (lua_type(L, 2) != LUA_TBOOLEAN)
+        return luaL_error(L, "Expected boolean for argument 2.");
+    bool newflag = lua_toboolean(L, 2);
+    lua_pop(L, 2);
 
-	con->globalModerator = newflag;
-	return 0;
+    con->globalModerator = newflag;
+    return 0;
 }
 
-int LuaConnection::isGlobalModerator(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::isGlobalModerator(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	lua_pushboolean(L, con->globalModerator);
-	return 1;
+    lua_pushboolean(L, con->globalModerator);
+    return 1;
 }
 
-int LuaConnection::setFriends(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::setFriends(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	if(lua_type(L, 2) != LUA_TTABLE)
-		return luaL_error(L, "Expected table for argument 2.");
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    if (lua_type(L, 2) != LUA_TTABLE)
+        return luaL_error(L, "Expected table for argument 2.");
 
-	lua_pushnil(L);
-	while(lua_next(L, -2))
-	{
-		con->friends.insert(lua_tostring(L, -1));
-		lua_pop(L, 1);
-	}
+    lua_pushnil(L);
+    while (lua_next(L, -2)) {
+        con->friends.insert(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
 
-	lua_pop(L, 3);
+    lua_pop(L, 3);
 
-	return 0;
+    return 0;
 }
 
-int LuaConnection::removeFriend(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::removeFriend(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	string name = luaL_checkstring(L, 2);
-	lua_pop(L, 2);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    string name = luaL_checkstring(L, 2);
+    lua_pop(L, 2);
 
-	con->friends.erase(name);
-	return 0;
+    con->friends.erase(name);
+    return 0;
 }
 
-int LuaConnection::getFriends(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::getFriends(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	lua_newtable(L);
-	const stringset_t friends = con->getFriends();
-	int n = 1;
-	for(stringset_t::const_iterator i = friends.begin(); i != friends.end(); ++i)
-	{
-		lua_pushstring(L, i->c_str());
-		lua_rawseti(L, -2, n++);
-	}
-	return 1;
+    lua_newtable(L);
+    const stringset_t friends = con->getFriends();
+    int n = 1;
+    for (stringset_t::const_iterator i = friends.begin(); i != friends.end(); ++i) {
+        lua_pushstring(L, i->c_str());
+        lua_rawseti(L, -2, n++);
+    }
+    return 1;
 }
 
-int LuaConnection::setIgnores(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::setIgnores(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	if(lua_type(L, 2) != LUA_TTABLE)
-		return luaL_error(L, "Expected table for argument 2.");
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    if (lua_type(L, 2) != LUA_TTABLE)
+        return luaL_error(L, "Expected table for argument 2.");
 
-	lua_pushnil(L);
-	while(lua_next(L, -2))
-	{
-		con->ignores.insert(lua_tostring(L, -1));
-		lua_pop(L, 1);
-	}
+    lua_pushnil(L);
+    while (lua_next(L, -2)) {
+        con->ignores.insert(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
 
-	lua_pop(L, 3);
+    lua_pop(L, 3);
 
-	return 0;
+    return 0;
 }
 
-int LuaConnection::addIgnore(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::addIgnore(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	string name = luaL_checkstring(L, 2);
-	lua_pop(L, 2);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    string name = luaL_checkstring(L, 2);
+    lua_pop(L, 2);
 
-	con->ignores.insert(name);
-	string redis_key;
-	lua_pushinteger(L, con->accountID);
-	lua_pushstring(L, ".ignores");
-	lua_concat(L, 2);
-	redis_key = lua_tostring(L, -1);
-	lua_pop(L, 1);
+    con->ignores.insert(name);
+    string redis_key;
+    lua_pushinteger(L, con->accountID);
+    lua_pushstring(L, ".ignores");
+    lua_concat(L, 2);
+    redis_key = lua_tostring(L, -1);
+    lua_pop(L, 1);
 
-	RedisRequest* req = new RedisRequest;
-	req->key = redis_key;
-	req->method = REDIS_DEL;
-	req->updateContext = RCONTEXT_IGNORE;
-	if(!Redis::addRequest(req))
-	{
-		delete req;
-		return 0;
-	}
+    RedisRequest* req = new RedisRequest;
+    req->key = redis_key;
+    req->method = REDIS_DEL;
+    req->updateContext = RCONTEXT_IGNORE;
+    if (!Redis::addRequest(req)) {
+        delete req;
+        return 0;
+    }
 
-	req = new RedisRequest;
-	req->key = redis_key;
-	req->method = REDIS_LPUSH;
-	req->updateContext = RCONTEXT_IGNORE;
-	for(stringset_t::const_iterator i = con->ignores.begin(); i != con->ignores.end(); ++i)
-	{
-		req->values.push(*i);
-	}
-	if(!Redis::addRequest(req))
-		delete req;
-	return 0;
+    req = new RedisRequest;
+    req->key = redis_key;
+    req->method = REDIS_LPUSH;
+    req->updateContext = RCONTEXT_IGNORE;
+    for (stringset_t::const_iterator i = con->ignores.begin(); i != con->ignores.end(); ++i) {
+        req->values.push(*i);
+    }
+    if (!Redis::addRequest(req))
+        delete req;
+    return 0;
 }
 
+int LuaConnection::removeIgnore(lua_State* L) {
+    luaL_checkany(L, 2);
 
-int LuaConnection::removeIgnore(lua_State* L)
-{
-	luaL_checkany(L, 2);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    string name = luaL_checkstring(L, 2);
+    lua_pop(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	string name = luaL_checkstring(L, 2);
-	lua_pop(L, 2);
+    con->ignores.erase(name);
+    string redis_key;
+    lua_pushinteger(L, con->accountID);
+    lua_pushstring(L, ".ignores");
+    lua_concat(L, 2);
+    redis_key = lua_tostring(L, -1);
+    lua_pop(L, 1);
 
-	con->ignores.erase(name);
-	string redis_key;
-	lua_pushinteger(L, con->accountID);
-	lua_pushstring(L, ".ignores");
-	lua_concat(L, 2);
-	redis_key = lua_tostring(L, -1);
-	lua_pop(L, 1);
+    RedisRequest* req = new RedisRequest;
+    req->key = redis_key;
+    req->method = REDIS_DEL;
+    req->updateContext = RCONTEXT_IGNORE;
+    if (!Redis::addRequest(req)) {
+        delete req;
+        return 0;
+    }
 
-	RedisRequest* req = new RedisRequest;
-	req->key = redis_key;
-	req->method = REDIS_DEL;
-	req->updateContext = RCONTEXT_IGNORE;
-	if(!Redis::addRequest(req))
-	{
-		delete req;
-		return 0;
-	}
-
-	req = new RedisRequest;
-	req->key = redis_key;
-	req->method = REDIS_LPUSH;
-	req->updateContext = RCONTEXT_IGNORE;
-	for(stringset_t::const_iterator i = con->ignores.begin(); i != con->ignores.end(); ++i)
-	{
-		req->values.push(*i);
-	}
-	if(!Redis::addRequest(req))
-		delete req;
-	return 0;
+    req = new RedisRequest;
+    req->key = redis_key;
+    req->method = REDIS_LPUSH;
+    req->updateContext = RCONTEXT_IGNORE;
+    for (stringset_t::const_iterator i = con->ignores.begin(); i != con->ignores.end(); ++i) {
+        req->values.push(*i);
+    }
+    if (!Redis::addRequest(req))
+        delete req;
+    return 0;
 }
 
-int LuaConnection::getIgnores(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::getIgnores(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	lua_newtable(L);
-	const stringset_t ignores = con->getIgnores();
-	int n = 1;
-	for(stringset_t::const_iterator i = ignores.begin(); i != ignores.end(); ++i)
-	{
-		lua_pushstring(L, i->c_str());
-		lua_rawseti(L, -2, n++);
-	}
-	return 1;
+    lua_newtable(L);
+    const stringset_t ignores = con->getIgnores();
+    int n = 1;
+    for (stringset_t::const_iterator i = ignores.begin(); i != ignores.end(); ++i) {
+        lua_pushstring(L, i->c_str());
+        lua_rawseti(L, -2, n++);
+    }
+    return 1;
 }
 
 /**
@@ -649,25 +603,23 @@ int LuaConnection::getIgnores(lua_State* L)
  * @param table kinks
  * @returns Nothing.
  */
-int LuaConnection::setKinks(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::setKinks(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	if(lua_type(L, 2) != LUA_TTABLE)
-		return luaL_error(L, "Expected table for argument 2.");
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    if (lua_type(L, 2) != LUA_TTABLE)
+        return luaL_error(L, "Expected table for argument 2.");
 
-	lua_pushnil(L);
-	while(lua_next(L, -2))
-	{
-		con->kinkList.insert(lua_tointeger(L, -1));
-		lua_pop(L, 1);
-	}
+    lua_pushnil(L);
+    while (lua_next(L, -2)) {
+        con->kinkList.insert(lua_tointeger(L, -1));
+        lua_pop(L, 1);
+    }
 
-	lua_pop(L, 3);
+    lua_pop(L, 3);
 
-	return 0;
+    return 0;
 }
 
 /**
@@ -675,9 +627,8 @@ int LuaConnection::setKinks(lua_State* L)
  * This functions is currently not implemented because there is no known use for it.
  * @returns Throws an error.
  */
-int LuaConnection::getKinks(lua_State* L)
-{
-	return luaL_error(L, "Not implemented.");
+int LuaConnection::getKinks(lua_State* L) {
+    return luaL_error(L, "Not implemented.");
 }
 
 /**
@@ -686,17 +637,16 @@ int LuaConnection::getKinks(lua_State* L)
  * @param string gender
  * @returns Nothing.
  */
-int LuaConnection::setGender(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::setGender(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	string gender = luaL_checkstring(L, 2);
-	lua_pop(L, 2);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    string gender = luaL_checkstring(L, 2);
+    lua_pop(L, 2);
 
-	con->gender = gender;
-	return 0;
+    con->gender = gender;
+    return 0;
 }
 
 /**
@@ -704,16 +654,15 @@ int LuaConnection::setGender(lua_State* L)
  * @param LUD connection
  * @returns [string] gender string.
  */
-int LuaConnection::getGender(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::getGender(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	lua_pushstring(L, con->gender.c_str());
-	return 1;
+    lua_pushstring(L, con->gender.c_str());
+    return 1;
 }
 
 /**
@@ -722,25 +671,23 @@ int LuaConnection::getGender(lua_State* L)
  * @param table custon kinks table
  * @returns Nothing.
  */
-int LuaConnection::setCustomKinks(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::setCustomKinks(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	if(lua_type(L, 2) != LUA_TTABLE)
-		return luaL_error(L, "Expected table for argument 2.");
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    if (lua_type(L, 2) != LUA_TTABLE)
+        return luaL_error(L, "Expected table for argument 2.");
 
-	lua_pushnil(L);
-	while(lua_next(L, -2))
-	{
-		con->customKinkMap[luaL_checkstring(L, -2)] = luaL_checkstring(L, -1);
-		lua_pop(L, 1);
-	}
+    lua_pushnil(L);
+    while (lua_next(L, -2)) {
+        con->customKinkMap[luaL_checkstring(L, -2)] = luaL_checkstring(L, -1);
+        lua_pop(L, 1);
+    }
 
-	lua_pop(L, 3);
+    lua_pop(L, 3);
 
-	return 0;
+    return 0;
 }
 
 /**
@@ -748,23 +695,21 @@ int LuaConnection::setCustomKinks(lua_State* L)
  * @param LUD connection
  * @returns [table] custom kinks
  */
-int LuaConnection::getCustomKinks(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::getCustomKinks(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	const stringmap_t kinks = con->getCustomKinks();
-	lua_newtable(L);
-	for(stringmap_t::const_iterator i = kinks.begin(); i != kinks.end(); ++i)
-	{
-		lua_pushstring(L, i->second.c_str());
-		lua_setfield(L, -2, i->first.c_str());
-	}
+    const stringmap_t kinks = con->getCustomKinks();
+    lua_newtable(L);
+    for (stringmap_t::const_iterator i = kinks.begin(); i != kinks.end(); ++i) {
+        lua_pushstring(L, i->second.c_str());
+        lua_setfield(L, -2, i->first.c_str());
+    }
 
-	return 1;
+    return 1;
 }
 
 /**
@@ -773,25 +718,23 @@ int LuaConnection::getCustomKinks(lua_State* L)
  * @param table info tags table
  * @returns Nothing.
  */
-int LuaConnection::setInfoTags(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::setInfoTags(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	if(lua_type(L, 2) != LUA_TTABLE)
-		return luaL_error(L, "Expected table for argument 2.");
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    if (lua_type(L, 2) != LUA_TTABLE)
+        return luaL_error(L, "Expected table for argument 2.");
 
-	lua_pushnil(L);
-	while(lua_next(L, -2))
-	{
-		con->infotagMap[luaL_checkstring(L, -2)] = luaL_checkstring(L, -1);
-		lua_pop(L, 1);
-	}
+    lua_pushnil(L);
+    while (lua_next(L, -2)) {
+        con->infotagMap[luaL_checkstring(L, -2)] = luaL_checkstring(L, -1);
+        lua_pop(L, 1);
+    }
 
-	lua_pop(L, 3);
+    lua_pop(L, 3);
 
-	return 0;
+    return 0;
 }
 
 /**
@@ -799,23 +742,21 @@ int LuaConnection::setInfoTags(lua_State* L)
  * @param LUD connection
  * @returns [table] info tags
  */
-int LuaConnection::getInfoTags(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::getInfoTags(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	const stringmap_t infotags = con->getInfoTags();
-	lua_newtable(L);
-	for(stringmap_t::const_iterator i = infotags.begin(); i != infotags.end(); ++i)
-	{
-		lua_pushstring(L, i->second.c_str());
-		lua_setfield(L, -2, i->first.c_str());
-	}
+    const stringmap_t infotags = con->getInfoTags();
+    lua_newtable(L);
+    for (stringmap_t::const_iterator i = infotags.begin(); i != infotags.end(); ++i) {
+        lua_pushstring(L, i->second.c_str());
+        lua_setfield(L, -2, i->first.c_str());
+    }
 
-	return 1;
+    return 1;
 }
 
 /**
@@ -825,27 +766,25 @@ int LuaConnection::getInfoTags(lua_State* L)
  * @param string/nil statusmessage
  * @returns Nothing.
  */
-int LuaConnection::setStatus(lua_State* L)
-{
-	luaL_checkany(L, 3);
+int LuaConnection::setStatus(lua_State* L) {
+    luaL_checkany(L, 3);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	string status = luaL_checkstring(L, 2);
-	string statusmessage;
-	bool setmessage = false;
-	if(lua_type(L, 3) == LUA_TSTRING)
-	{
-		statusmessage = luaL_checkstring(L, 3);
-		setmessage = true;
-	}
-	lua_pop(L, 3);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    string status = luaL_checkstring(L, 2);
+    string statusmessage;
+    bool setmessage = false;
+    if (lua_type(L, 3) == LUA_TSTRING) {
+        statusmessage = luaL_checkstring(L, 3);
+        setmessage = true;
+    }
+    lua_pop(L, 3);
 
-	con->status = status;
-	if(setmessage)
-		con->statusMessage = statusmessage;
+    con->status = status;
+    if (setmessage)
+        con->statusMessage = statusmessage;
 
-	return 0;
+    return 0;
 }
 
 /**
@@ -853,17 +792,16 @@ int LuaConnection::setStatus(lua_State* L)
  * @param LUD connection
  * @returns [string] status, [string] statusmessage
  */
-int LuaConnection::getStatus(lua_State* L)
-{
-	luaL_checkany(L, 1);
+int LuaConnection::getStatus(lua_State* L) {
+    luaL_checkany(L, 1);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	lua_pop(L, 1);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-	lua_pushstring(L, con->status.c_str());
-	lua_pushstring(L, con->statusMessage.c_str());
-	return 2;
+    lua_pushstring(L, con->status.c_str());
+    lua_pushstring(L, con->statusMessage.c_str());
+    return 2;
 }
 
 /**
@@ -873,18 +811,17 @@ int LuaConnection::getStatus(lua_State* L)
  * @param string value
  * @returns Nothing.
  */
-int LuaConnection::setMiscData(lua_State* L)
-{
-	luaL_checkany(L, 3);
+int LuaConnection::setMiscData(lua_State* L) {
+    luaL_checkany(L, 3);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	string key = luaL_checkstring(L, 2);
-	string data = luaL_checkstring(L, 3);
-	lua_pop(L, 3);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    string key = luaL_checkstring(L, 2);
+    string data = luaL_checkstring(L, 3);
+    lua_pop(L, 3);
 
-	con->miscMap[key] = data;
-	return 0;
+    con->miscMap[key] = data;
+    return 0;
 }
 
 /**
@@ -893,24 +830,20 @@ int LuaConnection::setMiscData(lua_State* L)
  * @param string key
  * @returns [nil] on failure/ [string] value for key.
  */
-int LuaConnection::getMiscData(lua_State* L)
-{
-	luaL_checkany(L, 2);
+int LuaConnection::getMiscData(lua_State* L) {
+    luaL_checkany(L, 2);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	string key = luaL_checkstring(L, 2);
-	lua_pop(L, 2);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    string key = luaL_checkstring(L, 2);
+    lua_pop(L, 2);
 
-	if(con->miscMap.find(key) != con->miscMap.end())
-	{
-		lua_pushstring(L, con->miscMap[key].c_str());
-	}
-	else
-	{
-		lua_pushnil(L);
-	}
-	return 1;
+    if (con->miscMap.find(key) != con->miscMap.end()) {
+        lua_pushstring(L, con->miscMap[key].c_str());
+    } else {
+        lua_pushnil(L);
+    }
+    return 1;
 }
 
 /**
@@ -920,23 +853,22 @@ int LuaConnection::getMiscData(lua_State* L)
  * @param number timeout length
  * @returns [boolean] true if the timer has not expired, false otherwise
  */
-int LuaConnection::checkUpdateTimer(lua_State* L)
-{
-	bool ret = false;
-	luaL_checkany(L, 3);
+int LuaConnection::checkUpdateTimer(lua_State* L) {
+    bool ret = false;
+    luaL_checkany(L, 3);
 
-	LBase* base = 0;
-	GETLCON(base, L, 1, con);
-	string timer = luaL_checkstring(L, 2);
-	double timeout = luaL_checknumber(L, 3);
-	lua_pop(L, 3);
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    string timer = luaL_checkstring(L, 2);
+    double timeout = luaL_checknumber(L, 3);
+    lua_pop(L, 3);
 
-	double time = Server::getEventTime();
-	if(con->timers[timer] > (time - timeout))
-		ret = true;
-	else
-		con->timers[timer] = time;
+    double time = Server::getEventTime();
+    if (con->timers[timer] > (time - timeout))
+        ret = true;
+    else
+        con->timers[timer] = time;
 
-	lua_pushboolean(L, ret);
-	return 1;
+    lua_pushboolean(L, ret);
+    return 1;
 }

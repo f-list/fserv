@@ -36,65 +36,68 @@ using std::queue;
 
 #define REDIS_MUTEX_TIMEOUT 250000000
 
-enum RedisMethod
-{
-	REDIS_DEL,
-	REDIS_LPUSH,
-	REDIS_LREM,
-	REDIS_SADD,
-	REDIS_SREM,
-	REDIS_SET,
-	REDIX_MAX
+enum RedisMethod {
+    REDIS_DEL,
+    REDIS_LPUSH,
+    REDIS_LREM,
+    REDIS_SADD,
+    REDIS_SREM,
+    REDIS_SET,
+    REDIX_MAX
 };
 
-enum RedisUpdateContext
-{
-	RCONTEXT_IGNORE,
-	RCONTEXT_ONLINE,
-	RCONTEXT_MAX
+enum RedisUpdateContext {
+    RCONTEXT_IGNORE,
+    RCONTEXT_ONLINE,
+    RCONTEXT_MAX
 };
 
-class RedisRequest
-{
+class RedisRequest {
 public:
-	string key;
-	queue<string> values;
-	RedisMethod method;
-	RedisUpdateContext updateContext;
+    string key;
+    queue<string> values;
+    RedisMethod method;
+    RedisUpdateContext updateContext;
 };
 
-class Redis
-{
+class Redis {
 public:
-	static void* runThread(void* param);
-	static bool addRequest(RedisRequest* newRequest);
+    static void* runThread(void* param);
+    static bool addRequest(RedisRequest* newRequest);
 
-	static void stopThread() { doRun = false; }
-	static bool isRunning() { return doRun; }
+    static void stopThread() {
+        doRun = false;
+    }
 
-	static pthread_mutex_t requestMutex;
-	static const string onlineUsersKey;
-	static const string lastCheckinKey;
+    static bool isRunning() {
+        return doRun;
+    }
+
+    static pthread_mutex_t requestMutex;
+    static const string onlineUsersKey;
+    static const string lastCheckinKey;
 private:
-	Redis() {}
-	~Redis() {}
 
-	static void connectToRedis();
-	static void sendInitialUserList();
+    Redis() { }
 
-	static RedisRequest* getRequest();
+    ~Redis() { }
 
-	static void processRequest(RedisRequest* req);
+    static void connectToRedis();
+    static void sendInitialUserList();
 
-	static void timeoutCallback(struct ev_loop* loop, ev_timer* w, int revents);
+    static RedisRequest* getRequest();
 
-	static redisContext* context;
+    static void processRequest(RedisRequest* req);
 
-	static queue<RedisRequest*> requestQueue;
-	static bool doRun;
-	static struct ev_loop* redis_loop;
-	static ev_timer* redis_timer;
-	static const __useconds_t REDIS_FAILURE_WAIT;
+    static void timeoutCallback(struct ev_loop* loop, ev_timer* w, int revents);
+
+    static redisContext* context;
+
+    static queue<RedisRequest*> requestQueue;
+    static bool doRun;
+    static struct ev_loop* redis_loop;
+    static ev_timer* redis_timer;
+    static const __useconds_t REDIS_FAILURE_WAIT;
 };
 
 #endif //REDIS_H

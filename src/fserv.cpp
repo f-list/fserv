@@ -39,79 +39,73 @@
 
 #define SHUTDOWN_WAIT 2000000
 
-void setup_signals()
-{
-	signal(SIGPIPE, SIG_IGN);
-	signal(SIGHUP, SIG_IGN);
+void setup_signals() {
+    signal(SIGPIPE, SIG_IGN);
+    signal(SIGHUP, SIG_IGN);
 }
 
-int main(int argc, char* argv[])
-{
-	//Logging
-	FLAGS_logbuflevel = 0;
-	FLAGS_logbufsecs = 0;
-	FLAGS_logtostderr = false;
-	FLAGS_log_dir = "./logs/";
-	FLAGS_log_prefix = argv[0];
-	google::InitGoogleLogging(argv[0]);
-	LOG(INFO) << "F-Chat Server starting";
+int main(int argc, char* argv[]) {
+    //Logging
+    FLAGS_logbuflevel = 0;
+    FLAGS_logbufsecs = 0;
+    FLAGS_logtostderr = false;
+    FLAGS_log_dir = "./logs/";
+    FLAGS_log_prefix = argv[0];
+    google::InitGoogleLogging(argv[0]);
+    LOG(INFO) << "F-Chat Server starting";
 
-	//Common startup
-	setup_signals();
-	struct rlimit fdlimit;
-	getrlimit(RLIMIT_NOFILE, &fdlimit);
-	if(fdlimit.rlim_max < 5000)
-	{
-		LOG(WARNING) << "Could not raise the limit for open files to 5000. C: "
-		<< fdlimit.rlim_cur << " M: " << fdlimit.rlim_max;
-		printf("Could not raise the limit for open files to 5000. C: %u M: %u\n", static_cast<unsigned int>(fdlimit.rlim_cur), static_cast<unsigned int>(fdlimit.rlim_max));
-	}
-	fdlimit.rlim_cur = 5000;
-	if(setrlimit(RLIMIT_NOFILE, &fdlimit) != 0)
-	{
-		LOG(WARNING) << "Call to raise the limit for open files failed.";
-		printf("Call to raise the limit for open files failed. Continue with caution\n");
-	}
+    //Common startup
+    setup_signals();
+    struct rlimit fdlimit;
+    getrlimit(RLIMIT_NOFILE, &fdlimit);
+    if (fdlimit.rlim_max < 5000) {
+        LOG(WARNING) << "Could not raise the limit for open files to 5000. C: "
+                << fdlimit.rlim_cur << " M: " << fdlimit.rlim_max;
+        printf("Could not raise the limit for open files to 5000. C: %u M: %u\n", static_cast<unsigned int> (fdlimit.rlim_cur), static_cast<unsigned int> (fdlimit.rlim_max));
+    }
+    fdlimit.rlim_cur = 5000;
+    if (setrlimit(RLIMIT_NOFILE, &fdlimit) != 0) {
+        LOG(WARNING) << "Call to raise the limit for open files failed.";
+        printf("Call to raise the limit for open files failed. Continue with caution\n");
+    }
 
-	LuaConstants::initClass();
-	StartupConfig::init();
-	if ( curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
-		LOG(ERROR) << "Curl global startup failed.";
-	Login::setMaxLoginSlots(static_cast<unsigned int>(StartupConfig::getDouble("loginslots")));
+    LuaConstants::initClass();
+    StartupConfig::init();
+    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
+        LOG(ERROR) << "Curl global startup failed.";
+    Login::setMaxLoginSlots(static_cast<unsigned int> (StartupConfig::getDouble("loginslots")));
 
-	pthread_t loginThread;
-	pthread_attr_t loginAttr;
-	pthread_attr_init(&loginAttr);
-	pthread_attr_setdetachstate(&loginAttr, PTHREAD_CREATE_JOINABLE);
-	pthread_create(&loginThread, &loginAttr, &Login::runThread, 0);
+    pthread_t loginThread;
+    pthread_attr_t loginAttr;
+    pthread_attr_init(&loginAttr);
+    pthread_attr_setdetachstate(&loginAttr, PTHREAD_CREATE_JOINABLE);
+    pthread_create(&loginThread, &loginAttr, &Login::runThread, 0);
 
-	pthread_t redisThread;
-	pthread_attr_t redisAttr;
-	pthread_attr_init(&redisAttr);
-	pthread_attr_setdetachstate(&redisAttr, PTHREAD_CREATE_JOINABLE);
-	if(StartupConfig::getBool("enableredis"))
-	{
-		pthread_create(&redisThread, &redisAttr, &Redis::runThread, 0);
-	}
+    pthread_t redisThread;
+    pthread_attr_t redisAttr;
+    pthread_attr_init(&redisAttr);
+    pthread_attr_setdetachstate(&redisAttr, PTHREAD_CREATE_JOINABLE);
+    if (StartupConfig::getBool("enableredis")) {
+        pthread_create(&redisThread, &redisAttr, &Redis::runThread, 0);
+    }
 
-//	Redis::stopThread();
-	Server::run();
+    //	Redis::stopThread();
+    Server::run();
 
-	usleep(SHUTDOWN_WAIT);
-	DLOG(INFO) << "Starting shutdown.";
+    usleep(SHUTDOWN_WAIT);
+    DLOG(INFO) << "Starting shutdown.";
 
-	//Shutdown
-	Login::stopThread();
-	pthread_join(loginThread, 0);
+    //Shutdown
+    Login::stopThread();
+    pthread_join(loginThread, 0);
 
-	if(Redis::isRunning() && StartupConfig::getBool("enableredis"))
-	{
-		Redis::stopThread();
-		pthread_join(redisThread, 0);
-	}
+    if (Redis::isRunning() && StartupConfig::getBool("enableredis")) {
+        Redis::stopThread();
+        pthread_join(redisThread, 0);
+    }
 
-	curl_global_cleanup();
-	LOG(INFO) << "Server shutdown completed.";
-	google::ShutdownGoogleLogging();
-	return 0;
+    curl_global_cleanup();
+    LOG(INFO) << "Server shutdown completed.";
+    google::ShutdownGoogleLogging();
+    return 0;
 }

@@ -35,30 +35,27 @@ using std::string;
 using boost::intrusive_ptr;
 class ConnectionInstance;
 
-enum LoginMethod
-{
-	LOGIN_METHOD_TICKET,
-	LOGIN_METHOD_UNKNOWN
+enum LoginMethod {
+    LOGIN_METHOD_TICKET,
+    LOGIN_METHOD_UNKNOWN
 };
 
-class LoginReply
-{
+class LoginReply {
 public:
-	intrusive_ptr<ConnectionInstance> connection;
-	string message;
-	bool success;
+    intrusive_ptr<ConnectionInstance> connection;
+    string message;
+    bool success;
 };
 
-class LoginRequest
-{
+class LoginRequest {
 public:
-	intrusive_ptr<ConnectionInstance> connection;
-	string characterName;
-	string account;
-	string password;
-	string hash;
-	string ticket;
-	LoginMethod method;
+    intrusive_ptr<ConnectionInstance> connection;
+    string characterName;
+    string account;
+    string password;
+    string hash;
+    string ticket;
+    LoginMethod method;
 };
 
 #endif //LOGIN_COMMON_H

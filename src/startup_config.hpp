@@ -34,26 +34,27 @@ using std::tr1::unordered_map;
 
 struct lua_State;
 
-class StartupConfig
-{
+class StartupConfig {
 public:
-	//Class startup
-	static void init();
+    //Class startup
+    static void init();
 
-	static bool getString(const char* name, string& value);
-	static string getString(const char* name);
-	static bool getBool(const char* name, bool& value);
-	static bool getBool(const char* name);
-	static bool getDouble(const char* name, double& value);
-	static double getDouble(const char* name);
+    static bool getString(const char* name, string& value);
+    static string getString(const char* name);
+    static bool getBool(const char* name, bool& value);
+    static bool getBool(const char* name);
+    static bool getDouble(const char* name, double& value);
+    static double getDouble(const char* name);
 
 private:
-	StartupConfig() {}
-	~StartupConfig() {}
 
-	static unordered_map<string, string> stringMap;
-	static unordered_map<string, bool> boolMap;
-	static unordered_map<string, double> doubleMap;
+    StartupConfig() { }
+
+    ~StartupConfig() { }
+
+    static unordered_map<string, string> stringMap;
+    static unordered_map<string, bool> boolMap;
+    static unordered_map<string, double> doubleMap;
 
 };
 

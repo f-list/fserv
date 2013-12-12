@@ -38,15 +38,14 @@ using std::tr1::unordered_map;
 
 typedef unordered_map<int, pair<string, string> > lconstantmap_t;
 
-class LuaConstants
-{
+class LuaConstants {
 public:
-	static int openConstantsLib(lua_State* L);
-	static void initClass();
+    static int openConstantsLib(lua_State* L);
+    static void initClass();
 
-	static int getErrorMessage(lua_State* L);
-	static const string& getErrorMessage(FReturnCode errorcode);
+    static int getErrorMessage(lua_State* L);
+    static const string& getErrorMessage(FReturnCode errorcode);
 private:
-	static lconstantmap_t errorMap;
+    static lconstantmap_t errorMap;
 };
 #endif //LUA_CONSTANTS_H

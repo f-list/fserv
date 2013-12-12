@@ -30,12 +30,11 @@
 #include <unicode/ustring.h>
 #include <unicode/unistr.h>
 
-std::string UnicodeTools::escapeHTML(std::string& input)
-{
-	icu::UnicodeString ustr(input.c_str());
-	ustr.findAndReplace("&", "&amp;");
-	ustr.findAndReplace("<", "&lt;");
-	ustr.findAndReplace(">", "&gt;");
-	string out;
-	return ustr.toUTF8String(out);
+std::string UnicodeTools::escapeHTML(std::string& input) {
+    icu::UnicodeString ustr(input.c_str());
+    ustr.findAndReplace("&", "&amp;");
+    ustr.findAndReplace("<", "&lt;");
+    ustr.findAndReplace(">", "&gt;");
+    string out;
+    return ustr.toUTF8String(out);
 }

@@ -35,149 +35,120 @@ unordered_map<string, string> StartupConfig::stringMap;
 unordered_map<string, bool> StartupConfig::boolMap;
 unordered_map<string, double> StartupConfig::doubleMap;
 
-void StartupConfig::init()
-{
-	DLOG(INFO) << "Loading startup config.";
-	lua_State* L = luaL_newstate();
-	int ret = luaL_dofile(L, "./script/startup_config.lua");
-	if(ret)
-	{
-		LOG(WARNING) << "Failed to load the startup config file. Reason: " << lua_tostring(L, -1);
-		return;
-	}
-	lua_pushvalue(L, LUA_GLOBALSINDEX);
-	lua_pushnil(L);
-	while(lua_next(L, -2))
-	{
-		if(lua_type(L, -2) != LUA_TSTRING)
-		{
-			lua_pop(L, 1);
-			continue;
-		}
+void StartupConfig::init() {
+    DLOG(INFO) << "Loading startup config.";
+    lua_State* L = luaL_newstate();
+    int ret = luaL_dofile(L, "./script/startup_config.lua");
+    if (ret) {
+        LOG(WARNING) << "Failed to load the startup config file. Reason: " << lua_tostring(L, -1);
+        return;
+    }
+    lua_pushvalue(L, LUA_GLOBALSINDEX);
+    lua_pushnil(L);
+    while (lua_next(L, -2)) {
+        if (lua_type(L, -2) != LUA_TSTRING) {
+            lua_pop(L, 1);
+            continue;
+        }
 
-		int type = lua_type(L, -1);
-		switch (type)
-		{
-			case LUA_TSTRING:
-			{
-				const char* value = lua_tostring(L, -1);
-				const char* key = lua_tostring(L, -2);
-				stringMap[key] = value;
-				break;
-			}
-			case LUA_TBOOLEAN:
-			{
-				bool value = lua_toboolean(L, -1);
-				const char* key = lua_tostring(L, -2);
-				boolMap[key] = value;
-				break;
-			}
-			case LUA_TNUMBER:
-			{
-				double value = lua_tonumber(L, -1);
-				const char* key = lua_tostring(L, -2);
-				doubleMap[key] = value;
-				break;
-			}
-			default:
-				break;
-		}
-		lua_pop(L, 1);
-	}
-	lua_pop(L, 1);
-	lua_close(L);
-	L = 0;
+        int type = lua_type(L, -1);
+        switch (type) {
+            case LUA_TSTRING:
+            {
+                const char* value = lua_tostring(L, -1);
+                const char* key = lua_tostring(L, -2);
+                stringMap[key] = value;
+                break;
+            }
+            case LUA_TBOOLEAN:
+            {
+                bool value = lua_toboolean(L, -1);
+                const char* key = lua_tostring(L, -2);
+                boolMap[key] = value;
+                break;
+            }
+            case LUA_TNUMBER:
+            {
+                double value = lua_tonumber(L, -1);
+                const char* key = lua_tostring(L, -2);
+                doubleMap[key] = value;
+                break;
+            }
+            default:
+                break;
+        }
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
+    lua_close(L);
+    L = 0;
 }
 
-bool StartupConfig::getBool(const char* name, bool& value)
-{
-	bool found = false;
-	string key = name;
-	if(boolMap.count(key) != 0)
-	{
-		value = boolMap[key];
-		found = true;
-	}
-	else
-	{
-		LOG(DFATAL) << "Could not find boolean config value '" << key << "'";
-	}
-	return found;
+bool StartupConfig::getBool(const char* name, bool& value) {
+    bool found = false;
+    string key = name;
+    if (boolMap.count(key) != 0) {
+        value = boolMap[key];
+        found = true;
+    } else {
+        LOG(DFATAL) << "Could not find boolean config value '" << key << "'";
+    }
+    return found;
 }
 
-bool StartupConfig::getBool(const char* name)
-{
-	bool ret = false;
-	string key = name;
-	if(boolMap.count(key) != 0)
-	{
-		ret = boolMap[key];
-	}
-	else
-	{
-		LOG(DFATAL) << "Could not find boolean config value '" << key << "', returning false";
-	}
-	return ret;
+bool StartupConfig::getBool(const char* name) {
+    bool ret = false;
+    string key = name;
+    if (boolMap.count(key) != 0) {
+        ret = boolMap[key];
+    } else {
+        LOG(DFATAL) << "Could not find boolean config value '" << key << "', returning false";
+    }
+    return ret;
 }
 
-bool StartupConfig::getDouble(const char* name, double& value)
-{
-	bool found = false;
-	string key = name;
-	if(doubleMap.count(key) != 0)
-	{
-		value = doubleMap[key];
-		found = true;
-	}
-	else
-	{
-		LOG(DFATAL) << "Could not find double config value '" << key << "'";
-	}
-	return found;
+bool StartupConfig::getDouble(const char* name, double& value) {
+    bool found = false;
+    string key = name;
+    if (doubleMap.count(key) != 0) {
+        value = doubleMap[key];
+        found = true;
+    } else {
+        LOG(DFATAL) << "Could not find double config value '" << key << "'";
+    }
+    return found;
 }
 
-double StartupConfig::getDouble(const char* name)
-{
-	double ret = 0;
-	string key = name;
-	if(doubleMap.count(key) != 0)
-	{
-		ret = doubleMap[key];
-	}
-	else
-	{
-		LOG(DFATAL) << "Could not find double config value '" << key << "', returning 0.0";
-	}
-	return ret;
+double StartupConfig::getDouble(const char* name) {
+    double ret = 0;
+    string key = name;
+    if (doubleMap.count(key) != 0) {
+        ret = doubleMap[key];
+    } else {
+        LOG(DFATAL) << "Could not find double config value '" << key << "', returning 0.0";
+    }
+    return ret;
 }
 
-bool StartupConfig::getString(const char* name, string& value)
-{
-	bool found = false;
-	string key = name;
-	if(stringMap.count(key) != 0)
-	{
-		value = stringMap[key];
-		found = true;
-	}
-	else
-	{
-		LOG(DFATAL) << "Could not find string config value '" << key << "'";
-	}
-	return found;
+bool StartupConfig::getString(const char* name, string& value) {
+    bool found = false;
+    string key = name;
+    if (stringMap.count(key) != 0) {
+        value = stringMap[key];
+        found = true;
+    } else {
+        LOG(DFATAL) << "Could not find string config value '" << key << "'";
+    }
+    return found;
 }
 
-string StartupConfig::getString(const char* name)
-{
-	string ret;
-	string key = name;
-	if(stringMap.count(key) != 0)
-	{
-		ret = stringMap[key];
-	}
-	else
-	{
-		LOG(DFATAL) << "Could not find string config value '" << key << "', returning empty string";
-	}
-	return ret;
+string StartupConfig::getString(const char* name) {
+    string ret;
+    string key = name;
+    if (stringMap.count(key) != 0) {
+        ret = stringMap[key];
+    } else {
+        LOG(DFATAL) << "Could not find string config value '" << key << "', returning empty string";
+    }
+    return ret;
 }

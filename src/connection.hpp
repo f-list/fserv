@@ -48,7 +48,6 @@ struct lua_State;
 class Channel;
 
 
-
 typedef list< intrusive_ptr<Channel> > chanlist_t;
 typedef unordered_set<int> intlist_t;
 typedef unordered_set<string> stringset_t;
@@ -56,80 +55,93 @@ typedef unordered_map<string, string> stringmap_t;
 typedef unordered_map<string, double> timermap_t;
 typedef list<string> stringlist_t;
 
-class ConnectionInstance : public LBase
-{
+class ConnectionInstance : public LBase {
 public:
-	ConnectionInstance();
-	~ConnectionInstance();
+    ConnectionInstance();
+    ~ConnectionInstance();
 
-	bool send(string& message);
-	void sendError(int error);
-	void sendError(int error, string message);
-	void sendDebugReply(string message);
+    bool send(string& message);
+    void sendError(int error);
+    void sendError(int error, string message);
+    void sendDebugReply(string message);
 
-	void setDelayClose();
+    void setDelayClose();
 
-	void leaveChannel(Channel* channel);
-	void joinChannel(Channel* channel);
+    void leaveChannel(Channel* channel);
+    void joinChannel(Channel* channel);
 
-	FReturnCode reloadIsolation(string& output);
-	FReturnCode isolateLua(string& output);
-	void deisolateLua();
+    FReturnCode reloadIsolation(string& output);
+    FReturnCode isolateLua(string& output);
+    void deisolateLua();
 
-	const stringset_t& getFriends() const { return friends; }
-	const stringset_t& getIgnores() const { return ignores; }
-	const stringmap_t& getCustomKinks() const { return customKinkMap; }
-	const stringmap_t& getInfoTags() const { return infotagMap; }
-	const stringmap_t& getMiscData() const { return miscMap; }
+    const stringset_t& getFriends() const {
+        return friends;
+    }
+
+    const stringset_t& getIgnores() const {
+        return ignores;
+    }
+
+    const stringmap_t& getCustomKinks() const {
+        return customKinkMap;
+    }
+
+    const stringmap_t& getInfoTags() const {
+        return infotagMap;
+    }
+
+    const stringmap_t& getMiscData() const {
+        return miscMap;
+    }
 
 public:
-	long				accountID;
-	string				characterName;
-	string				characterNameLower;
-	bool				identified;
-	bool				admin;
-	bool				globalModerator;
-	ProtocolVersion 	protocol;
-	struct sockaddr_in  clientAddress;
-	bool				closed;
-	bool				delayClose;
+    long accountID;
+    string characterName;
+    string characterNameLower;
+    bool identified;
+    bool admin;
+    bool globalModerator;
+    ProtocolVersion protocol;
+    struct sockaddr_in clientAddress;
+    bool closed;
+    bool delayClose;
 
-	string				statusMessage;
-	string				status;
-	string				gender;
-	stringset_t			friends;
-	stringset_t			ignores;
+    string statusMessage;
+    string status;
+    string gender;
+    stringset_t friends;
+    stringset_t ignores;
 
-	chanlist_t			channelList;
+    chanlist_t channelList;
 
-	stringmap_t			miscMap;
-	stringmap_t			customKinkMap;
-	stringmap_t			infotagMap;
-	intlist_t			kinkList;
+    stringmap_t miscMap;
+    stringmap_t customKinkMap;
+    stringmap_t infotagMap;
+    intlist_t kinkList;
 
 
-	//Buffers
-	string				readBuffer;
-	stringlist_t		writeBuffer;
+    //Buffers
+    string readBuffer;
+    stringlist_t writeBuffer;
 
-	//Timers
-	timermap_t			timers;
+    //Timers
+    timermap_t timers;
 
-	//Event loop items
-	struct ev_loop*		loop;
-	ev_timer*			pingEvent;
-	ev_timer* 			timerEvent;
-	ev_io*				readEvent;
-	ev_io*				writeEvent;
-	ev_tstamp			lastActivity;
+    //Event loop items
+    struct ev_loop* loop;
+    ev_timer* pingEvent;
+    ev_timer* timerEvent;
+    ev_io* readEvent;
+    ev_io* writeEvent;
+    ev_tstamp lastActivity;
 
-	volatile size_t				refCount; //Does this need to be volatile?
+    volatile size_t refCount; //Does this need to be volatile?
 
-	friend void intrusive_ptr_release(ConnectionInstance* p);
-	friend void intrusive_ptr_add_ref(ConnectionInstance* p);
+    friend void intrusive_ptr_release(ConnectionInstance* p);
+    friend void intrusive_ptr_add_ref(ConnectionInstance* p);
 
-	//Lua
-	struct lua_State*	debugL;
+    //Lua
+    struct lua_State* debugL;
 };
 
 typedef intrusive_ptr<ConnectionInstance> ConnectionPtr;

@@ -34,12 +34,11 @@ using std::string;
 using boost::intrusive_ptr;
 class ConnectionInstance;
 
-class NativeCommand
-{
+class NativeCommand {
 public:
-	static FReturnCode DebugCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
-	static FReturnCode IdentCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
-	static FReturnCode SearchCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
+    static FReturnCode DebugCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
+    static FReturnCode IdentCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
+    static FReturnCode SearchCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
 private:
 };
 
