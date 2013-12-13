@@ -82,11 +82,15 @@ int main(int argc, char* argv[]) {
     pthread_create(&loginThread, &loginAttr, &Login::runThread, 0);
 
     pthread_t redisThread;
-    pthread_attr_t redisAttr;
-    pthread_attr_init(&redisAttr);
-    pthread_attr_setdetachstate(&redisAttr, PTHREAD_CREATE_JOINABLE);
     if (StartupConfig::getBool("enableredis")) {
+        pthread_attr_t redisAttr;
+        pthread_attr_init(&redisAttr);
+        pthread_attr_setdetachstate(&redisAttr, PTHREAD_CREATE_JOINABLE);
         pthread_create(&redisThread, &redisAttr, &Redis::runThread, 0);
+    }
+    else
+    {
+        Redis::stopThread(); //Need to prevent redis from accepting requests.
     }
 
     //	Redis::stopThread();

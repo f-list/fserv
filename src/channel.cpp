@@ -42,7 +42,8 @@ participantCount(0),
 lastActivity(0),
 canDestroy(true),
 title(""),
-topUsers(0) {
+topUsers(0),
+refCount(0) {
     if (chantype == CT_PRIVATE) {
         description = privChanDescriptionDefault;
     }
@@ -59,7 +60,8 @@ participantCount(0),
 lastActivity(0),
 canDestroy(true),
 title(""),
-topUsers(0) {
+topUsers(0),
+refCount(0) {
     invites.insert(creator->characterNameLower);
     owner = creator->characterName;
     description = privChanDescriptionDefault;
