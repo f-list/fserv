@@ -225,8 +225,9 @@ int LuaConnection::send(lua_State* L) {
     free((void*) jsonstr);
     json_decref(json);
     lua_pop(L, 3);
-
-    con->send(message);
+    
+    MessagePtr outMessage(MessageBuffer::FromString(message));
+    con->send(outMessage);
     return 0;
 }
 
@@ -244,7 +245,8 @@ int LuaConnection::sendRaw(lua_State* L) {
     string message = luaL_checkstring(L, 2);
     lua_pop(L, 2);
 
-    con->send(message);
+    MessagePtr outMessage(MessageBuffer::FromString(message));
+    con->send(outMessage);
     return 0;
 }
 

@@ -50,6 +50,7 @@ closed(false),
 delayClose(false),
 status("online"),
 gender("None"),
+writePosition(0),
 loop(0),
 pingEvent(0),
 timerEvent(0),
@@ -75,37 +76,25 @@ void intrusive_ptr_add_ref(ConnectionInstance* p) {
     ++p->refCount;
 }
 
-bool ConnectionInstance::send(string& message) {
+bool ConnectionInstance::send(MessagePtr message) {
     // This will disconnect the client as a side effect.
-    if (closed || writeBuffer.size() > MAX_SEND_QUEUE_ITEMS)
+    if (closed || writeQueue.size() > MAX_SEND_QUEUE_ITEMS)
         return false;
 
-    //DLOG(INFO) << "Sending: " << message;
-    string buffer;
-    switch (protocol) {
-        case PROTOCOL_HYBI:
-            Websocket::Hybi::send(message, buffer);
-            break;
-        case PROTOCOL_UNKNOWN:
-            buffer = message;
-            break;
-        default:
-            return false;
-    }
+    writeQueue.push_back(message);
+    ev_io_start(loop, writeEvent);
+    return true;
+}
 
-    int length = buffer.size();
-    if (length < MAX_SEND_QUEUE_ITEM_SIZE) {
-        writeBuffer.push_back(buffer);
-    } else {
-        int i = 0;
-        while (length > MAX_SEND_QUEUE_ITEM_SIZE) {
-            string temp(buffer.substr(i++*MAX_SEND_QUEUE_ITEM_SIZE, MAX_SEND_QUEUE_ITEM_SIZE));
-            writeBuffer.push_back(temp);
-            length -= MAX_SEND_QUEUE_ITEM_SIZE;
-        }
-        string temp(buffer.substr(i*MAX_SEND_QUEUE_ITEM_SIZE, length));
-        writeBuffer.push_back(temp);
-    }
+bool ConnectionInstance::sendRaw(string& message) {
+    if (closed)
+        return false;
+
+    MessageBuffer* buffer = new MessageBuffer();
+    MessagePtr outMessage(buffer);
+    buffer->Set(message.data(), message.length());
+
+    writeQueue.push_back(outMessage);
     ev_io_start(loop, writeEvent);
     return true;
 }
@@ -121,7 +110,8 @@ void ConnectionInstance::sendError(int error) {
             );
     const char* errstr = json_dumps(topnode, JSON_COMPACT);
     outstr += errstr;
-    send(outstr);
+    MessagePtr message(MessageBuffer::FromString(outstr));
+    send(message);
     free((void*) errstr);
     json_decref(topnode);
     DLOG(INFO) << "Sending error to connection: " << outstr;
@@ -139,7 +129,8 @@ void ConnectionInstance::sendError(int error, string message) {
     json_object_set_new_nocheck(topnode, "message", messagenode);
     const char* errstr = json_dumps(topnode, JSON_COMPACT);
     outstr += errstr;
-    send(outstr);
+    MessagePtr outMessage(MessageBuffer::FromString(outstr));
+    send(outMessage);
     free((void*) errstr);
     json_decref(topnode);
     DLOG(INFO) << "Sending custom error to connection: " << outstr;
@@ -156,7 +147,8 @@ void ConnectionInstance::sendDebugReply(string message) {
     outstr += replystr;
     free((void*) replystr);
     json_decref(topnode);
-    send(outstr);
+    MessagePtr outMessage(MessageBuffer::FromString(outstr));
+    send(outMessage);
 }
 
 void ConnectionInstance::setDelayClose() {

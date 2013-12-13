@@ -202,9 +202,10 @@ void Server::connectionWriteCallback(struct ev_loop* loop, ev_io* w, int revents
         prepareShutdownConnection(con.get());
         close(w->fd);
     } else if (revents & EV_WRITE) {
-        if (con->writeBuffer.size()) {
-            int len = con->writeBuffer.front().size();
-            int sent = send(w->fd, con->writeBuffer.front().c_str(), len, 0);
+        if (con->writeQueue.size()) {
+            MessagePtr outMessage = con->writeQueue.front();
+            int len = outMessage->Length() - con->writePosition;
+            int sent = send(w->fd, outMessage->Buffer() + con->writePosition, len, 0);
             if (sent < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
                 return;
             } else if (sent <= 0) {
@@ -212,11 +213,10 @@ void Server::connectionWriteCallback(struct ev_loop* loop, ev_io* w, int revents
                 close(w->fd);
             } else if (sent != len) {
                 DLOG(WARNING) << "Short write to socket. Expected to write " << len << "bytes but only wrote " << sent << " bytes.";
-                string tmp(con->writeBuffer.front().substr(sent));
-                con->writeBuffer.pop_front();
-                con->writeBuffer.push_front(tmp);
+                con->writePosition += sent;
             } else {
-                con->writeBuffer.pop_front();
+                con->writeQueue.pop_front();
+                con->writePosition = 0;
             }
         } else {
             ev_io_stop(loop, w);
@@ -311,7 +311,7 @@ void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents) {
                     return;
 
             }
-            con->send(buffer);
+            con->sendRaw(buffer);
             con->protocol = ver;
             con->readBuffer.clear();
             ev_io* read = new ev_io;
@@ -432,7 +432,8 @@ void Server::prepareCallback(struct ev_loop* loop, ev_prepare* w, int revents) {
 void Server::pingCallback(struct ev_loop* loop, ev_timer* w, int revents) {
     static string ping_command("PIN");
     ConnectionPtr con(static_cast<ConnectionInstance*> (w->data));
-    con->send(ping_command);
+    MessagePtr outMessage(MessageBuffer::FromString(ping_command));
+    con->send(outMessage);
     ev_timer_again(server_loop, w);
 }
 

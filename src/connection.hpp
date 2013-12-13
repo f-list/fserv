@@ -36,6 +36,7 @@
 #include "websocket.hpp"
 #include "ferror.hpp"
 #include "lua_base.hpp"
+#include "messagebuffer.hpp"
 
 using std::string;
 using std::tr1::unordered_map;
@@ -53,14 +54,15 @@ typedef unordered_set<int> intlist_t;
 typedef unordered_set<string> stringset_t;
 typedef unordered_map<string, string> stringmap_t;
 typedef unordered_map<string, double> timermap_t;
-typedef list<string> stringlist_t;
+typedef list<MessagePtr> messagelist_t;
 
 class ConnectionInstance : public LBase {
 public:
     ConnectionInstance();
     ~ConnectionInstance();
 
-    bool send(string& message);
+    bool send(MessagePtr message);
+    bool sendRaw(string& message);
     void sendError(int error);
     void sendError(int error, string message);
     void sendDebugReply(string message);
@@ -122,7 +124,8 @@ public:
 
     //Buffers
     string readBuffer;
-    stringlist_t writeBuffer;
+    messagelist_t writeQueue;
+    size_t writePosition;
 
     //Timers
     timermap_t timers;
