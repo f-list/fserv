@@ -71,7 +71,7 @@ public:
 private:
     size_t length;
     uint8_t* buffer;
-    StreamedList* list;
+    //StreamedList* list;
 
     volatile size_t refCount;
 
