@@ -24,6 +24,7 @@ Required third party libraries
 
 * [LuaJIT](http://www.luajit.org/)
 * [libev](http://software.schmorp.de/pkg/libev.html)
+* [evhttpclient](https://github.com/jspotter/evhttpclient)
 * [google-glog](https://code.google.com/p/google-glog/)
 * [google-perftools (tcmalloc)](https://code.google.com/p/gperftools/) - *Optional with minor source and makefile modifications*
 * [libjansson](http://www.digip.org/jansson/)
