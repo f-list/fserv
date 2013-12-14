@@ -29,7 +29,7 @@
 #include "logging.hpp"
 #include "connection.hpp"
 #include "fjson.hpp"
-#include "login_curl.hpp"
+#include "login_evhttp.hpp"
 #include "server.hpp"
 #include "startup_config.hpp"
 #include "server_state.hpp"
@@ -183,13 +183,13 @@ FReturnCode NativeCommand::IdentCommand(ConnectionPtr& con, string& payload) {
         return FERR_UNKNOWN_AUTH_METHOD;
     }
 
-    if (!Login::addRequest(request)) {
+    if (!LoginEvHTTPClient::addRequest(request)) {
         json_decref(topnode);
         delete request;
         return FERR_NO_LOGIN_SLOT;
     }
 
-    Login::sendWakeup();
+    LoginEvHTTPClient::sendWakeup();
 
     json_decref(topnode);
     return FERR_OK;

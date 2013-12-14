@@ -31,7 +31,7 @@
 #include "logging.hpp"
 #include "flua.hpp"
 #include "fthread.hpp"
-#include "login_curl.hpp"
+#include "login_evhttp.hpp"
 #include "redis.hpp"
 #include "ferror.hpp"
 
