@@ -177,7 +177,8 @@ void* LoginEvHTTPClient::runThread(void* param) {
     login_loop = ev_loop_new(EVFLAG_AUTO);
 
     double timeout = StartupConfig::getDouble("logintimeout");
-    client = new EvHttpClient(login_loop, StartupConfig::getString("loginhost"), timeout, NULL, 0);
+    int connection_pool = StartupConfig::getDouble("login_connection_pool");
+    client = new EvHttpClient(login_loop, StartupConfig::getString("loginhost"), timeout, NULL, connection_pool);
     
     login_timer = new ev_timer;
     ev_timer_init(login_timer, LoginEvHTTPClient::timeoutCallback, 0, 5.);
