@@ -46,10 +46,8 @@ struct ev_loop* LoginEvHTTPClient::login_loop = 0;
 ev_async* LoginEvHTTPClient::login_async = 0;
 ev_timer* LoginEvHTTPClient::login_timer = 0;
 EvHttpClient* LoginEvHTTPClient::client;
-map<string, string> login_headers;
-
-pthread_mutex_t curl_initialization_mutex = PTHREAD_MUTEX_INITIALIZER;
-CURL* curl_handle = 0;
+map<string, string> LoginEvHTTPClient::login_headers;
+CURL* LoginEvHTTPClient::curl_handle = 0;
 
 bool curl_escape_string(string& to_escape) {
     bool res = false;
@@ -63,10 +61,7 @@ bool curl_escape_string(string& to_escape) {
 }
 
 bool LoginEvHTTPClient::setupCurlHandle() {
-    MUT_LOCK(curl_initialization_mutex);
-    curl_global_init(CURL_GLOBAL_NOTHING);
     curl_handle = curl_easy_init();
-    MUT_UNLOCK(curl_initialization_mutex);
     return curl_handle != NULL;
 }
 
@@ -97,15 +92,13 @@ void LoginEvHTTPClient::response_callback(ResponseInfo *response, void *requestD
     addReply(reply);
 }
 
-string login_url;
-
 void LoginEvHTTPClient::processLogin(LoginRequest* request) {
     bool res = false;
     LoginReply* reply = new LoginReply;
     reply->connection = request->connection;
     reply->success = false;
 
-    string url = login_url;
+    string url = StartupConfig::getString("loginpath");
     switch (request->method) {
         case LOGIN_METHOD_TICKET:
             url += "?method=ticket&account=";
@@ -166,12 +159,8 @@ void LoginEvHTTPClient::timeoutCallback(struct ev_loop* loop, ev_timer* w, int r
 
 void* LoginEvHTTPClient::runThread(void* param) {
     DLOG(INFO) << "Loginservice: Starting";
-    /*while (!setupCurlHandle()) {
-        LOG(DFATAL) << "Could not set up a curl handle for login. Sleeping.";
-        usleep(CURL_FAILURE_WAIT);
-    }*/
 
-    login_url = StartupConfig::getString("loginpath");
+    setupCurlHandle();
     login_headers.insert(pair<string,string>("User-Agent", StartupConfig::getString("version")));
 
     login_loop = ev_loop_new(EVFLAG_AUTO);

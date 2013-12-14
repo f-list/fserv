@@ -76,5 +76,7 @@ private:
     static struct ev_loop* login_loop;
     static ev_async* login_async;
     static ev_timer* login_timer;
+    static map<string, string> login_headers;
+    CURL* curl_handle;
 };
 #endif //LOGIN_EV_HTTP_H
