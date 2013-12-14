@@ -34,7 +34,7 @@ install:
   - cd ~/build
   - git clone https://github.com/jspotter/evhttpclient
   - cd evhttpclient
-  - ./configure && make
+  - make
   - sudo cp *.h /usr/include
   - sudo cp libevhttpclient.so /usr/lib
   
