@@ -58,6 +58,7 @@ public:
     static pthread_mutex_t replyMutex;
     
 private:
+    static bool curl_escape_string(string& to_escape);
     static bool addReply(LoginReply* newReply);
     static void processLogin(LoginRequest* request);
     static LoginRequest* getRequest();
@@ -77,6 +78,6 @@ private:
     static ev_async* login_async;
     static ev_timer* login_timer;
     static map<string, string> login_headers;
-    CURL* curl_handle;
+    static CURL* curl_handle;
 };
 #endif //LOGIN_EV_HTTP_H

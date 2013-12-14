@@ -49,7 +49,7 @@ EvHttpClient* LoginEvHTTPClient::client;
 map<string, string> LoginEvHTTPClient::login_headers;
 CURL* LoginEvHTTPClient::curl_handle = 0;
 
-bool curl_escape_string(string& to_escape) {
+bool LoginEvHTTPClient::curl_escape_string(string& to_escape) {
     bool res = false;
     char* output = curl_easy_escape(curl_handle, to_escape.c_str(), to_escape.length());
     if (output) {
