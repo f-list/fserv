@@ -32,7 +32,7 @@
 //Local project headers
 #include "logging.hpp"
 #include "fthread.hpp"
-#include "login_curl.hpp"
+#include "login_evhttp.hpp"
 #include "server.hpp"
 #include "startup_config.hpp"
 #include "lua_constants.hpp"
@@ -73,13 +73,13 @@ int main(int argc, char* argv[]) {
     StartupConfig::init();
     if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
         LOG(ERROR) << "Curl global startup failed.";
-    Login::setMaxLoginSlots(static_cast<unsigned int> (StartupConfig::getDouble("loginslots")));
+    LoginEvHTTPClient::setMaxLoginSlots(static_cast<unsigned int> (StartupConfig::getDouble("loginslots")));
 
     pthread_t loginThread;
     pthread_attr_t loginAttr;
     pthread_attr_init(&loginAttr);
     pthread_attr_setdetachstate(&loginAttr, PTHREAD_CREATE_JOINABLE);
-    pthread_create(&loginThread, &loginAttr, &Login::runThread, 0);
+    pthread_create(&loginThread, &loginAttr, &LoginEvHTTPClient::runThread, 0);
 
     pthread_t redisThread;
     if (StartupConfig::getBool("enableredis")) {
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
     DLOG(INFO) << "Starting shutdown.";
 
     //Shutdown
-    Login::stopThread();
+    LoginEvHTTPClient::stopThread();
     pthread_join(loginThread, 0);
 
     if (Redis::isRunning() && StartupConfig::getBool("enableredis")) {

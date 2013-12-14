@@ -30,6 +30,14 @@ install:
   - cd glog-0.3.3
   - ./configure && make && sudo make install
   
+  # Fetch and build evHTTPClient
+  - cd ~/build
+  - git clone https://github.com/jspotter/evhttpclient
+  - cd evhttpclient
+  - make
+  - sudo cp *.h /usr/include
+  - sudo cp libevhttpclient.so /usr/lib
+  
 script: 
   # Finally, build fserv.
   - cd ~/build/f-list/fserv

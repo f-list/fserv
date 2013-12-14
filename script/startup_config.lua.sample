@@ -21,9 +21,14 @@ rtbaddress="127.0.0.1"
 --- RTB MAC secret.
 rtbsecret="anotherlongandcomplicatedrandomizedpassword"
 
---Login (CURL)
+--Login (evHTTPClient)
 logintimeout=30
-loginurl="http://www.f-list.net/json/verifyLogin.php"
+---Number of concurrent connections to the login server.
+login_connection_pool=15
+---Protocol, host and port.
+loginhost="http://www.f-list.net"
+---Login path
+loginpath="/json/verifyLogin.php"
 
 -- Lua
 --- Should lua time out event handlers.

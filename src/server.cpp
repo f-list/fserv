@@ -440,7 +440,7 @@ void Server::pingCallback(struct ev_loop* loop, ev_timer* w, int revents) {
 void Server::processWakeupCallback(struct ev_loop* loop, ev_async* w, int revents) {
     DLOG(INFO) << "Processing async wakeup.";
 
-    LoginReply* reply = Login::getReply();
+    LoginReply* reply = LoginEvHTTPClient::getReply();
     while (reply) {
         ConnectionPtr con = reply->connection;
         if (!con->closed) {
@@ -453,7 +453,7 @@ void Server::processWakeupCallback(struct ev_loop* loop, ev_async* w, int revent
             DLOG(WARNING) << "Received login reply for closed connection.";
         }
         delete reply;
-        reply = Login::getReply();
+        reply = LoginEvHTTPClient::getReply();
     }
 }
 
