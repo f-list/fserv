@@ -456,8 +456,8 @@ function (con, args)
 	return const.FERR_OK
 end
 
--- Adds a moderator to a channel.
--- Syntax: COA <channel> <character>
+-- Removes a moderator from a channel.
+-- Syntax: COR <channel> <character>
 event.COR =
 function (con, args)
 	if args.channel == nil or args.character == nil then
