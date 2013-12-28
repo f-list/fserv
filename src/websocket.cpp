@@ -54,7 +54,12 @@
 // NOTE NOTE NOTE NOTE
 namespace Websocket {
 
-    ProtocolVersion Acceptor::accept(std::string& input, std::string& output) {
+    /*
+     * Due to some "issues" with the TLS proxy server mangling headers, we
+     * have to lowercase headers to normalize the capitalization.
+     */
+    ProtocolVersion Acceptor::accept(std::string& input, std::string& output,
+            std::string& ip) {
         ProtocolVersion ret = PROTOCOL_INCOMPLETE;
         try {
             DLOG(INFO) << "Attempting to parse a websocket header.";
@@ -71,7 +76,11 @@ namespace Websocket {
 
                 std::string::size_type pos = line.find(": ");
                 if (pos != std::string::npos) {
-                    headers[line.substr(0, pos)] = line.substr(pos + 2);
+                    std::string key = line.substr(0, pos);
+                    for (int i = 0; i < key.length(); ++i) {
+                        key[i] = tolower(key[i]);
+                    }
+                    headers[key] = line.substr(pos + 2);
                 }
 
                 end = remainder.find("\r\n");
@@ -79,9 +88,14 @@ namespace Websocket {
 
             std::string outbuffer;
 
-            if (headers.count("Sec-WebSocket-Version") != 0 && headers.count("Sec-WebSocket-Key") != 0) {
+            // Copy the forwarded for ip into our output if it exists.
+            // Caller checks for proper remote address before trusting this.
+            if (headers.count("x-forwarded-for") != 0) {
+                ip = headers["x-forwarded-for"];
+            }
+            if (headers.count("sec-websocket-version") != 0 && headers.count("sec-websocket-key") != 0) {
                 DLOG(INFO) << "Found a Hybi websocket header.";
-                if (Hybi::accept(headers["Sec-WebSocket-Key"], headers["Sec-WebSocket-Origin"], outbuffer) != WS_RESULT_OK) {
+                if (Hybi::accept(headers["sec-websocket-key"], headers["sec-websocket-origin"], outbuffer) != WS_RESULT_OK) {
                     ret = PROTOCOL_BAD;
                 } else {
                     ret = PROTOCOL_HYBI;

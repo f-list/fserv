@@ -297,7 +297,8 @@ void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents) {
             con->readBuffer.append(&recvbuffer[0], received);
 
             string buffer;
-            ProtocolVersion ver = Websocket::Acceptor::accept(con->readBuffer, buffer);
+            string ip;
+            ProtocolVersion ver = Websocket::Acceptor::accept(con->readBuffer, buffer, ip);
             switch (ver) {
                 case PROTOCOL_HYBI:
                     break;
@@ -310,6 +311,16 @@ void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents) {
                     close(w->fd);
                     return;
 
+            }
+            // Only localhost is allowed to proxy for other clients.
+            if (con->clientAddress.sin_addr.s_addr == 0x70000001) {
+                if (inet_pton(AF_INET, ip.c_str(), &con->clientAddress) != 1) {
+                    LOG(WARNING) << "Could not determine the endpoint address from the TLS proxy.";
+                    prepareShutdownConnection(con.get());
+                    close(w->fd);
+                    return;
+                }
+                LOG(INFO) << "Accepted connection from TLS proxy for endpoint: " << inet_ntoa(con->clientAddress.sin_addr);
             }
             con->sendRaw(buffer);
             con->protocol = ver;
