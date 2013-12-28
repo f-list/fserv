@@ -58,7 +58,8 @@ namespace Websocket {
 
     class Acceptor {
     public:
-        static ProtocolVersion accept(std::string& input, std::string& output);
+        static ProtocolVersion accept(std::string& input, std::string& output,
+                                      std::string& ip);
     private:
 
         Acceptor() { }
@@ -68,7 +69,8 @@ namespace Websocket {
 
     class Hybi {
     public:
-        static WebSocketResult accept(std::string& key, std::string& origin, std::string& output);
+        static WebSocketResult accept(std::string& key, std::string& origin,
+                                      std::string& output);
         static WebSocketResult receive(std::string& input, std::string& output);
         static void send(std::string& input, std::string& output);
     private:
