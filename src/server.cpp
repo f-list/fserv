@@ -313,8 +313,8 @@ void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents) {
 
             }
             // Only localhost is allowed to proxy for other clients.
-            if (con->clientAddress.sin_addr.s_addr == 0x70000001) {
-                if (inet_pton(AF_INET, ip.c_str(), &con->clientAddress) != 1) {
+            if (ntohl(con->clientAddress.sin_addr.s_addr) == 0x70000001) {
+                if (inet_pton(AF_INET, ip.c_str(), &con->clientAddress.sin_addr) != 1) {
                     LOG(WARNING) << "Could not determine the endpoint address from the TLS proxy.";
                     prepareShutdownConnection(con.get());
                     close(w->fd);
