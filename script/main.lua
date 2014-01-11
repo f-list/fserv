@@ -1105,7 +1105,7 @@ function (con, args)
 			local rolls = tonumber(roll[1])
 			local sides = tonumber(roll[2])
 			local mod = 0
-			if rolls == nil or sides == nil or rolls > 9  or sides > 100 or sides < 2 then
+			if rolls == nil or sides == nil or rolls > 9  or sides > 500 or sides < 2 then
 				return const.FERR_BAD_ROLL_FORMAT
 			elseif rolls < 0 then
 				rolls = math.abs(rolls)
