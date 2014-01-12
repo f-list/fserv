@@ -78,9 +78,7 @@ void intrusive_ptr_add_ref(Channel* p) {
 }
 
 Channel::~Channel() {
-    for (chconlist_t::iterator i = participants.begin(); i != participants.end(); ++i) {
-        (*i)->leaveChannel(this);
-    }
+    assert(participants.size() == 0);
 }
 
 void Channel::sendToAll(string& message) {
