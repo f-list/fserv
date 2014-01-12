@@ -112,6 +112,7 @@ public:
         return connectionMap.size();
     }
 
+    static string generatePrivateChannelID(ConnectionPtr con, string& title);
     static void addChannel(string& name, Channel* channel);
     static void removeChannel(string& name);
     static ChannelPtr getChannel(string& name);
@@ -163,6 +164,7 @@ private:
 
     static long userCount;
     static long maxUserCount;
+    static long channelSeed;
     static conptrmap_t connectionMap;
     static concountmap_t connectionCountMap;
     static chanptrmap_t channelMap;

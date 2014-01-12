@@ -34,7 +34,6 @@
 #include "lua_channel.hpp"
 #include "server.hpp"
 #include "server_state.hpp"
-#include "sha1.hpp"
 
 #include <string>
 #include <stdio.h>
@@ -278,19 +277,8 @@ int LuaChannel::createPrivateChannel(lua_State* L) {
     GETLCON(base, L, 1, con);
     string title = luaL_checkstring(L, 2);
     lua_pop(L, 2);
-
-    char buf[1024];
-    bzero(&buf[0], sizeof (buf));
-    int size = snprintf(&buf[0], sizeof (buf), "%s%s%f%s", title.c_str(), con->characterName.c_str(), (float) Server::getEventTime(), "5n293$cns");
-
-    string namehash(&buf[0], size);
-    bzero(&buf[0], sizeof (buf));
-    namehash = thirdparty::SHA1HashString(namehash);
-    snprintf(&buf[0], sizeof (buf), "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", (unsigned char) namehash[0], (unsigned char) namehash[1],
-            (unsigned char) namehash[2], (unsigned char) namehash[3], (unsigned char) namehash[4], (unsigned char) namehash[5], (unsigned char) namehash[6],
-            (unsigned char) namehash[7], (unsigned char) namehash[8], (unsigned char) namehash[9]);
-    namehash = string(&buf[0], 20);
-    namehash = "ADH-" + namehash;
+    
+    string namehash = ServerState::generatePrivateChannelID(con, title);
     Channel* privchan = new Channel(namehash, CT_PRIVATE, con);
     privchan->setTitle(title);
     ServerState::addChannel(namehash, privchan);

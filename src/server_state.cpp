@@ -29,6 +29,8 @@
 #include "fjson.hpp"
 #include "logging.hpp"
 #include "redis.hpp"
+#include "server.hpp"
+#include "sha1.hpp"
 
 #include <string>
 #include <iostream>
@@ -46,6 +48,7 @@ staffcallmap_t ServerState::staffCallList;
 chanoplist_t ServerState::channelOpList;
 long ServerState::userCount = 0;
 long ServerState::maxUserCount = 0;
+long ServerState::channelSeed = 0;
 
 bool ServerState::fsaveFile(const char* name, string& contents) {
     std::ofstream file;
@@ -367,6 +370,37 @@ ConnectionPtr ServerState::getConnection(string& name) {
 
 const int ServerState::getConnectionIPCount(ConnectionPtr con) {
     return connectionCountMap[(int) con->clientAddress.sin_addr.s_addr];
+}
+
+string ServerState::generatePrivateChannelID(ConnectionPtr con, string& title) {
+    while (true) {
+        char buf[1024];
+        bzero(&buf[0], sizeof (buf));
+        int size = snprintf(&buf[0], sizeof (buf), "%s%s%f%ld", title.c_str(),
+                con->characterName.c_str(), (float) Server::getEventTime(),
+                ++ServerState::channelSeed);
+
+        string namehash(&buf[0], size);
+        bzero(&buf[0], sizeof (buf));
+        namehash = thirdparty::SHA1HashString(namehash);
+        snprintf(&buf[0], sizeof (buf), "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+                (unsigned char) namehash[0], (unsigned char) namehash[1],
+                (unsigned char) namehash[2], (unsigned char) namehash[3],
+                (unsigned char) namehash[4], (unsigned char) namehash[5],
+                (unsigned char) namehash[6], (unsigned char) namehash[7],
+                (unsigned char) namehash[8], (unsigned char) namehash[9]);
+        namehash = string(&buf[0], 20);
+        namehash = "ADH-" + namehash;
+        string lname = namehash;
+        int nameSize = lname.size();
+        for (int i = 0; i < nameSize; ++i) {
+            lname[i] = (char) tolower(lname[i]);
+        }
+        Channel* chan = ServerState::getChannel(lname).get();
+        if (chan == 0) {
+            return namehash;
+        }
+    }
 }
 
 void ServerState::addChannel(string& name, Channel* channel) {
