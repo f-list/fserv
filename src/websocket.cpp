@@ -77,7 +77,7 @@ namespace Websocket {
                 std::string::size_type pos = line.find(": ");
                 if (pos != std::string::npos) {
                     std::string key = line.substr(0, pos);
-                    for (int i = 0; i < key.length(); ++i) {
+                    for (size_t i = 0; i < key.length(); ++i) {
                         key[i] = tolower(key[i]);
                     }
                     headers[key] = line.substr(pos + 2);
@@ -249,45 +249,4 @@ namespace Websocket {
         string tmp(frame.begin(), frame.end());
         output.swap(tmp);
     }
-    
-    void flist_request(PurpleConnection *pc, const gchar* type, JsonObject *object) {
-    FListAccount *fla = pc->proto_data;
-    gsize json_len;
-    gchar *json_text = NULL;
-    gsize sent;
-    GString *payload_str = g_string_new(NULL);
-    gchar *payload;
-    gsize payload_len;
-    gsize payload_offset;
-    char* to_send = 0;
-    
-    g_string_append(payload_str, type);
-    
-    if(object) {
-        JsonNode *root = json_node_new(JSON_NODE_OBJECT);
-        JsonGenerator *gen = json_generator_new();
-        json_node_set_object(root, object);
-        json_generator_set_root(gen, root);
-        json_text = json_generator_to_data(gen, &json_len);
-        g_string_append(payload_str, " ");
-        g_string_append(payload_str, json_text);
-        g_free(json_text);
-        g_object_unref(gen);
-        json_node_free(root);
-    }
-    
-    payload_len = payload_str->len;
-    payload = g_string_free(payload_str, FALSE);
-    if(payload_len < 126)
-    {
-        payload_offset
-    }
-    
-    g_free(payload);
-    
-    
-    // TODO: check the return value of write()
-    sent = write(fla->fd, to_write, to_write_len);
-    free(to_send);
-}
 }
