@@ -269,9 +269,12 @@ void ServerState::loadBans() {
 
 void ServerState::saveBans() {
     DLOG(INFO) << "Saving bans.";
-    for (timeoutmap_t::iterator i = timeoutList.begin(); i != timeoutList.end(); ++i) {
-        if (i->second.end < time(0))
-            timeoutList.erase(i);
+    for (timeoutmap_t::iterator i = timeoutList.begin(); i != timeoutList.end(); ) {
+        if (i->second.end < time(0)) {
+            timeoutList.erase(i++);
+        } else {
+            ++i;
+        }
     }
 
     json_t* root = json_object();
