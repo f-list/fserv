@@ -42,6 +42,7 @@
 ConnectionInstance::ConnectionInstance()
 :
 LBase(),
+accountID(0),
 identified(false),
 admin(false),
 globalModerator(false),

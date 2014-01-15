@@ -141,7 +141,7 @@ void ServerState::saveChannels() {
 
 void ServerState::cleanupChannels() {
     chanptrmap_t chans = getChannels();
-    chans.empty();
+    chans.clear();
 }
 
 void ServerState::removeUnusedChannels() {
