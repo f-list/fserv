@@ -86,7 +86,15 @@ void Redis::processRequest(RedisRequest* req) {
             case REDIS_DEL:
             {
                 redisReply* reply = (redisReply*) redisCommand(context, "DEL %s", req->key.c_str());
-                freeReplyObject(reply);
+                if (reply)
+                    freeReplyObject(reply);
+                else {
+                    DLOG(WARNING) << "A redis command failed. Restarting the redis system.";
+                    redisFree(context);
+                    context = 0;
+                    delete req;
+                    return;
+                }
                 break;
             }
             case REDIS_SADD:
