@@ -62,6 +62,9 @@ debugL(0) {
 }
 
 ConnectionInstance::~ConnectionInstance() {
+    if (closed != true) {
+        LOG(FATAL) << "[BUG] Deleting a connection not marked as closed.";
+    }
     if (debugL) {
         lua_close(debugL);
     }
@@ -69,6 +72,9 @@ ConnectionInstance::~ConnectionInstance() {
 
 void intrusive_ptr_release(ConnectionInstance* p) {
     if ((--p->refCount) <= 0) {
+        if (p->closed != true) {
+            LOG(FATAL) << "[BUG] Deleting a connection not marked as closed.";
+        }
         delete p;
     }
 }
