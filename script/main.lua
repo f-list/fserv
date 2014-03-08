@@ -710,7 +710,7 @@ function (con, args)
 	end
 
 	if args.action == "list" then
- 		u.send(con, "IGN", {action="list", array_characters=u.getIgnoreList(con)})
+		u.send(con, "IGN", {action="list", array_characters=u.getIgnoreList(con)})
 	elseif args.action == "add" and args.character ~= nil then
 		if #u.getIgnoreList(con) < 100 then
 			u.addIgnore(con, string.lower(args.character))
@@ -718,6 +718,16 @@ function (con, args)
 		else
 			u.sendError(con, 64, "Your ignore list may not exceed 100 people.")
 			return const.FERR_OK
+		end
+	elseif args.action == "delete" and args.character == "*" then
+		local ignores = u.getIgnoreList(con)
+		for i, v in ipairs(ignores) do
+			u.removeIgnore(con, string.lower(v))
+		end
+		local account_cons = u.getByAccount(con)
+		for i, v in ipairs(account_cons) do
+			u.setIgnores(v, ignores)
+			u.send(con, "IGN", {action="init", array_characters=u.getIgnoreList(con)})
 		end
 	elseif args.action == "delete" and args.character ~= nil then
 		u.removeIgnore(con, string.lower(args.character))
@@ -1653,8 +1663,8 @@ function chat_init()
 end
 
 function string:split(sep)
-        local sep, fields = sep or ":", {}
-        local pattern = string.format("([^%s]+)", sep)
-        self:gsub(pattern, function(c) fields[#fields+1] = c end)
-        return fields
+	local sep, fields = sep or ":", {}
+	local pattern = string.format("([^%s]+)", sep)
+	self:gsub(pattern, function(c) fields[#fields+1] = c end)
+	return fields
 end
