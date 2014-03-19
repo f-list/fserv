@@ -1298,6 +1298,10 @@ end
 -- Syntax STA <status> ?<statusmessage>
 event.STA =
 function (con, args)
+	if u.checkUpdateTimer(con, "sta", const.STA_FLOOD) == true then
+		return const.FERR_THROTTLE_MESSAGE
+	end
+
 	if args.status == nil then
 		return const.FERR_BAD_SYNTAX
 	end
@@ -1630,6 +1634,7 @@ function chat_init()
 	const.FKS_FLOOD = s.getConfigDouble("find_flood")
 	const.SFC_FLOOD = s.getConfigDouble("staffcall_flood")
 	const.IGN_FLOOD = s.getConfigDouble("ignore_flood")
+	const.STA_FLOOD = 5
 	const.VERSION = s.getConfigString("version")
 	const.IP_MAX = s.getConfigDouble("max_per_ip")
 	const.MAX_TITLE_LEN = 64.4999
