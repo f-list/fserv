@@ -1422,7 +1422,7 @@ end
 
 event.ident_callback =
 function (con, args)
-	if args.error ~= "" then
+	if args.error ~= nil then
 		print("Error returned from login server was: "..args.error)
 		return const.FERR_IDENT_FAILED
 	end
