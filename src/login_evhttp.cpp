@@ -65,22 +65,15 @@ bool LoginEvHTTPClient::setupCurlHandle() {
     return curl_handle != NULL;
 }
 
-void LoginEvHTTPClient::response_callback(ResponseInfo *response, void *requestData, void *clientData)
-{
-    LoginReply* reply = static_cast<LoginReply*>(requestData);
-    if(response == NULL) {
+void LoginEvHTTPClient::response_callback(ResponseInfo *response, void *requestData, void *clientData) {
+    LoginReply* reply = static_cast<LoginReply*> (requestData);
+    if (response == NULL) {
         DLOG(WARNING) << "Loginservice: Null response received.";
         addReply(reply);
         return;
     }
 
-    if(response->code >= 300) {
-        DLOG(WARNING) << "Loginservice: Non-2xx response code (" << response->code << ")." << endl;
-        addReply(reply);
-        return;
-    }
-
-    if(response->timeout) {
+    if (response->timeout) {
         DLOG(WARNING) << "Loginservice: Request timed out.";
         addReply(reply);
         return;
@@ -99,18 +92,19 @@ void LoginEvHTTPClient::processLogin(LoginRequest* request) {
     reply->success = false;
 
     string url = StartupConfig::getString("loginpath");
+    string post = "always200=1&searchData=1&secret=";
+    string secret = StartupConfig::getString("loginsecret");
     switch (request->method) {
         case LOGIN_METHOD_TICKET:
-            url += "?method=ticket&account=";
-            if (!curl_escape_string(request->account))
+            if (!curl_escape_string(secret))
                 break;
-            url += request->account + "&ticket=";
+            post += secret + "&ticket=";
             if (!curl_escape_string(request->ticket))
                 break;
-            url += request->ticket + "&char=";
+            post += request->ticket + "&name=";
             if (!curl_escape_string(request->characterName))
                 break;
-            url += request->characterName;
+            post += request->characterName;
             res = true;
             break;
         default:
@@ -118,15 +112,16 @@ void LoginEvHTTPClient::processLogin(LoginRequest* request) {
             addReply(reply);
             return;
     }
-    
-    if(!res) {
+
+    if (!res) {
         DLOG(WARNING) << "Loginservice: Bad characters in request";
         addReply(reply);
         return;
     }
-    
-    LOG(INFO) << "Sending request: " << url;
-    if(client->makeGet(LoginEvHTTPClient::response_callback, url, login_headers, (void*)reply) != 0) {
+
+    DLOG(INFO) << "Sending request: " << url;
+    if (client->makePost(LoginEvHTTPClient::response_callback, url, login_headers,
+            post, (void*) reply) != 0) {
         DLOG(WARNING) << "Loginservice: Get failed for " << url;
         addReply(reply);
         return;
@@ -161,14 +156,14 @@ void* LoginEvHTTPClient::runThread(void* param) {
     DLOG(INFO) << "Loginservice: Starting";
 
     setupCurlHandle();
-    login_headers.insert(pair<string,string>("User-Agent", StartupConfig::getString("version")));
+    login_headers.insert(pair<string, string>("User-Agent", StartupConfig::getString("version")));
 
     login_loop = ev_loop_new(EVFLAG_AUTO);
 
     double timeout = StartupConfig::getDouble("logintimeout");
     int connection_pool = StartupConfig::getDouble("login_connection_pool");
     client = new EvHttpClient(login_loop, StartupConfig::getString("loginhost"), timeout, NULL, connection_pool);
-    
+
     login_timer = new ev_timer;
     ev_timer_init(login_timer, LoginEvHTTPClient::timeoutCallback, 0, 5.);
     ev_timer_start(login_loop, login_timer);
@@ -185,10 +180,10 @@ void* LoginEvHTTPClient::runThread(void* param) {
     ev_timer_stop(login_loop, login_timer);
     delete login_timer;
     login_timer = 0;
-    
+
     delete client;
     login_headers.clear();
-    
+
     ev_loop_destroy(login_loop);
     login_loop = 0;
     DLOG(INFO) << "Loginservice: Ending.";
@@ -254,5 +249,3 @@ bool LoginEvHTTPClient::addRequest(LoginRequest* newRequest) {
     //DLOG(INFO) << "Finished adding login request to queue.";
     return true;
 }
-
-

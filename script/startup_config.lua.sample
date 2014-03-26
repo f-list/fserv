@@ -26,9 +26,11 @@ logintimeout=30
 ---Number of concurrent connections to the login server.
 login_connection_pool=15
 ---Protocol, host and port.
-loginhost="http://www.f-list.net"
+loginhost="http://www.f-list.net:6881"
 ---Login path
-loginpath="/json/verifyLogin.php"
+loginpath="/api/v2/chat/auth"
+---Login secret
+loginsecret="somelongpassword"
 
 -- Lua
 --- Should lua time out event handlers.

@@ -1431,7 +1431,7 @@ function (con, args)
 		return const.FERR_TOO_MANY_FROM_IP
 	end
 
-	local name = args.char.name
+	local name = args.name
 	local lname = string.lower(name)
 
 	local oldconfound, oldcon = u.getConnection(lname)
@@ -1442,7 +1442,7 @@ function (con, args)
 		oldcon = nil
 	end
 
-	if tonumber(args.account.banned) ~= 0 or tonumber(args.account.timeout) >  s.getTime() then
+	if args.banned ~= false or tonumber(args.timeout) >  s.getTime() then
 		return const.FERR_BANNED_FROM_SERVER
 	end
 
@@ -1450,14 +1450,14 @@ function (con, args)
 		return const.FERR_IDENT_FAILED
 	end
 
-	if tonumber(args.account.account_id) == 0 then
+	if tonumber(args.account_id) == 0 then
 		print("Failed a login because the account id was zero")
 		return const.FERR_IDENT_FAILED
 	end
-	u.setAccountID(con, args.account.account_id)
+	u.setAccountID(con, args.account_id)
 
 	local isadmin = false
-	if args.account.admin == "1" or lname == "kira" or lname == "vera" or lname == "melvin" then
+	if args.admin == true or lname == "kira" or lname == "vera" or lname == "melvin" then
 		u.setAdmin(con, true)
 		isadmin = true
 	end
@@ -1479,38 +1479,10 @@ function (con, args)
 		return const.FERR_OK
 	end
 
-	if args.select ~= nil then
-		if args.select.Gender ~= nil then
-			u.setGender(con, args.select.Gender)
-		else
-			args.select.Gender="None"
-			u.setGender(con, "None")
-		end
-		if args.select.Orientation == nil then
-			args.select.Orientation = "None"
-		end
-		if args.select.Position == nil then
-			args.select.Position = "None"
-		end
-		if args.select["Language preference"] == nil then
-			args.select["Language preference"] = "None"
-		end
-		if args.select["Furry preference"] == nil then
-			args.select["Furry preference"] = "None"
-		end
-		if args.select["Dom/Sub Role"] == nil then
-			args.select["Dom/Sub Role"] = "None"
-		end
-		u.setInfoTags(con, args.select)
+	if args.gender ~= nil then
+		u.setGender(con, args.gender)
 	else
-		local newselect = {}
-		newselect.Gender = "None"
-		newselect.Orientation = "None"
-		newselect["Language preference"] = "None"
-		newselect["Furry preference"] = "None"
-		newselect["Dom/Sub Role"] = "None"
-		newselect.Position = "None"
-		u.setInfoTags(con, newselect)
+		args.gender="None"
 		u.setGender(con, "None")
 	end
 
@@ -1521,12 +1493,8 @@ function (con, args)
 		u.setKinks(con, newkinks)
 	end
 
-	if args.info ~= nil then
-		u.setInfoTags(con, args.info)
-	end
-
-	if args.custom ~= nil then
-		u.setCustomKinks(con, args.custom)
+	if args.infotags ~= nil then
+		u.setInfoTags(con, args.infotags)
 	end
 
 	if args.array_friends ~= nil then
@@ -1534,7 +1502,7 @@ function (con, args)
 	end
 
 	if args.array_ignores ~= nil then
-		u.setIgnores(con, args.array_ignores)
+		--u.setIgnores(con, args.array_ignores)
 	end
 
 	local isstaff = false
