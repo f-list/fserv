@@ -157,6 +157,7 @@ void* LoginEvHTTPClient::runThread(void* param) {
 
     setupCurlHandle();
     login_headers.insert(pair<string, string>("User-Agent", StartupConfig::getString("version")));
+    login_headers.insert(pair<string, string>("Content-Type","application/x-www-form-urlencoded"));
 
     login_loop = ev_loop_new(EVFLAG_AUTO);
 
