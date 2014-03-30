@@ -97,6 +97,7 @@ void LuaConstants::initClass() {
     E(FERR_NOT_IMPLEMENTED, "This command has not been implemented yet.");
     E(FERR_LOGIN_TIMED_OUT, "A connection to the login server timed out. Please try again in a moment.");
     E(FERR_UNKNOWN, "An unknown error occurred.");
+    E(FERR_WRONG_TICKET_VERSION, "You are attempting to log in using an outdated API ticket version. Please contact Kira for details.");
 
 #undef E
 }

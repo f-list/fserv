@@ -165,14 +165,16 @@ FReturnCode NativeCommand::IdentCommand(ConnectionPtr& con, string& payload) {
     string method = json_string_value(methodnode);
     if (method == "ticket") {
         request->method = LOGIN_METHOD_TICKET;
-        json_t* tempnode = json_object_get(topnode, "account");
-        if (!json_is_string(tempnode))
-            goto fail;
-        request->account = json_string_value(tempnode);
-        tempnode = json_object_get(topnode, "ticket");
+        json_t* tempnode = json_object_get(topnode, "ticket");
         if (!json_is_string(tempnode))
             goto fail;
         request->ticket = json_string_value(tempnode);
+        if (request->ticket.substr(0,4) == "fct_")
+        {
+            json_decref(topnode);
+            delete request;
+            return FERR_WRONG_TICKET_VERSION;
+        }
         tempnode = json_object_get(topnode, "character");
         if (!json_is_string(tempnode))
             goto fail;

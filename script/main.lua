@@ -1424,7 +1424,8 @@ event.ident_callback =
 function (con, args)
 	if args.error ~= nil then
 		print("Error returned from login server was: "..args.error)
-		return const.FERR_IDENT_FAILED
+        u.sendError(con, 4, "Login error: "..args.error.." Message: "..args.error_message)
+		return const.FERR_OK
 	end
 
 	if u.getIPCount(con) >= const.IP_MAX then
