@@ -65,15 +65,6 @@ function joinChannel(chan, con)
 	u.send(con, "CDS", {channel=channame, description=c.getDescription(chan)})
 end
 
-function propagateIgnoreList(con, laction, lcharacter)
-	local ignores = u.getIgnoreList(con)
-	local account_cons = u.getByAccount(con)
-	for i, v in ipairs(account_cons) do
-		u.setIgnores(v, ignores)
-		u.send(v, "IGN", {action=laction, character=lcharacter})
-	end
-end
-
 -- Bans a person by their account.
 -- Syntax: ACB <character>
 event.ACB =
@@ -702,7 +693,7 @@ function (con, args)
 end
 
 -- Processes ignore lists.
--- Syntax: IGN <It's complicated>
+-- Syntax: IGN <action>
 event.IGN =
 function (con, args)
 	if args.action == nil then
@@ -711,34 +702,6 @@ function (con, args)
 
 	if args.action == "list" then
 		u.send(con, "IGN", {action="list", array_characters=u.getIgnoreList(con)})
-	elseif args.action == "add" and args.character ~= nil then
-		if #u.getIgnoreList(con) < 100 then
-			u.addIgnore(con, string.lower(args.character))
-			propagateIgnoreList(con, "add", args.character)
-		else
-			u.sendError(con, 64, "Your ignore list may not exceed 100 people.")
-			return const.FERR_OK
-		end
-	elseif args.action == "delete" and args.character == "*" then
-		local ignores = u.getIgnoreList(con)
-		for i, v in ipairs(ignores) do
-			u.removeIgnore(con, string.lower(v))
-		end
-		local account_cons = u.getByAccount(con)
-		for i, v in ipairs(account_cons) do
-			u.setIgnores(v, ignores)
-			u.send(con, "IGN", {action="init", array_characters=u.getIgnoreList(con)})
-		end
-	elseif args.action == "delete" and args.character ~= nil then
-		u.removeIgnore(con, string.lower(args.character))
-		propagateIgnoreList(con, "delete", args.character)
-	elseif args.action == "notify" and args.character ~= nil then
-		if u.checkUpdateTimer(con, "ign", const.IGN_FLOOD) ~= true then
-			local found, char = u.getConnection(string.lower(args.character))
-			if found == true then
-				u.sendError(char, 20, u.getName(con).." does not wish to receive messages from you.")
-			end
-		end
 	else
 		return const.FERR_BAD_SYNTAX
 	end
@@ -1587,6 +1550,20 @@ function (args)
 	end
 	s.broadcastOps("SYS", {message="Hellban against account id: "..args['a'].." was successful."})
 	return const.FERR_OK
+end
+
+rtb.IGN =
+function (args)
+        local accounter_cons = u.getByAccountID(args.a)
+        for i, v in ipairs(account_cons) do
+                if args.t == "add" then
+                        u.addIgnore(v, args.c, args.d)
+                        u.send(v, "IGN", {action="add", character=args.c})
+                elseif args.t == "rem" then
+                        u.removeIgnore(v, args.c, args.d)
+                        u.send(v, "IGN", {action="del", character=args.c})
+                end
+        end
 end
 
 --[[ While this function is called before most other Lua functions,	it is discouraged that you store anything in Lua

@@ -516,31 +516,6 @@ int LuaConnection::addIgnore(lua_State* L) {
     lua_pop(L, 2);
 
     con->ignores.insert(name);
-    string redis_key;
-    lua_pushinteger(L, con->accountID);
-    lua_pushstring(L, ".ignores");
-    lua_concat(L, 2);
-    redis_key = lua_tostring(L, -1);
-    lua_pop(L, 1);
-
-    RedisRequest* req = new RedisRequest;
-    req->key = redis_key;
-    req->method = REDIS_DEL;
-    req->updateContext = RCONTEXT_IGNORE;
-    if (!Redis::addRequest(req)) {
-        delete req;
-        return 0;
-    }
-
-    req = new RedisRequest;
-    req->key = redis_key;
-    req->method = REDIS_LPUSH;
-    req->updateContext = RCONTEXT_IGNORE;
-    for (stringset_t::const_iterator i = con->ignores.begin(); i != con->ignores.end(); ++i) {
-        req->values.push(*i);
-    }
-    if (!Redis::addRequest(req))
-        delete req;
     return 0;
 }
 
@@ -553,31 +528,6 @@ int LuaConnection::removeIgnore(lua_State* L) {
     lua_pop(L, 2);
 
     con->ignores.erase(name);
-    string redis_key;
-    lua_pushinteger(L, con->accountID);
-    lua_pushstring(L, ".ignores");
-    lua_concat(L, 2);
-    redis_key = lua_tostring(L, -1);
-    lua_pop(L, 1);
-
-    RedisRequest* req = new RedisRequest;
-    req->key = redis_key;
-    req->method = REDIS_DEL;
-    req->updateContext = RCONTEXT_IGNORE;
-    if (!Redis::addRequest(req)) {
-        delete req;
-        return 0;
-    }
-
-    req = new RedisRequest;
-    req->key = redis_key;
-    req->method = REDIS_LPUSH;
-    req->updateContext = RCONTEXT_IGNORE;
-    for (stringset_t::const_iterator i = con->ignores.begin(); i != con->ignores.end(); ++i) {
-        req->values.push(*i);
-    }
-    if (!Redis::addRequest(req))
-        delete req;
     return 0;
 }
 
