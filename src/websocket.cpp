@@ -226,13 +226,13 @@ namespace Websocket {
     }
 
     void Hybi::send(string& input, string& output) {
-        std::vector<char> frame;
+        std::vector<unsigned char> frame;
         unsigned int length = input.length();
 
         frame.push_back(0x80 | wsOpcodeText);
 
         if (length <= wsSingleByteLength) {
-            frame.push_back(static_cast<char> (length));
+            frame.push_back(static_cast<unsigned char> (length));
         } else if (length <= 0xFFFF) {
             frame.push_back(wsTwoByteLength);
             frame.push_back((length & 0xFF00) >> 8);
@@ -240,12 +240,12 @@ namespace Websocket {
         } else {
             uint64_t qlength = length;
             frame.push_back(wsEightByteLength);
-            for (size_t i = 0; i<sizeof (qlength); ++i) {
-                frame.push_back(qlength & 0xFF);
-                qlength >>= 8;
+            for (size_t i = 0; i < 8; ++i) {
+                unsigned char length_piece = (qlength >> 8*(7-i)) & 0xFF;
+                frame.push_back(length_piece);
             }
         }
-        frame.insert(frame.end(), input.c_str(), input.c_str() + length);
+        frame.insert(frame.end(), input.data(), input.data() + length);
         string tmp(frame.begin(), frame.end());
         output.swap(tmp);
     }
