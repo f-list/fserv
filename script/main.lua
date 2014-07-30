@@ -1090,7 +1090,7 @@ function (con, args)
 			u.send(con, "SYS", {message="Couldn't locate anyone who is available to have the bottle land on them."})
 		else
 			local picked = bottlers[math.random(#bottlers)]
-			c.sendAll(chan, "RLL", {channel=c.getName(chan), character=u.getName(con), type="bottle", target=picked, message=string.format("[b]%s[/b] spins the bottle: [b]%s[/b]", u.getName(con), picked)})
+			c.sendAll(chan, "RLL", {channel=c.getName(chan), character=u.getName(con), type="bottle", target=picked, message=string.format("[user]%s[/user] spins the bottle: [user]%s[/user]", u.getName(con), picked)})
 		end
 		return const.FERR_OK
 	end
@@ -1134,7 +1134,7 @@ function (con, args)
 	for i,v in ipairs(results) do
 		total = total + v
 	end
-	local result = string.format("[b]%s[/b] rolls %s: ", u.getName(con), odice)
+	local result = string.format("[user]%s[/user] rolls %s: ", u.getName(con), odice)
 	local concatresults = ""
 	if #results == 1 then
 		concatresults = "[b]"..total.."[/b]"
