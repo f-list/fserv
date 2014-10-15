@@ -1620,6 +1620,17 @@ function (args)
 	return const.FERR_OK
 end
 
+rtb.KIK =
+function (args)
+	local account_cons = u.getByAccountID(args.a)
+	for i, v in ipairs(account_cons) do
+		u.sendError(v, const.FERR_KICKED)
+		u.close(v)
+	end
+	s.broadcastOps("SYS", {message="Chat kick applied against account id: "..args['a'].." was successful."})
+	return const.FERR_OK
+end
+
 --[[ While this function is called before most other Lua functions,	it is discouraged that you store anything in Lua
 		that is not entirely disposable.
 --]]
