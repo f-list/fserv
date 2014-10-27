@@ -962,11 +962,11 @@ function (con, args)
 		return const.FERR_OK
 	end
 
-    if type(args.replyid) ~= "string" or #args.replyid ~= 36 then
-        args.replyid = nil
+	if type(args.replyid) ~= "string" or #args.replyid ~= 36 then
+		args.replyid = nil
 	end
 
-    c.sendChannel(chan, con, "MSG", {id=s.getUUID(), replyid=args.replyid, channel=c.getName(chan), character=u.getName(con), message=s.escapeHTML(args.message)})
+	c.sendChannel(chan, con, "MSG", {id=s.getUUID(), replyid=args.replyid, channel=c.getName(chan), character=u.getName(con), message=s.escapeHTML(args.message)})
 	return const.FERR_OK
 end
 
@@ -1001,13 +1001,13 @@ function (con, args)
 
 	if u.getMiscData(con, "hellban") ~= nil then
 		return const.FERR_OK
-    end
+	end
 
-    if type(args.replyid) ~= "string" or #args.replyid ~= 36 then
-        args.replyid = nil
-    end
+	if type(args.replyid) ~= "string" or #args.replyid ~= 36 then
+		args.replyid = nil
+	end
 
-    u.send(target, "PRI", {id=s.getUUID(), replyid=args.replyid, character=u.getName(con), message=s.escapeHTML(args.message), recipient=args.recipient})
+	u.send(target, "PRI", {id=s.getUUID(), replyid=args.replyid, character=u.getName(con), message=s.escapeHTML(args.message), recipient=args.recipient})
 	return const.FERR_OK
 end
 
