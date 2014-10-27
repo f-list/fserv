@@ -50,6 +50,7 @@ public:
     //static int setConfigString(lua_State* L);
 
     static int getTime(lua_State* L);
+    static int getUUID(lua_State* L);
     static int getUserCount(lua_State* L);
 
     static int sendUserList(lua_State* L);

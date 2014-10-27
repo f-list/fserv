@@ -30,6 +30,7 @@ Required third party libraries
 * [libjansson](http://www.digip.org/jansson/)
 * [hiredis](https://github.com/antirez/hiredis)
 * libicu - see local package manager
+* libuuid - see local package manager (uuid/uuid-dev)
 * curl - see local package manager
 * [boost](http://www.boost.org/) - *Optional if you replace the intrusive 
   pointers with something of your own.*

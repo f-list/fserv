@@ -34,6 +34,7 @@
 #include "unicode_tools.hpp"
 #include "startup_config.hpp"
 #include "server.hpp"
+#include <uuid/uuid.h>
 #include <time.h>
 #include <stdio.h>
 #include <string>
@@ -50,6 +51,7 @@ static const luaL_Reg luachat_funcs[] = {
     {"getConfigDouble", LuaChat::getConfigDouble},
     {"getConfigString", LuaChat::getConfigString},
     {"getTime", LuaChat::getTime},
+    {"getUUID", LuaChat::getUUID},
     {"getUserCount", LuaChat::getUserCount},
     {"sendUserList", LuaChat::sendUserList},
     {"getOpList", LuaChat::getOpList},
@@ -205,6 +207,26 @@ int LuaChat::getConfigString(lua_State* L) {
  */
 int LuaChat::getTime(lua_State* L) {
     lua_pushinteger(L, time(0));
+    return 1;
+}
+
+/**
+ * Gets a fresh UUID.
+ * @returns returns a UUID.
+ */
+int LuaChat::getUUID(lua_State* L) {
+    uuid_t uuid;
+    uuid_generate_time_safe(uuid);
+    //int result = uuid_generate_time_safe(uuid);
+    // if, at any point, uuids begin to look fishy,
+    // check the result value here
+    // the result value tells you whether the value was
+    // safely generated (dev/urandom on linux)
+    // or whether it was "unsafely" generated (local mac address, PRNG)
+    char uuidstr[37];
+    uuid_unparse_lower(uuid, uuidstr);
+    uuidstr[36] = '0';
+    lua_pushstring(L, static_cast<const char*>(uuidstr));
     return 1;
 }
 
