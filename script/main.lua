@@ -1121,12 +1121,12 @@ end
 -- Syntax: dice_roll <connection> <bottlers> <args>
 bottle_spin = 
 function (con, bottlers, args)
-    local conname = u.getName(con);
+    local conname = u.getName(con)
     if #bottlers ~= 0 then
         local picked = bottlers[math.random(#bottlers)]
         return {character=conname, type="bottle", target=picked, message=string.format("[user]%s[/user] spins the bottle: [user]%s[/user]", conname, picked)}
     end
-    return nil;
+    return nil
 end
 
 -- Rolls dice or spins the bottle in a channel.
@@ -1140,7 +1140,7 @@ function (con, args)
     local haschannel = args.channel ~= nil
     local hasrecipient = args.recipient ~= nil
     if ~haschannel and ~hasrecipient then
-        return const.FERR_BAD_SYNTAX;
+        return const.FERR_BAD_SYNTAX
     end
     
     if u.checkUpdateTimer(con, "msg", const.MSG_FLOOD) == true then
@@ -1173,15 +1173,15 @@ function (con, args)
     
     if args.dice == "bottle" then
         -- gets the right bottle people!
-        local bottlers = haschannel ? c.getBottleList(chan, con) : { conname, args.recipient };
+        local bottlers = haschannel ? c.getBottleList(chan, con) : { conname, args.recipient }
         local bottle = spin_bottle(conn, bottlers, args)
         if bottle == nil then   
             u.send(con, "SYS", {message="Couldn't locate anyone who is available to have the bottle land on them."})
         else
             if haschannel then
-                bottle.channel = args.channel;
+                bottle.channel = args.channel
             else
-                bottle.recipient = args.recipient;
+                bottle.recipient = args.recipient
             end
             c.sendAll(chan, "RLL", bottle)
         end
