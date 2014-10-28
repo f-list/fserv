@@ -200,7 +200,7 @@ function (con, args)
 end
 
 -- Bans a user from a channel.
--- Syntax:: CKU <channel> <character>
+-- Syntax:: CBU <channel> <character>
 event.CBU =
 function (con, args)
 	if args.channel == nil or args.character == nil then
@@ -212,40 +212,35 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	if c.isMod(chan, con) ~= true then
-		return const.FERR_NOT_OP
-	end
-
-	if c.inChannel(chan, con) ~= true then
-		return const.FERR_USER_NOT_IN_CHANNEL
-	end
-
-	local targetonline, char = u.getConnection(string.lower(args.character))
-	local chantype = c.getType(chan)
-	if chantype == "public" then
-		if targetonline == true and c.isMod(chan, char) == true then
-			return const.FERR_DENIED_ON_OP
-		end
+    local chantype = c.getType(chan)
+    local targetname = args.character
+    local lowertargetname = string.lower(targetname)
+	local targetonline, target = u.getConnection(lowertargetname)
+    -- if the target is currently online,
+    -- adjust information to exactly reflect what the target connection
+    -- says it should be
+	if targetonline then
+        targetname = u.getName(target)
+        lowertargetname = string.tolower(targetname)
+    end
+    
+    local canban = canChannelKickBan(con, lowertargetname, chan, chantype, args)
+    if cankick ~= nil then
+        return cankick
+    end
+    
+    if chantype == "public" then
 		s.logAction(con, "CBU", args)
-	elseif chantype == "private" then
-		c.removeInvite(chan, string.lower(args.character))
+    elseif chantype == "private" then
+		c.removeInvite(chan, lowertargetname)
 	end
 
-	if targetonline == false then
-		char = args.character
-		if c.isBanned(chan, string.lower(char)) == true then
-			return const.FERR_ALREADY_CHANNEL_BANNED
-		end
-		c.sendAll(chan, "CBU", {channel=args.channel, operator=u.getName(con), character=char})
-		c.ban(chan, con, string.lower(char))
-	else
-		if c.isBanned(chan, char) == true then
-			return const.FERR_ALREADY_CHANNEL_BANNED
-		end
-		c.sendAll(chan, "CBU", {channel=args.channel, operator=u.getName(con), character=u.getName(char)})
-		c.ban(chan, con, char)
-		if c.inChannel(chan, char) == true then
-			partChannel(chan, char)
+    c.sendAll(chan, "CBU", {channel=args.channel, operator=u.getName(con), character=targetname})
+    c.ban(chan, con, lowertargetname)
+    -- if we are online, make sure the target leaves the channel
+	if targetonline then
+    	if c.inChannel(chan, target) == true then
+			partChannel(chan, target)
 		end
 	end
 
@@ -342,6 +337,51 @@ function (con, args)
 	return const.FERR_OK
 end
 
+-- Checks to see if a kick/ban is possible
+-- returns nil (no errors) if able to kick/ban, otherwise returns error
+-- Syntax: canChannelKickban <connection> <target name> <channel handle> <channeltype>
+canChannelKickban =
+function (con, targetname, chan, channeltype)
+    -- [[ we should not check if the user is in the channel:
+    -- you should be able to timeout / kick, and then decide later a ban was cooler
+	if ~(c.inChannel(chan, con)) or ~(c.inChannel(chan, target)) then
+		return const.FERR_USER_NOT_IN_CHANNEL
+	end
+    -- ]]
+
+    -- check using user name
+    if c.isBanned(chan, lowertargetname) == true then
+        return const.FERR_ALREADY_CHANNEL_BANNED
+    end
+    
+    -- you cannot kick/ban any moderator-type user in a public channel, at all
+    if chantype == "public" then
+        if c.isMod(lowertargetname) then
+            return const.FERR_DENIED_ON_OP
+        end
+    end
+
+    -- check if target is stronger than currnet user (con)
+    if s.isOp(lowertargetname) then
+        if s.isOp(con) ~= true then
+            return const.FERR_DENIED_ON_OP
+        end
+        return nil
+    then
+
+    if c.isOwner(chan, lowertargetname) then
+        if ~c.isOwner(chan, con) then
+            return const.FERR_DENIED_ON_OP
+        end
+    end
+    
+    if c.isMod(chan, lowertargetname) and c.isMod(chan, con) then
+        return const.FERR_DENIED_ON_OP
+    end
+    
+    return nil
+end
+
 -- Kicks a user from a channel.
 -- Syntax:: CKU <channel> <character>
 event.CKU =
@@ -355,31 +395,29 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	local fchar, char = u.getConnection(string.lower(args.character))
-	if fchar ~= true then
+    local chantype = c.getType(chan)
+    local targetname = args.character
+    local lowertargetname = string.lower(targetname)
+	local foundtarget, target = u.getConnection(string.lower(args.character))
+	if foundtarget ~= true then
 		return const.FERR_USER_NOT_FOUND
 	end
-
-	if c.isMod(chan, con) ~= true then
-		return const.FERR_NOT_OP
-	end
-
-	if (c.inChannel(chan, con) ~= true) or (c.inChannel(chan, char) ~= true) then
-		return const.FERR_USER_NOT_IN_CHANNEL
-	end
-
-	local chantype = c.getType(chan)
-	if chantype == "public" then
-		if c.isMod(chan, char) == true then
-			return const.FERR_DENIED_ON_OP
-		end
-		s.logAction(con, "CKU", args)
-	elseif chantype == "private" then
+    targetname = u.getName(target)
+    lowertargetname = string.lower(targetname)
+    
+    local cankick = canChannelKickban(con, lowertargetname, chan, chantype)
+    if cankick ~= nil then
+        return cankick
+    end
+    
+    if chantype == "public" then
+        s.logAction(con, "CBU", args)        
+    elseif chantype == "private" then
 		c.removeInvite(chan, string.lower(args.character))
 	end
 
-	c.sendAll(chan, "CKU", {channel=args.channel, operator=u.getName(con), character=u.getName(char)})
-	partChannel(chan, char)
+	c.sendAll(chan, "CKU", {channel=args.channel, operator=u.getName(con), character=targetname})
+	partChannel(chan, target)
 	return const.FERR_OK
 end
 
@@ -578,40 +616,26 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	if c.isMod(chan, con) ~= true then
-		return const.FERR_NOT_OP
-	end
-
-	if c.inChannel(chan, con) ~= true then
-		return const.FERR_USER_NOT_IN_CHANNEL
-	end
-
-	local targetonline, char = u.getConnection(string.lower(args.character))
-	local chantype = c.getType(chan)
-	if chantype == "public" then
-		if c.isMod(chan, char) == true then
-			return const.FERR_DENIED_ON_OP
-		end
+    local chantype = c.getType(chan)
+    local targetname = args.character
+    local lowertargetname = string.lower(targetname)
+	local targetonline, target = u.getConnection(lowertargetname)
+    if targetonline then
+        targetname = u.getName(target)
+        lowertargetname = string.tolower(targetname)
+    end
+    
+    if chantype == "public" then
 		s.logAction(con, "CTU", args)
 	elseif chantype == "private" then
-		c.removeInvite(chan, string.lower(args.character))
+		c.removeInvite(chan, lowertargetname)
 	end
 
-	if targetonline == false then
-		char = args.character
-		if c.isBanned(chan, string.lower(char)) == true then
-			return const.FERR_ALREADY_CHANNEL_BANNED
-		end
-		c.sendAll(chan, "CTU", {channel=args.channel, operator=u.getName(con), character=char, length=tonumber(args.length)})
-		c.timeout(chan, con, string.lower(char), length)
-	else
-		if c.isBanned(chan, char) == true then
-			return const.FERR_ALREADY_CHANNEL_BANNED
-		end
-		c.sendAll(chan, "CTU", {channel=args.channel, operator=u.getName(con), character=u.getName(char), length=tonumber(args.length)})
-		c.timeout(chan, con, char, length)
-		if c.inChannel(chan, char) == true then
-			partChannel(chan, char)
+    c.sendAll(chan, "CTU", {channel=args.channel, operator=u.getName(con), character=targetname, length=tonumber(args.length)})
+    c.timeout(chan, con, lowertargetname, length)
+    if targetonline then
+    	if c.inChannel(chan, target) then
+			partChannel(chan, target)
 		end
 	end
 

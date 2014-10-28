@@ -164,17 +164,9 @@ bool Channel::inChannel(ConnectionPtr con) {
 }
 
 bool Channel::isBanned(ConnectionPtr con) {
-    chbanmap_t::const_iterator itr = bans.find(con->characterNameLower);
-    if (itr != bans.end()) {
-        BanRecord b = itr->second;
-        if (b.timeout == 0 || b.timeout >= time(0)) {
-            return true;
-        } else {
-            bans.erase(con->characterNameLower);
-        }
-    }
-
-    return false;
+    // no reason to rewrite the function: just pass it through
+    // to the other overload
+    return isBanned(con->characterNameLower);
 }
 
 bool Channel::isBanned(string& name) {
@@ -192,15 +184,7 @@ bool Channel::isBanned(string& name) {
 }
 
 bool Channel::getBan(ConnectionPtr con, BanRecord& ban) {
-    chbanmap_t::const_iterator itr = bans.find(con->characterNameLower);
-    if (itr != bans.end()) {
-        BanRecord tmp = itr->second;
-        ban.banner = tmp.banner;
-        ban.time = tmp.time;
-        ban.timeout = tmp.timeout;
-        return true;
-    }
-    return false;
+    return getBan(con->characterNameLower, ban);
 }
 
 bool Channel::getBan(string& name, BanRecord& ban) {
