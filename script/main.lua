@@ -1057,12 +1057,6 @@ end
 -- Syntax: dice_roll <connection> <args>
 dice_roll = 
 function (con, args)
-    local haschannel = args.channel ~= nil
-    local hasrecipient = args.recipient ~= nil
-    if ~haschannel and ~hasrecipient then
-        return nil;
-    end
-    
     local odice = s.escapeHTML(args.dice)
     local dice = string.gsub(args.dice, "-", "+-")
     local steps = string.split(dice, "+")
@@ -1120,75 +1114,19 @@ function (con, args)
         concatresults = concatresults.." = [b]"..total.."[/b]"
     end
     
-    if haschannel then
-        return {channel=args.channel, type="dice", array_rolls=steps, array_results=results, endresult=total, character=u.getName(con), message=result..concatresults}
-    end
-    return {channel=args.channel, type="dice", array_rolls=steps, array_results=results, endresult=total, character=u.getName(con), message=result..concatresults}
+    return {type="dice", array_rolls=steps, array_results=results, endresult=total, character=u.getName(con), message=result..concatresults}
 end
 
 -- Spins the bottle for a channel / private message
--- Syntax: dice_roll <connection> <channel> <args>
+-- Syntax: dice_roll <connection> <bottlers> <args>
 bottle_spin = 
-function (con, chan, args)
-    -- unfortunately we still have to check at this level, and perform
-    -- the right function, since channels and PMs
-    -- weren't implemented as specializations of each other...
-    local haschannel = args.channel ~= nil
-    local hasrecipient = args.recipient ~= nil
-    if ~haschannel and ~hasrecipient then
-        return nil;
-    end
+function (con, bottlers, args)
     local conname = u.getName(con);
-    local bottlers = haschannel ? c.getBottleList(chan, con) : { conname, args.recipient };
-    if #bottlers == 0 then
-        u.send(con, "SYS", {message="Couldn't locate anyone who is available to have the bottle land on them."})
-    else
+    if #bottlers ~= 0 then
         local picked = bottlers[math.random(#bottlers)]
-        if haschannel then
-            return {channel=c.getName(chan), character=conname, type="bottle", target=picked, message=string.format("[user]%s[/user] spins the bottle: [user]%s[/user]", conname, picked)}
-        end
-        return {recipient=conname, character=conname, type="bottle", target=picked, message=string.format("[user]%s[/user] spins the bottle: [user]%s[/user]", conname, picked)};
+        return {character=conname, type="bottle", target=picked, message=string.format("[user]%s[/user] spins the bottle: [user]%s[/user]", conname, picked)}
     end
     return nil;
-end
-
--- Rolls dice or spins the bottle in a channel or private room.
--- Syntax: spinroll <connection> <to-lowered channel name> <args>
-spinroll = 
-function (con, lowerchanname args)
-    local found, chan = nil
-    if lowerchanname ~= nil then
-        if lowerchanname == "frontpage" then
-            u.sendError(con, -10, "You may not roll dice or spin the bottle in Frontpage.")
-            return const.FERR_OK
-        end
-        
-        found, chan = c.getChannel(lowerchanname)
-        if found ~= true then
-            return const.FERR_CHANNEL_NOT_FOUND
-        end
-        
-        if c.getMode(chan) == "ads" then
-            return const.FERR_ADS_ONLY
-        end
-    end
-    
-    if args.dice == "bottle" then
-        local bottle = spin_bottle(conn, chan, args)
-        if bottle == nil then   
-            u.send(con, "SYS", {message="Couldn't locate anyone who is available to have the bottle land on them."})
-        else
-            c.sendAll(chan, "RLL", bottle)
-        end
-    end    
-
-    local roll = roll_dice(con, args)
-    if roll == nil then
-        return const.FERR_BAD_ROLL_FORMAT
-    end
-	
-    c.sendAll(chan, "RLL", roll)
-	return const.FERR_OK
 end
 
 -- Rolls dice or spins the bottle in a channel.
@@ -1199,19 +1137,68 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
     
-    if u.getMiscData(con, "hellban") ~= nil then
-        return const.FERR_OK
+    local haschannel = args.channel ~= nil
+    local hasrecipient = args.recipient ~= nil
+    if ~haschannel and ~hasrecipient then
+        return const.FERR_BAD_SYNTAX;
     end
     
     if u.checkUpdateTimer(con, "msg", const.MSG_FLOOD) == true then
         return const.FERR_THROTTLE_MESSAGE
     end
 
-    -- use nil to signal not-a-channel
-    if args.channel ~= nil then
-        return spinroll(con, string.tolower(args.channel), args)
+    local found, chan = nil
+    if haschannel then
+        local lchanname = string.tolower(args.channel)
+        if lowerchanname == "frontpage" then
+            u.sendError(con, -10, "You may not roll dice or spin the bottle in Frontpage.")
+            return const.FERR_OK
+        end
     end
-    return spinroll(con, nil, args)
+
+    -- Hellban comes last    
+    if u.getMiscData(con, "hellban") ~= nil then
+        return const.FERR_OK
+    end
+    
+    found, chan = c.getChannel(lowerchanname)
+    if found ~= true then
+        return const.FERR_CHANNEL_NOT_FOUND
+    end
+    
+    if c.getMode(chan) == "ads" then
+        return const.FERR_ADS_ONLY
+    end
+    
+    if args.dice == "bottle" then
+        -- gets the right bottle people!
+        local bottlers = haschannel ? c.getBottleList(chan, con) : { conname, args.recipient };
+        local bottle = spin_bottle(conn, haschannel, hasrecipient, bottlers, args)
+        if bottle == nil then   
+            u.send(con, "SYS", {message="Couldn't locate anyone who is available to have the bottle land on them."})
+        else
+            if haschannel then
+                bottle.channel = args.channel;
+            else
+                bottle.recipient = args.recipient;
+            end
+            c.sendAll(chan, "RLL", bottle)
+        end
+        
+    end    
+
+    local roll = roll_dice(con, haschannel, hasrecipient, args)
+    if roll == nil then
+        return const.FERR_BAD_ROLL_FORMAT
+    end
+	if haschannel then
+        roll.channel = args.channel
+    else
+        roll.recipient = args.recipient
+    end
+    
+    c.sendAll(chan, "RLL", roll)
+	return const.FERR_OK
 end
 
 -- Set the message mode for a channel.
