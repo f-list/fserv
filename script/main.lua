@@ -1154,6 +1154,16 @@ function (con, args)
             u.sendError(con, -10, "You may not roll dice or spin the bottle in Frontpage.")
             return const.FERR_OK
         end
+    
+        found, chan = c.getChannel(lowerchanname)
+        if found ~= true then
+            return const.FERR_CHANNEL_NOT_FOUND
+        end
+        
+        if c.getMode(chan) == "ads" then
+            return const.FERR_ADS_ONLY
+        end
+    
     end
 
     -- Hellban comes last    
@@ -1161,19 +1171,10 @@ function (con, args)
         return const.FERR_OK
     end
     
-    found, chan = c.getChannel(lowerchanname)
-    if found ~= true then
-        return const.FERR_CHANNEL_NOT_FOUND
-    end
-    
-    if c.getMode(chan) == "ads" then
-        return const.FERR_ADS_ONLY
-    end
-    
     if args.dice == "bottle" then
         -- gets the right bottle people!
         local bottlers = haschannel ? c.getBottleList(chan, con) : { conname, args.recipient };
-        local bottle = spin_bottle(conn, haschannel, hasrecipient, bottlers, args)
+        local bottle = spin_bottle(conn, bottlers, args)
         if bottle == nil then   
             u.send(con, "SYS", {message="Couldn't locate anyone who is available to have the bottle land on them."})
         else
@@ -1187,7 +1188,7 @@ function (con, args)
         
     end    
 
-    local roll = roll_dice(con, haschannel, hasrecipient, args)
+    local roll = roll_dice(con, args)
     if roll == nil then
         return const.FERR_BAD_ROLL_FORMAT
     end
