@@ -74,6 +74,74 @@ function propagateIgnoreList(con, laction, lcharacter)
 	end
 end
 
+function switch(t, ...)
+    t.case = function (self, x)
+        local f=self[x] or self.default
+        if f then
+            if type(f)~="function" then
+                error("case "..tostring(x).." not a function")
+            end
+            return f(x, self, unpack(arg))
+        end
+        return nil
+    end
+    return t
+end
+
+channel_get_options = switch {
+    "adthrottle" = function (opt, chan) return c.getAdThrottle(chan) end,
+    "adlength" = function (opt, chan) return c.getAdLength(chan) end,
+    "messagethrottle" = function (opt, chan) return c.getMessageThrottle(chan) end,
+    "messagelength" = function (opt, chan) return c.getMessageLength(chan) end,
+    "bottle" = function (opt, chan) return c.getCanBottle(chan) end,
+    "roll" = function (opt, chan) return c.getCanRoll(chan) end,
+}
+
+channel_set_options = switch {
+    "adthrottle" = function (opt, chan, value) 
+        if type(value) ~= "number" then
+            return const.FERR_BAD_SYNTAX
+        end
+        c.setAdThrottle(chan, value) 
+        return nil
+    end,
+    "adlength" = function (opt, chan, value) 
+        if type(value) ~= "number" then
+            return const.FERR_BAD_SYNTAX
+        end
+        c.setAdLength(chan, value) 
+        return nil
+    end,
+    "messagethrottle" = function (opt, chan, value) 
+        if type(value) ~= "number" then
+            return const.FERR_BAD_SYNTAX
+        end
+        c.setMessageThrottle(chan, value)
+        return nil
+    end,
+    "messagelength" = function (opt, chan, value) 
+        if type(value) ~= "number" then
+            return const.FERR_BAD_SYNTAX
+        end
+        c.setMessageLength(chan, value) 
+        return nil
+    end,
+    "bottle" = function (opt, chan, value) 
+        if type(value) ~= "boolean" then
+            return const.FERR_BAD_SYNTAX
+        end
+        c.setCanBottle(chan, value) 
+        return nil
+    end,
+    "roll" = function (opt, chan, value)
+        if type(value) ~= "boolean" then
+            return const.FERR_BAD_SYNTAX
+        end
+        c.setCanRoll(chan, value)
+        return nil
+    end,
+}
+
 -- Bans a person by their account.
 -- Syntax: ACB <character>
 event.ACB =
@@ -646,6 +714,58 @@ function (con, args)
 	c.unban(chan, string.lower(args.character))
 	u.send(con, "SYS", {channel=args.channel, message=args.character.." has been removed from the channel ban list."})
 	return const.FERR_OK
+end
+
+-- Gets an option from a channel
+-- Syntax: CGO <connection> <channel> <option name>
+event.CGO =
+function (con, args)
+    if args.channel == nil or args.option == nil then
+        return const.FERR_BAD_SYNTAX
+    end
+    
+    local channelpresent, chan = c.getChannel(string.lower(args.channel))
+    if channelpresent ~= true then
+        return const.FERR_CHANNEL_NOT_FOUND
+    end
+    
+    if c.isMod(chan, con) ~= true then
+        return const.FERR_NOT_OP
+    end
+    
+    local value = channel_get_option:case(args.option)
+    if optionvalue == nil then
+        return const.FERR_BAD_SYNTAX 
+    end
+
+    u.send(con, "CGO", {option=args.option, optionvalue=value})
+    return const.FERR_OK
+end
+
+-- Sets an option for a channel
+-- Syntax: CGO <connection> <channel> <option name> <option value>
+event.CSO =
+function (con, args)
+    if args.channel == nil or args.option == nil or args.optionvalue == nil then
+        return const.FERR_BAD_SYNTAX
+    end
+    
+    local channelpresent, chan = c.getChannel(string.lower(args.channel))
+    if channelpresent ~= true then
+        return const.FERR_CHANNEL_NOT_FOUND
+    end
+    
+    if c.isMod(chan, con) ~= true then
+        return const.FERR_NOT_OP
+    end
+    
+    local success = channel_set_option:case(args.option, args.optionvalue)
+    if result ~= nil then
+        return result   
+    end
+    -- Do we echo back on success?
+    u.send(con, "CSO", {option=args.option, optionvalue=args.optionvalue})
+    return const.FERR_OK
 end
 
 -- Removes a global moderator.

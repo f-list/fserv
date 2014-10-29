@@ -38,6 +38,7 @@
 #include <string>
 #include <stdio.h>
 #include <string.h>
+#include <type_traits>
 
 using std::string;
 
@@ -1127,4 +1128,129 @@ int LuaChannel::canDestroy(lua_State* L) {
     ret = chan->getCanDestroy();
     lua_pushboolean(L, ret);
     return 1;
+}
+
+// okay, really, all of these functions are dead similar
+// this is actually ridiculous: it's a massive copy-pasta fest
+/*int LuaChannel::getCanBottle(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    LBase* base = 0;
+    GETLCHAN(base, L, 1, chan);
+    lua_pop(L, 1);
+
+    lua_pushboolean(L, chan->getCanBottle());
+    return 1;
+}*/
+
+// let's try some templates...
+// We give it the type that will have the member function, the 
+// return type, and then the last will be the compile-time reference
+// to the invoked member function
+template <typename T, typename R, R (T::* MemberFunc)()>
+int channel_push_call (lua_State* L) {
+    // Same code as before
+    luaL_checkany(L, 1);
+   
+    LBase* base = 0;
+    GETLCHAN(base, L, 1, chan);
+    lua_pop(L, 1);
+    
+    // since templates are compile-time like macros,
+    // we can tell it to invoke the compile-time member function MemberFunc
+    // and then it will call that func
+    // benefit: WRITING LESS FUNCTIONS THANK THE LORD
+    // cons: none, compile-time is awesome
+    lua_push(L, (chan->*MemberFunc)());
+    
+    // we always return 1 thing from a member function,
+    // since C++ doesn't support multiple returns 
+    // (and we're not doing fancy pairs or tuples)
+    // so same code as before
+    return 1;
+}
+
+// This template removes the R,
+// making it void in the MemberFunc part
+// this means there's no return,
+// so it should be treated as a setting function
+// We also give it an Arg type, so it can know what to take
+template <typename T, typename Arg, void (T::* MemberFunc)( Arg )>
+int channel_pop_call (lua_State* L) {
+    // This stripping allows us to peel of volatile and const from args
+    // letting us get to the actual, true type of the argument
+    // e.g., "const std::string&" --> "std::string"
+    typedef typename std::remove_reference<typename std::remove_cv<T>::type>::type ArgType;
+    
+    // Same code as before
+    luaL_checkany(L, 1);
+   
+    LBase* base = 0;
+    GETLCHAN(base, L, 1, chan);
+    
+    // Now, we need to know which arguments we're popping
+    // and then use them appropriately
+    // For this, we'll use a templated pop call
+    // that does the right thing for us
+    // This function says "Pop a type ArgType from this index"
+    ArgType arg = lua_pop<ArgType>::pop(L, 2);
+
+    // Pop 1 for the LCHAN macro, 1 for the lua_pop function
+    lua_pop(L, 2);
+    
+    (chan->*MemberFunc)(arg);
+    // we're not returning anything
+    return 0;
+}
+
+// so short, so sweet!
+int LuaChannel::getCanBottle(lua_State* L) {
+    return channel_push_call<Channel, bool, &Channel::getCanBottle>(L);
+}
+
+int LuaChannel::getCanRoll(lua_State* L) {
+    return channel_push_call<Channel, bool, &Channel::getCanRoll>(L);
+}
+
+// Switch return types, still painless!
+int LuaChannel::getAdLength(lua_State* L) {
+    return channel_push_call<Channel, bool, &Channel::getAdLength>(L);
+}
+
+int LuaChannel::getAdThrottle(lua_State* L) {
+    return channel_push_call<Channel, int, &Channel::getAdThrottle>(L);
+}
+
+int LuaChannel::getMessageLength(lua_State* L) {
+    return channel_push_call<Channel, bool, &Channel::getMessageLength>(L);
+}
+
+int LuaChannel::getMessageThrottle(lua_State* L) {
+    return channel_push_call<Channel, int, &Channel::getMessageThrottle>(L);
+}
+
+// the setter functions are also easy with the template now
+// a lot of copy-paste errors, eliminated!
+int LuaChannel::setCanBottle(lua_State* L) {
+    return channel_pop_call<Channel, bool, &Channel::setCanBottle>(L);
+}
+
+int LuaChannel::setCanRoll(lua_State* L) {
+    return channel_pop_call<Channel, bool, &Channel::setCanRoll>(L);
+}
+
+int LuaChannel::setAdLength(lua_State* L) {
+    return channel_pop_call<Channel, bool, &Channel::setAdLength>(L);
+}
+
+int LuaChannel::setAdThrottle(lua_State* L) {
+    return channel_pop_call<Channel, int, &Channel::setAdThrottle>(L);
+}
+
+int LuaChannel::setMessageLength(lua_State* L) {
+    return channel_pop_call<Channel, bool, &Channel::setMessageLength>(L);
+}
+
+int LuaChannel::setMessageThrottle(lua_State* L) {
+    return channel_pop_call<Channel, int, &Channel::setMessageThrottle>(L);
 }

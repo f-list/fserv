@@ -93,6 +93,31 @@ public:
     static int getBottleList(lua_State* L);
 
     static int canDestroy(lua_State* L);
+    
+    static int getCanBottle(lua_State* L);
+    
+    static int setCanBottle(lua_State* L);
+    
+    static int getCanRoll(lua_State* L);
+    
+    static int setCanRoll(lua_State* L);
+    
+    static int getAdThrottle(lua_State* L);
+    
+    static int setAdThrottle(lua_State* L);
+    
+    static int getAdLength(lua_State* L);
+    
+    static int setAdLength(lua_State* L);
+    
+    static int getMessageThrottle(lua_State* L);
+    
+    static int setMessageThrottle(lua_State* L);
+    
+    static int getMessageLength(lua_State* L);
+    
+    static int setMessageLength(lua_State* L);
+    
 private:
 
     LuaChannel() { }
