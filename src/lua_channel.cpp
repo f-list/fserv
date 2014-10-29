@@ -1143,72 +1143,6 @@ int LuaChannel::canDestroy(lua_State* L) {
     return 1;
 }*/
 
-// let's try some extra functions and templates...
-// this struct allows us to overload based on a type we're given
-// (partial specialization)
-template <typename T>
-struct lua_getter {};
-
-// Each specialization allows us to decide what to return
-// if a specialization doesn't exist, then there's a compile-time
-// error telling us we need to add another specialization
-// for the argument type we want to return
-template <>
-struct lua_getter<std::string> {
-    inline static std::string get (lua_State* L, int index) {
-        return luaL_checkstring(L, index);
-    }
-};
-
-template <>
-struct lua_getter<const char*> {
-    inline static std::string get (lua_State* L, int index) {
-        return luaL_checkstring(L, index);
-    }
-};
-
-template <>
-struct lua_getter<int> {
-    inline static int get (lua_State* L, int index) {
-        return luaL_checkinteger(L, index);
-    }
-};
-
-template <>
-struct lua_getter<bool> {
-    inline static bool get (lua_State* L, int index) {
-        return lua_toboolean(L, index);
-    }
-};
-
-// now, we write a function that will call this thing for us
-template <typename T>
-inline T get(lua_State* L, int index) {
-    lua_getter<T> getter;
-    return getter.get(L, index);
-}
-
-// we don't have to use the same specialization technique
-// for the pusher, rather we just write overloads
-// if one of these functions can't handle the return,
-// we'll get a compile-time error, which is nice
-// when coding new functionality
-inline void push (lua_State* L, bool value) {
-    lua_pushboolean(L, value);
-}
-
-inline void push (lua_State* L, int value) {
-    lua_pushinteger(L, value);
-}
-
-inline void push (lua_State* L, const char* value) {
-    lua_pushstring(L, value);
-}
-
-inline void push (lua_State* L, const std::string& value) {
-    lua_pushstring(L, value.c_str());
-}
-
 // We give it the type that will have the member function, the 
 // return type, and then the last will be the compile-time reference
 // to the invoked member function
@@ -1226,7 +1160,7 @@ int channel_push_call (lua_State* L) {
     // and then it will call that func
     // benefit: WRITING LESS FUNCTIONS WOO
     // cons: none, compile-time is awesome
-    push(L, (chan->*MemberFunc)());
+    lua::push(L, (chan->*MemberFunc)());
     
     // we always return 1 thing from a member function,
     // since C++ doesn't support multiple returns 
@@ -1258,7 +1192,7 @@ int channel_pop_call (lua_State* L) {
     // For this, we'll use a templated pop call
     // that does the right thing for us
     // This function says "Pop a type ArgType from this index"
-    ArgType arg = get<ArgType>(L, 2);
+    ArgType arg = lua::get<ArgType>(L, 2);
 
     // Pop 1 for the LCHAN macro, 1 for the get function
     lua_pop(L, 2);
