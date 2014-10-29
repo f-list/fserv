@@ -88,6 +88,10 @@ function switch(t, ...)
     return t
 end
 
+-- Gets the value of a setting given
+-- a channel and the option name
+-- returns the value of the setting
+-- Usage: channel_set_options:case(<option name> <channel> <desired value>)
 channel_get_options = switch {
     "adthrottle" = function (opt, chan) return c.getAdThrottle(chan) end,
     "adlength" = function (opt, chan) return c.getAdLength(chan) end,
@@ -95,42 +99,47 @@ channel_get_options = switch {
     "messagelength" = function (opt, chan) return c.getMessageLength(chan) end,
     "bottle" = function (opt, chan) return c.getCanBottle(chan) end,
     "roll" = function (opt, chan) return c.getCanRoll(chan) end,
+    "public" = function(opt, chan) return c.getType(chan) end,
 }
 
+-- Sets the value of a setting given
+-- a channel and the option name and the value
+-- returns nil on success, otherwise an error code on failure
+-- Usage: channel_set_options:case(<option name> <channel> <desired value>)
 channel_set_options = switch {
     "adthrottle" = function (opt, chan, value) 
         if type(value) ~= "number" then
             return const.FERR_BAD_CHANNEL_OPTION_FORMAT
         end
-        c.setAdThrottle(chan, value) 
+        c.setAdThrottle(chan, math.min(value, const.LRP_FLOOD)) 
         return nil
     end,
     "adlength" = function (opt, chan, value) 
         if type(value) ~= "number" then
             return const.FERR_BAD_CHANNEL_OPTION_FORMAT
         end
-        c.setAdLength(chan, value) 
+        c.setAdLength(chan, math.min(value, const.LRP_MAX)) 
         return nil
     end,
     "messagethrottle" = function (opt, chan, value) 
         if type(value) ~= "number" then
             return const.FERR_BAD_CHANNEL_OPTION_FORMAT
         end
-        c.setMessageThrottle(chan, value)
+        c.setMessageThrottle(chan, math.min(value, const.MSG_FLOOD))
         return nil
     end,
     "messagelength" = function (opt, chan, value) 
         if type(value) ~= "number" then
             return const.FERR_BAD_CHANNEL_OPTION_FORMAT
         end
-        c.setMessageLength(chan, value) 
+        c.setMessageLength(chan, math.min(value, const.MSG_MAX)) 
         return nil
     end,
     "bottle" = function (opt, chan, value) 
         if type(value) ~= "boolean" then
             return const.FERR_BAD_CHANNEL_OPTION_FORMAT
         end
-        c.setCanBottle(chan, value) 
+        c.setCanBottle(chan, value)
         return nil
     end,
     "roll" = function (opt, chan, value)
@@ -140,6 +149,28 @@ channel_set_options = switch {
         c.setCanRoll(chan, value)
         return nil
     end,
+    "public" = function(opt, chan, value)
+        local newpub = string.lower(value)
+        if (newpub ~= "public") and (newpub ~= "private") then
+            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
+        end
+    
+        local chantype = c.getType(chan)
+        if (chantype ~= "private") and (chantype ~= "pubprivate") then
+            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
+        end
+    
+        local pubstatus = false
+        local statusmsg = "closed."
+        if newpub == "public" then
+            pubstatus = true
+            statusmsg = "public."
+        end
+    
+        c.setPublic(chan, pubstatus)
+        u.send(con, "SYS", {channel=c.getName(chan), message="This channel is now [b]"..statusmsg.."[/b]"})
+        return nil
+    end
 }
 
 -- Bans a person by their account.
@@ -717,10 +748,10 @@ function (con, args)
 end
 
 -- Gets an option from a channel
--- Syntax: CGO <connection> <channel> <option name>
-event.CGO =
+-- Syntax: CGS <connection> <channel> <option name>
+event.CGS =
 function (con, args)
-    if args.channel == nil or args.option == nil then
+    if args.channel == nil or args.setting == nil then
         return const.FERR_BAD_SYNTAX
     end
     
@@ -733,20 +764,20 @@ function (con, args)
         return const.FERR_NOT_OP
     end
     
-    local value = channel_get_option:case(args.option)
-    if optionvalue == nil then
+    local value = channel_get_option:case(args.setting)
+    if value == nil then
         return const.FERR_BAD_SYNTAX 
     end
 
-    u.send(con, "CGO", {option=args.option, optionvalue=value})
+    u.send(con, "CGS", {setting=args.setting, value=value})
     return const.FERR_OK
 end
 
--- Sets an option for a channel
--- Syntax: CGO <connection> <channel> <option name> <option value>
-event.CSO =
+-- Sets setting for a channel
+-- Syntax: CSS <connection> <channel> <option name> <option value>
+event.CSS =
 function (con, args)
-    if args.channel == nil or args.option == nil or args.optionvalue == nil then
+    if args.channel == nil or args.setting == nil or args.value == nil then
         return const.FERR_BAD_SYNTAX
     end
     
@@ -759,12 +790,12 @@ function (con, args)
         return const.FERR_NOT_OP
     end
     
-    local success = channel_set_option:case(args.option, args.optionvalue)
+    local success = channel_set_option:case(args.option, args.value)
     if result ~= nil then
         return result   
     end
-    -- Do we echo back on success?
-    u.send(con, "CSO", {option=args.option, optionvalue=args.optionvalue})
+    
+    u.send(con, "CSS", {option=args.option, value=args.value})
     return const.FERR_OK
 end
 
@@ -1323,39 +1354,11 @@ end
 -- Syntax: RST <status(public/closed)>
 event.RST =
 function (con, args)
-	if args.channel == nil or args.status == nil then
-		return const.FERR_BAD_SYNTAX
-	end
-
-	local newpub = string.lower(args.status)
-	if (newpub ~= "public") and (newpub ~= "private") then
-		return const.FERR_BAD_SYNTAX
-	end
-
-	local found, chan = c.getChannel(string.lower(args.channel))
-	if found ~= true then
-		return const.FERR_CHANNEL_NOT_FOUND
-	end
-
-	if c.isOwner(chan, con) ~= true then
-		return const.FERR_NOT_OP
-	end
-
-	local chantype = c.getType(chan)
-	if (chantype ~= "private") and (chantype ~= "pubprivate") then
-		return const.FERR_BAD_SYNTAX
-	end
-
-	local pubstatus = false
-	local statusmsg = "closed."
-	if newpub == "public" then
-		pubstatus = true
-		statusmsg = "public."
-	end
-
-	c.setPublic(chan, pubstatus)
-	u.send(con, "SYS", {channel=string.lower(args.channel), message="This channel is now [b]"..statusmsg.."[/b]"})
-	return const.FERR_OK
+    args.option = "public"
+    args.value = args.status
+    
+    // Forward to CSO now
+    return event.CSO(con, args)
 end
 
 -- Rewards a character with a crown status.
