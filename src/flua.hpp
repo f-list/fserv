@@ -50,43 +50,5 @@ extern "C" {
                                                 lbase = 0; \
                                                 if( varname == 0 ) \
                                                         return luaL_error(lstate, "#2 Argument "#index" was not a ConnectionPtr.")
-
-// this overloaded push function
-// allows the right function to be called
-// without any overhead
-inline void lua_push (lua_State* L, bool value) {
-    lua_pushboolean(L, value);
-}
-
-inline void lua_push (lua_State* L, int value) {
-    lua_pushinteger(L, value);
-}
-
-inline void lua_push (lua_State* L, const char* value) {
-    lua_pushstring(L, value);
-}
-
-inline void lua_push (lua_State* L, const std::string& value) {
-    lua_pushstring(L, value.c_str());
-}
-
-// this struct allows us to overload based on a type we're given
-// (partial specialization)
-template <typename T>
-struct lua_pop {};
-
-template <>
-struct lua_pop<std::string> {
-    static std::string pop (lua_State* L, int index) {
-        return lua_checkstring(L, index);
-    }
-};
-
-template <>
-struct lua_pop<int> {
-    static int pop (lua_State* L, int index) {
-        return lua_checkinteger(L, index);
-    }
-};
     
 #endif //FLUA_H

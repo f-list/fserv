@@ -100,42 +100,42 @@ channel_get_options = switch {
 channel_set_options = switch {
     "adthrottle" = function (opt, chan, value) 
         if type(value) ~= "number" then
-            return const.FERR_BAD_SYNTAX
+            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
         end
         c.setAdThrottle(chan, value) 
         return nil
     end,
     "adlength" = function (opt, chan, value) 
         if type(value) ~= "number" then
-            return const.FERR_BAD_SYNTAX
+            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
         end
         c.setAdLength(chan, value) 
         return nil
     end,
     "messagethrottle" = function (opt, chan, value) 
         if type(value) ~= "number" then
-            return const.FERR_BAD_SYNTAX
+            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
         end
         c.setMessageThrottle(chan, value)
         return nil
     end,
     "messagelength" = function (opt, chan, value) 
         if type(value) ~= "number" then
-            return const.FERR_BAD_SYNTAX
+            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
         end
         c.setMessageLength(chan, value) 
         return nil
     end,
     "bottle" = function (opt, chan, value) 
         if type(value) ~= "boolean" then
-            return const.FERR_BAD_SYNTAX
+            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
         end
         c.setCanBottle(chan, value) 
         return nil
     end,
     "roll" = function (opt, chan, value)
         if type(value) ~= "boolean" then
-            return const.FERR_BAD_SYNTAX
+            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
         end
         c.setCanRoll(chan, value)
         return nil
@@ -1057,10 +1057,14 @@ function (con, args)
 	if u.checkUpdateTimer(con, "msg", const.MSG_FLOOD) == true then
 		return const.FERR_THROTTLE_MESSAGE
 	end
-
+    
 	local found, chan = c.getChannel(string.lower(args.channel))
 	if found ~= true then
 		return const.FERR_CHANNEL_NOT_FOUND
+	end
+
+	if u.checkUpdateTimer(con, "msg", c.getMessageThrottle(chan)) then
+		return const.FERR_THROTTLE_MESSAGE
 	end
 
 	if c.getMode(chan) == "ads" then
@@ -1072,6 +1076,8 @@ function (con, args)
 		return const.FERR_MESSAGE_TOO_LONG
 	elseif #args.message > const.MSG_MAX then
 		return const.FERR_MESSAGE_TOO_LONG
+    elseif #args.message > c.getMessageLength(chan) then
+        return const.FERR_MESSAGE_TOO_LONG
 	end
 
 	if c.inChannel(chan, con) ~= true then
@@ -1199,12 +1205,19 @@ function (con, args)
 	if u.checkUpdateTimer(con, "msg", const.MSG_FLOOD) == true then
 		return const.FERR_THROTTLE_MESSAGE
 	end
+    
+	if u.checkUpdateTimer(con, "msg", c.getMessageThrottle(chan)) then
+		return const.FERR_THROTTLE_MESSAGE
+	end
 
 	if u.getMiscData(con, "hellban") ~= nil then
 		return const.FERR_OK
 	end
 
 	if args.dice == "bottle" then
+        if ~c.getCanBottle(chan) then
+            return const.FERR_NO_BOTTLE
+        end
 		local bottlers = c.getBottleList(chan, con)
 		if #bottlers == 0 then
 			u.send(con, "SYS", {message="Couldn't locate anyone who is available to have the bottle land on them."})
@@ -1215,7 +1228,11 @@ function (con, args)
 		return const.FERR_OK
 	end
 
-	local odice = s.escapeHTML(args.dice)
+    if ~c.getCanRoll(chan) then
+        return const.FERR_NO_ROLL
+    end
+    
+	local odice_NO_DICEapeHTML(args.dice)
 	local dice = string.gsub(args.dice, "-", "+-")
 	local steps = string.split(dice, "+")
 	local results = {}

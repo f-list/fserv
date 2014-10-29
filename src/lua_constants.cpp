@@ -65,7 +65,10 @@ void LuaConstants::initClass() {
     E(FERR_UNKNOWN_AUTH_METHOD, "Unknown authentication method requested.");
 
     E(FERR_BAD_ROLL_FORMAT, "There was a problem with your roll command.");
+    E(FERR_NO_DICE, "There are no dice rolls allowed here.");
+    E(FERR_NO_BOTTLE, "There are no bottle spins allowed here.");
 
+    E(FERR_BAD_CHANNEL_OPTION_FORMAT, "The formatting/syntax for the channel option was incorrect.");
     E(FERR_BAD_TIMEOUT_FORMAT, "The time given for the timeout was invalid. It must be a number between 1 and 90 minutes.");
     E(FERR_TIMED_OUT, "You have been timed out from chat.");
     E(FERR_KICKED, "You have been kicked from chat.");

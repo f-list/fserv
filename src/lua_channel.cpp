@@ -38,7 +38,7 @@
 #include <string>
 #include <stdio.h>
 #include <string.h>
-#include <type_traits>
+#include <boost/type_traits.hpp>
 
 using std::string;
 
@@ -1143,11 +1143,76 @@ int LuaChannel::canDestroy(lua_State* L) {
     return 1;
 }*/
 
-// let's try some templates...
+// let's try some extra functions and templates...
+// this struct allows us to overload based on a type we're given
+// (partial specialization)
+template <typename T>
+struct lua_getter {};
+
+// Each specialization allows us to decide what to return
+// if a specialization doesn't exist, then there's a compile-time
+// error telling us we need to add another specialization
+// for the argument type we want to return
+template <>
+struct lua_getter<std::string> {
+    inline static std::string get (lua_State* L, int index) {
+        return luaL_checkstring(L, index);
+    }
+};
+
+template <>
+struct lua_getter<const char*> {
+    inline static std::string get (lua_State* L, int index) {
+        return luaL_checkstring(L, index);
+    }
+};
+
+template <>
+struct lua_getter<int> {
+    inline static int get (lua_State* L, int index) {
+        return luaL_checkinteger(L, index);
+    }
+};
+
+template <>
+struct lua_getter<bool> {
+    inline static bool get (lua_State* L, int index) {
+        return lua_toboolean(L, index);
+    }
+};
+
+// now, we write a function that will call this thing for us
+template <typename T>
+inline T get(lua_State* L, int index) {
+    lua_getter<T> getter;
+    return getter.get(L, index);
+}
+
+// we don't have to use the same specialization technique
+// for the pusher, rather we just write overloads
+// if one of these functions can't handle the return,
+// we'll get a compile-time error, which is nice
+// when coding new functionality
+inline void push (lua_State* L, bool value) {
+    lua_pushboolean(L, value);
+}
+
+inline void push (lua_State* L, int value) {
+    lua_pushinteger(L, value);
+}
+
+inline void push (lua_State* L, const char* value) {
+    lua_pushstring(L, value);
+}
+
+inline void push (lua_State* L, const std::string& value) {
+    lua_pushstring(L, value.c_str());
+}
+
 // We give it the type that will have the member function, the 
 // return type, and then the last will be the compile-time reference
 // to the invoked member function
-template <typename T, typename R, R (T::* MemberFunc)()>
+template <typename T, typename R, R (T::* MemberFunc)() const>
 int channel_push_call (lua_State* L) {
     // Same code as before
     luaL_checkany(L, 1);
@@ -1159,9 +1224,9 @@ int channel_push_call (lua_State* L) {
     // since templates are compile-time like macros,
     // we can tell it to invoke the compile-time member function MemberFunc
     // and then it will call that func
-    // benefit: WRITING LESS FUNCTIONS THANK THE LORD
+    // benefit: WRITING LESS FUNCTIONS WOO
     // cons: none, compile-time is awesome
-    lua_push(L, (chan->*MemberFunc)());
+    push(L, (chan->*MemberFunc)());
     
     // we always return 1 thing from a member function,
     // since C++ doesn't support multiple returns 
@@ -1180,7 +1245,7 @@ int channel_pop_call (lua_State* L) {
     // This stripping allows us to peel of volatile and const from args
     // letting us get to the actual, true type of the argument
     // e.g., "const std::string&" --> "std::string"
-    typedef typename std::remove_reference<typename std::remove_cv<T>::type>::type ArgType;
+    typedef typename boost::remove_reference<typename boost::remove_cv<Arg>::type>::type ArgType;
     
     // Same code as before
     luaL_checkany(L, 1);
@@ -1193,9 +1258,9 @@ int channel_pop_call (lua_State* L) {
     // For this, we'll use a templated pop call
     // that does the right thing for us
     // This function says "Pop a type ArgType from this index"
-    ArgType arg = lua_pop<ArgType>::pop(L, 2);
+    ArgType arg = get<ArgType>(L, 2);
 
-    // Pop 1 for the LCHAN macro, 1 for the lua_pop function
+    // Pop 1 for the LCHAN macro, 1 for the get function
     lua_pop(L, 2);
     
     (chan->*MemberFunc)(arg);
@@ -1203,6 +1268,7 @@ int channel_pop_call (lua_State* L) {
     return 0;
 }
 
+// all the getters
 // so short, so sweet!
 int LuaChannel::getCanBottle(lua_State* L) {
     return channel_push_call<Channel, bool, &Channel::getCanBottle>(L);
@@ -1214,7 +1280,7 @@ int LuaChannel::getCanRoll(lua_State* L) {
 
 // Switch return types, still painless!
 int LuaChannel::getAdLength(lua_State* L) {
-    return channel_push_call<Channel, bool, &Channel::getAdLength>(L);
+    return channel_push_call<Channel, int, &Channel::getAdLength>(L);
 }
 
 int LuaChannel::getAdThrottle(lua_State* L) {
@@ -1222,7 +1288,7 @@ int LuaChannel::getAdThrottle(lua_State* L) {
 }
 
 int LuaChannel::getMessageLength(lua_State* L) {
-    return channel_push_call<Channel, bool, &Channel::getMessageLength>(L);
+    return channel_push_call<Channel, int, &Channel::getMessageLength>(L);
 }
 
 int LuaChannel::getMessageThrottle(lua_State* L) {
@@ -1240,7 +1306,7 @@ int LuaChannel::setCanRoll(lua_State* L) {
 }
 
 int LuaChannel::setAdLength(lua_State* L) {
-    return channel_pop_call<Channel, bool, &Channel::setAdLength>(L);
+    return channel_pop_call<Channel, int, &Channel::setAdLength>(L);
 }
 
 int LuaChannel::setAdThrottle(lua_State* L) {
@@ -1248,7 +1314,7 @@ int LuaChannel::setAdThrottle(lua_State* L) {
 }
 
 int LuaChannel::setMessageLength(lua_State* L) {
-    return channel_pop_call<Channel, bool, &Channel::setMessageLength>(L);
+    return channel_pop_call<Channel, int, &Channel::setMessageLength>(L);
 }
 
 int LuaChannel::setMessageThrottle(lua_State* L) {
