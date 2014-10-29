@@ -75,17 +75,17 @@ function propagateIgnoreList(con, laction, lcharacter)
 end
 
 function switch(t, ...)
-    t.case = function (self, x)
-        local f=self[x] or self.default
-        if f then
-            if type(f)~="function" then
-                error("case "..tostring(x).." not a function")
-            end
-            return f(x, self, unpack(arg))
-        end
-        return nil
-    end
-    return t
+	t.case = function (self, x)
+		local f=self[x] or self.default
+		if f then
+			if type(f)~="function" then
+				error("case "..tostring(x).." not a function")
+			end
+			return f(x, self, unpack(arg))
+		end
+		return nil
+	end
+	return t
 end
 
 -- Gets the value of a setting given
@@ -93,13 +93,13 @@ end
 -- returns the value of the setting
 -- Usage: channel_set_options:case(<option name> <channel> <desired value>)
 channel_get_options = switch {
-    "adthrottle" = function (opt, chan) return c.getAdThrottle(chan) end,
-    "adlength" = function (opt, chan) return c.getAdLength(chan) end,
-    "messagethrottle" = function (opt, chan) return c.getMessageThrottle(chan) end,
-    "messagelength" = function (opt, chan) return c.getMessageLength(chan) end,
-    "bottle" = function (opt, chan) return c.getCanBottle(chan) end,
-    "roll" = function (opt, chan) return c.getCanRoll(chan) end,
-    "public" = function(opt, chan) return c.getType(chan) end,
+	"adthrottle" = function (opt, chan) return c.getAdThrottle(chan) end,
+	"adlength" = function (opt, chan) return c.getAdLength(chan) end,
+	"messagethrottle" = function (opt, chan) return c.getMessageThrottle(chan) end,
+	"messagelength" = function (opt, chan) return c.getMessageLength(chan) end,
+	"bottle" = function (opt, chan) return c.getCanBottle(chan) end,
+	"roll" = function (opt, chan) return c.getCanRoll(chan) end,
+	"public" = function(opt, chan) return c.getType(chan) end,
 }
 
 -- Sets the value of a setting given
@@ -107,70 +107,70 @@ channel_get_options = switch {
 -- returns nil on success, otherwise an error code on failure
 -- Usage: channel_set_options:case(<option name> <channel> <desired value>)
 channel_set_options = switch {
-    "adthrottle" = function (opt, chan, value) 
-        if type(value) ~= "number" then
-            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
-        end
-        c.setAdThrottle(chan, math.min(value, const.LRP_FLOOD)) 
-        return nil
-    end,
-    "adlength" = function (opt, chan, value) 
-        if type(value) ~= "number" then
-            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
-        end
-        c.setAdLength(chan, math.min(value, const.LRP_MAX)) 
-        return nil
-    end,
-    "messagethrottle" = function (opt, chan, value) 
-        if type(value) ~= "number" then
-            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
-        end
-        c.setMessageThrottle(chan, math.min(value, const.MSG_FLOOD))
-        return nil
-    end,
-    "messagelength" = function (opt, chan, value) 
-        if type(value) ~= "number" then
-            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
-        end
-        c.setMessageLength(chan, math.min(value, const.MSG_MAX)) 
-        return nil
-    end,
-    "bottle" = function (opt, chan, value) 
-        if type(value) ~= "boolean" then
-            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
-        end
-        c.setCanBottle(chan, value)
-        return nil
-    end,
-    "roll" = function (opt, chan, value)
-        if type(value) ~= "boolean" then
-            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
-        end
-        c.setCanRoll(chan, value)
-        return nil
-    end,
-    "public" = function(opt, chan, value)
-        local newpub = string.lower(value)
-        if (newpub ~= "public") and (newpub ~= "private") then
-            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
-        end
-    
-        local chantype = c.getType(chan)
-        if (chantype ~= "private") and (chantype ~= "pubprivate") then
-            return const.FERR_BAD_CHANNEL_OPTION_FORMAT
-        end
-    
-        local pubstatus = false
-        local statusmsg = "closed."
-        if newpub == "public" then
-            pubstatus = true
-            statusmsg = "public."
-        end
-    
-        c.setPublic(chan, pubstatus)
-        u.send(con, "SYS", {channel=c.getName(chan), message="This channel is now [b]"..statusmsg.."[/b]"})
-        return nil
-    end
+	"adthrottle" = function (opt, chan, value) 
+		if type(value) ~= "number" then
+			return const.FERR_BAD_CHANNEL_OPTION_FORMAT
+		end
+		c.setAdThrottle(chan, math.min(value, const.LRP_FLOOD)) 
+		return nil
+	end,
+	"adlength" = function (opt, chan, value) 
+		if type(value) ~= "number" then
+			return const.FERR_BAD_CHANNEL_OPTION_FORMAT
+		end
+		c.setAdLength(chan, math.min(value, const.LRP_MAX)) 
+		return nil
+	end,
+	"messagethrottle" = function (opt, chan, value) 
+		if type(value) ~= "number" then
+			return const.FERR_BAD_CHANNEL_OPTION_FORMAT
+		end
+		c.setMessageThrottle(chan, math.min(value, const.MSG_FLOOD))
+		return nil
+	end,
+	"messagelength" = function (opt, chan, value) 
+		if type(value) ~= "number" then
+			return const.FERR_BAD_CHANNEL_OPTION_FORMAT
+		end
+		c.setMessageLength(chan, math.min(value, const.MSG_MAX)) 
+		return nil
+	end,
+	"bottle" = function (opt, chan, value) 
+		if type(value) ~= "boolean" then
+			return const.FERR_BAD_CHANNEL_OPTION_FORMAT
+		end
+		c.setCanBottle(chan, value)
+		return nil
+	end,
+	"roll" = function (opt, chan, value)
+		if type(value) ~= "boolean" then
+			return const.FERR_BAD_CHANNEL_OPTION_FORMAT
+		end
+		c.setCanRoll(chan, value)
+		return nil
+	end,
+	"public" = function(opt, chan, value)
+		local newpub = string.lower(value)
+		if (newpub ~= "public") and (newpub ~= "private") then
+			return const.FERR_BAD_CHANNEL_OPTION_FORMAT
+		end
+	
+		local chantype = c.getType(chan)
+		if (chantype ~= "private") and (chantype ~= "pubprivate") then
+			return const.FERR_BAD_CHANNEL_OPTION_FORMAT
+		end
+	
+		local pubstatus = false
+		local statusmsg = "closed."
+		if newpub == "public" then
+			pubstatus = true
+			statusmsg = "public."
+		end
+	
+		c.setPublic(chan, pubstatus)
+		u.send(con, "SYS", {channel=c.getName(chan), message="This channel is now [b]"..statusmsg.."[/b]"})
+		return nil
+	end
 }
 
 -- Bans a person by their account.
@@ -751,52 +751,52 @@ end
 -- Syntax: CGS <connection> <channel> <option name>
 event.CGS =
 function (con, args)
-    if args.channel == nil or args.setting == nil then
-        return const.FERR_BAD_SYNTAX
-    end
-    
-    local channelpresent, chan = c.getChannel(string.lower(args.channel))
-    if channelpresent ~= true then
-        return const.FERR_CHANNEL_NOT_FOUND
-    end
-    
-    if c.isMod(chan, con) ~= true then
-        return const.FERR_NOT_OP
-    end
-    
-    local value = channel_get_option:case(args.setting)
-    if value == nil then
-        return const.FERR_BAD_SYNTAX 
-    end
+	if args.channel == nil or args.setting == nil then
+		return const.FERR_BAD_SYNTAX
+	end
+	
+	local channelpresent, chan = c.getChannel(string.lower(args.channel))
+	if channelpresent ~= true then
+		return const.FERR_CHANNEL_NOT_FOUND
+	end
+	
+	if c.isMod(chan, con) ~= true then
+		return const.FERR_NOT_OP
+	end
+	
+	local value = channel_get_option:case(args.setting)
+	if value == nil then
+		return const.FERR_BAD_SYNTAX 
+	end
 
-    u.send(con, "CGS", {setting=args.setting, value=value})
-    return const.FERR_OK
+	u.send(con, "CGS", {setting=args.setting, value=value})
+	return const.FERR_OK
 end
 
 -- Sets setting for a channel
 -- Syntax: CSS <connection> <channel> <option name> <option value>
 event.CSS =
 function (con, args)
-    if args.channel == nil or args.setting == nil or args.value == nil then
-        return const.FERR_BAD_SYNTAX
-    end
-    
-    local channelpresent, chan = c.getChannel(string.lower(args.channel))
-    if channelpresent ~= true then
-        return const.FERR_CHANNEL_NOT_FOUND
-    end
-    
-    if c.isMod(chan, con) ~= true then
-        return const.FERR_NOT_OP
-    end
-    
-    local success = channel_set_option:case(args.option, args.value)
-    if result ~= nil then
-        return result   
-    end
-    
-    u.send(con, "CSS", {option=args.option, value=args.value})
-    return const.FERR_OK
+	if args.channel == nil or args.setting == nil or args.value == nil then
+		return const.FERR_BAD_SYNTAX
+	end
+	
+	local channelpresent, chan = c.getChannel(string.lower(args.channel))
+	if channelpresent ~= true then
+		return const.FERR_CHANNEL_NOT_FOUND
+	end
+	
+	if c.isMod(chan, con) ~= true then
+		return const.FERR_NOT_OP
+	end
+	
+	local success = channel_set_option:case(args.option, args.value)
+	if result ~= nil then
+		return result   
+	end
+	
+	u.send(con, "CSS", {option=args.option, value=args.value})
+	return const.FERR_OK
 end
 
 -- Removes a global moderator.
@@ -1088,7 +1088,7 @@ function (con, args)
 	if u.checkUpdateTimer(con, "msg", const.MSG_FLOOD) == true then
 		return const.FERR_THROTTLE_MESSAGE
 	end
-    
+	
 	local found, chan = c.getChannel(string.lower(args.channel))
 	if found ~= true then
 		return const.FERR_CHANNEL_NOT_FOUND
@@ -1107,8 +1107,8 @@ function (con, args)
 		return const.FERR_MESSAGE_TOO_LONG
 	elseif #args.message > const.MSG_MAX then
 		return const.FERR_MESSAGE_TOO_LONG
-    elseif #args.message > c.getMessageLength(chan) then
-        return const.FERR_MESSAGE_TOO_LONG
+	elseif #args.message > c.getMessageLength(chan) then
+		return const.FERR_MESSAGE_TOO_LONG
 	end
 
 	if c.inChannel(chan, con) ~= true then
@@ -1236,7 +1236,7 @@ function (con, args)
 	if u.checkUpdateTimer(con, "msg", const.MSG_FLOOD) == true then
 		return const.FERR_THROTTLE_MESSAGE
 	end
-    
+	
 	if u.checkUpdateTimer(con, "msg", c.getMessageThrottle(chan)) then
 		return const.FERR_THROTTLE_MESSAGE
 	end
@@ -1246,9 +1246,9 @@ function (con, args)
 	end
 
 	if args.dice == "bottle" then
-        if ~c.getCanBottle(chan) then
-            return const.FERR_NO_BOTTLE
-        end
+		if ~c.getCanBottle(chan) then
+			return const.FERR_NO_BOTTLE
+		end
 		local bottlers = c.getBottleList(chan, con)
 		if #bottlers == 0 then
 			u.send(con, "SYS", {message="Couldn't locate anyone who is available to have the bottle land on them."})
@@ -1259,10 +1259,10 @@ function (con, args)
 		return const.FERR_OK
 	end
 
-    if ~c.getCanRoll(chan) then
-        return const.FERR_NO_ROLL
-    end
-    
+	if ~c.getCanRoll(chan) then
+		return const.FERR_NO_ROLL
+	end
+	
 	local odice_NO_DICEapeHTML(args.dice)
 	local dice = string.gsub(args.dice, "-", "+-")
 	local steps = string.split(dice, "+")
@@ -1354,11 +1354,11 @@ end
 -- Syntax: RST <status(public/closed)>
 event.RST =
 function (con, args)
-    args.option = "public"
-    args.value = args.status
-    
-    // Forward to CSO now
-    return event.CSO(con, args)
+	args.option = "public"
+	args.value = args.status
+	
+	// Forward to CSO now
+	return event.CSO(con, args)
 end
 
 -- Rewards a character with a crown status.
