@@ -74,6 +74,9 @@ function propagateIgnoreList(con, laction, lcharacter)
 	end
 end
 
+-- Checks to see if a kick/ban/timeout is possible
+-- returns nil (no errors) if able to kick/ban, otherwise returns error
+-- Syntax: canChannelKickBan <connection> <target name> <target handle> <channel handle>
 function canChannelKickBan(con, targetname, targetcon, chan)
 	-- Source connection must be a channel op or above.
 	if c.isMod(chan, con) ~= true then
@@ -92,10 +95,9 @@ function canChannelKickBan(con, targetname, targetcon, chan)
 
 	-- Channel owners or above cannot kick/ban/timeout other owners or above.
 	if c.isOwner(chan, con) and c.isOwner(chan, target) then
-			return const.FERR_DENIED_ON_OP
+		return const.FERR_DENIED_ON_OP
 	end
 
-	-- Channel ops cannot kick/ban/timeout other channel ops.
 	if c.isOnlyMod(chan, con) and c.isOnlyMod(chan, target) then
 		return const.FERR_DENIED_ON_OP
 	end
@@ -241,36 +243,24 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	local chantype = c.getType(chan)
-	local targetname = args.character
-	local lowertargetname = string.lower(targetname)
+	local targetname = string.lower(args.character)
 	local targetonline, target = u.getConnection(lowertargetname)
-	-- if the target is currently online,
-	-- adjust information to exactly reflect what the target connection
-	-- says it should be
-	if targetonline then
-		targetname = u.getName(target)
-		lowertargetname = string.tolower(targetname)
-	end
-	
-	local caban = canChannelKickBan(con, lowertargetname, chan, chantype, args)
+
+	local canban = canChannelKickBan(con, targetname, target, chan)
 	if canban ~= nil then
 		return canban
 	end
-	
+
 	if chantype == "public" then
 		s.logAction(con, "CBU", args)
 	elseif chantype == "private" then
-		c.removeInvite(chan, lowertargetname)
+		c.removeInvite(chan, targetname)
 	end
 
-	c.sendAll(chan, "CBU", {channel=args.channel, operator=u.getName(con), character=targetname})
-	c.ban(chan, con, lowertargetname)
-	-- if we are online, make sure the target leaves the channel
-	if targetonline then
-		if c.inChannel(chan, target) == true then
-			partChannel(chan, target)
-		end
+	c.sendAll(chan, "CBU", {channel=args.channel, operator=u.getName(con), character=args.character})
+	c.ban(chan, con, targetname)
+	if targetonline and c.inChannel(chan, target) then
+		partChannel(chan, target)
 	end
 
 	return const.FERR_OK
@@ -379,29 +369,24 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	local chantype = c.getType(chan)
-	local targetname = args.character
-	local lowertargetname = string.lower(targetname)
-	local foundtarget, target = u.getConnection(string.lower(args.character))
-	if foundtarget ~= true then
-		return const.FERR_USER_NOT_FOUND
-	end
-	targetname = u.getName(target)
-	lowertargetname = string.lower(targetname)
-	
-	local cankick = canChannelKickban(con, lowertargetname, chan, chantype)
+	local targetname = string.lower(args.character)
+	local targetonline, target = u.getConnection(targetname)
+
+	local cankick = canChannelKickban(con, targetname, target, chan)
 	if cankick ~= nil then
 		return cankick
 	end
-	
+
 	if chantype == "public" then
-		s.logAction(con, "CBU", args)		
+		s.logAction(con, "CBU", args)
 	elseif chantype == "private" then
-		c.removeInvite(chan, string.lower(args.character))
+		c.removeInvite(chan, targetname)
 	end
 
-	c.sendAll(chan, "CKU", {channel=args.channel, operator=u.getName(con), character=targetname})
-	partChannel(chan, target)
+	c.sendAll(chan, "CKU", {channel=args.channel, operator=u.getName(con), character=args.character})
+	if targetonline and c.inChannel(chan, target) then
+		partChannel(chan, target)
+	end
 	return const.FERR_OK
 end
 
@@ -600,16 +585,10 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	local chantype = c.getType(chan)
-	local targetname = args.character
-	local lowertargetname = string.lower(targetname)
+	local targetname = string.lower(args.character)
 	local targetonline, target = u.getConnection(lowertargetname)
-	if targetonline then
-		targetname = u.getName(target)
-		lowertargetname = string.tolower(targetname)
-	end
-	
-	local cantimeout = canChannelKickBan(con, lowertargetname, chan, chantype, args)
+
+	local cantimeout = canChannelKickban(con, targetname, target, chan)
 	if cantimeout ~= nil then
 		return cantimeout
 	end
@@ -617,15 +596,13 @@ function (con, args)
 	if chantype == "public" then
 		s.logAction(con, "CTU", args)
 	elseif chantype == "private" then
-		c.removeInvite(chan, lowertargetname)
+		c.removeInvite(chan, targetname)
 	end
 
-	c.sendAll(chan, "CTU", {channel=args.channel, operator=u.getName(con), character=targetname, length=tonumber(args.length)})
-	c.timeout(chan, con, lowertargetname, length)
-	if targetonline then
-		if c.inChannel(chan, target) then
-			partChannel(chan, target)
-		end
+	c.sendAll(chan, "CTU", {channel=args.channel, operator=u.getName(con), character=args.character, length=tonumber(args.length)})
+	c.timeout(chan, con, targetname, length)
+	if targetonline and c.inChannel(chan, target) then
+		partChannel(chan, target)
 	end
 
 	return const.FERR_OK
