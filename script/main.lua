@@ -86,8 +86,8 @@ function (con, args)
 		return const.FERR_NOT_OP
 	end
 
-    -- TODO: allow bans when a user is gone by allowing
-    -- name -> id lookup system within FChat
+	-- TODO: allow bans when a user is gone by allowing
+	-- name -> id lookup system within FChat
 
 	local found, char = u.getConnection(string.lower(args.character))
 	if found ~= true then
@@ -100,10 +100,10 @@ function (con, args)
 
 	s.logAction(con, "ACB", args)
 	s.addBan(char)
-    -- message with direct name
-    u.send(con, "ACB", {character=u.getName(char)})
-    -- send legacy message
-    u.send(con, "SYS", {message=u.getName(char).." is now account banned."})
+	-- message with direct name
+	u.send(con, "ACB", {character=u.getName(char)})
+	-- send legacy message
+	u.send(con, "SYS", {message=u.getName(char).." is now account banned."})
 	local account_cons = u.getByAccount(char)
 	for i, v in ipairs(account_cons) do
 		u.sendError(v, const.FERR_BANNED_FROM_SERVER)
@@ -201,9 +201,9 @@ function (con, args)
 		banl= banl..", "..ban
 	end
 	banl = string.sub(banl, 3)
-    u.send(con, "CBL", {channel=args.channel, array_characters=banlist})
-    -- still send legacy SYS message
-    u.send(con, "SYS", {channel=args.channel, message=banmessage..banl})
+	u.send(con, "CBL", {channel=args.channel, array_characters=banlist})
+	-- still send legacy SYS message
+	u.send(con, "SYS", {channel=args.channel, message=banmessage..banl})
 	return const.FERR_OK
 end
 
@@ -460,9 +460,9 @@ function (con, args)
 		end
 	end
 	opl = string.sub(opl, 3)
-    u.send(con, "COL", {channel=args.channel, array_oplist=oplist})
+	u.send(con, "COL", {channel=args.channel, array_oplist=oplist})
 	-- still send the legacy message
-    u.send(con, "SYS", {channel=args.channel, message=opmessage..opl})
+	u.send(con, "SYS", {channel=args.channel, message=opmessage..opl})
 	return const.FERR_OK
 end
 
@@ -520,8 +520,8 @@ function (con, args)
 		local found, chan = c.getChannel(string.lower(args.channel))
 		if found ~= true then
 			c.createChannel(args.channel)
-            u.send(con, "CRC", {channel=args.channel})
-            -- still send legacy SYS message
+			u.send(con, "CRC", {channel=args.channel})
+			-- still send legacy SYS message
 			u.send(con, "SYS", {message=args.channel .. " has been created as a public channel."})
 		end
 	else
@@ -656,9 +656,9 @@ function (con, args)
 	end
 
 	c.unban(chan, string.lower(args.character))
-    u.send(con, "CUB", {channel=args.channel, character=args.character})
+	u.send(con, "CUB", {channel=args.channel, character=args.character})
 	-- still send legacy sys message
-    u.send(con, "SYS", {channel=args.channel, message=args.character.." has been removed from the channel ban list."})
+	u.send(con, "SYS", {channel=args.channel, message=args.character.." has been removed from the channel ban list."})
 	return const.FERR_OK
 end
 
@@ -1356,40 +1356,40 @@ function (con, args)
 	if (u.isAdmin(con) ~= true) and (u.isGlobMod(con) ~= true) then
 		return const.FERR_NOT_OP
 	end
-    
+	
 	local reason = s.escapeHTML(args.reason)
 
-    local targetname = args.character
-    local lowertargetname = string.lower(targetname)
+	local targetname = args.character
+	local lowertargetname = string.lower(targetname)
 	local targetonline, target = u.getConnection(lowertargetname)
 	if targetonline then
-        targetname = u.getName(target)
-        lowertargetname = string.lower(targetname)		
-        if (u.isAdmin(target) == true) or (u.isGlobMod(target) == true) then
-            return const.FERR_DENIED_ON_OP
-        end	
-        s.logAction(con, "TMO", args)
-        s.addTimeout(char, length*60)
-    else
-        if c.isOp(lowertargetname) or c.isGlobMod(lowertargetname) then
-            return const.FERR_DENIED_ON_OP
-        end
-        -- TODO: guess we really need that offline name -> id system
-        u.send(con, "SYS", {message="Cannot timeout user that is not online"})
-        return const.FERR_NOT_IMPLEMENTED
-    end
-        
-    -- Keep sending sys messages
-    u.send(con, "SYS", {message=targetname.." has been given a "..length.." minute time out for: "..reason})
-    -- Send a specific TMO message on success as well
-    u.send(con, "TMO", {character=targetname, length=length, message=targetname.." has been given a "..length.." minute time out for: "..reason})
+		targetname = u.getName(target)
+		lowertargetname = string.lower(targetname)		
+		if (u.isAdmin(target) == true) or (u.isGlobMod(target) == true) then
+			return const.FERR_DENIED_ON_OP
+		end	
+		s.logAction(con, "TMO", args)
+		s.addTimeout(char, length*60)
+	else
+		if c.isOp(lowertargetname) or c.isGlobMod(lowertargetname) then
+			return const.FERR_DENIED_ON_OP
+		end
+		-- TODO: guess we really need that offline name -> id system
+		u.send(con, "SYS", {message="Cannot timeout user that is not online"})
+		return const.FERR_NOT_IMPLEMENTED
+	end
+		
+	-- Keep sending sys messages
+	u.send(con, "SYS", {message=targetname.." has been given a "..length.." minute time out for: "..reason})
+	-- Send a specific TMO message on success as well
+	u.send(con, "TMO", {character=targetname, length=length, message=targetname.." has been given a "..length.." minute time out for: "..reason})
 	if targetonline then
-        local account_cons = u.getByAccount(char)
-        for i, v in ipairs(account_cons) do
-            u.sendError(v, const.FERR_TIMED_OUT, "You have been given a time out by "..u.getName(con).." for "..length.." minute(s). The reason given was: "..reason)
-            u.close(v)
-        end
-    end
+		local account_cons = u.getByAccount(char)
+		for i, v in ipairs(account_cons) do
+			u.sendError(v, const.FERR_TIMED_OUT, "You have been given a time out by "..u.getName(con).." for "..length.." minute(s). The reason given was: "..reason)
+			u.close(v)
+		end
+	end
 	return const.FERR_OK
 end
 
