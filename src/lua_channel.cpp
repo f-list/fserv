@@ -78,6 +78,7 @@ static const luaL_Reg luachannel_funcs[] = {
     {"isMod", LuaChannel::isMod},
     {"isOwner", LuaChannel::isOwner},
     {"getModList", LuaChannel::getModList},
+    {"getOwnerList", LuaChannel::getOwnerList},
     {"checkUpdateTimer", LuaChannel::checkUpdateTimer},
     {"getType", LuaChannel::getType},
     {"setMode", LuaChannel::setMode},
@@ -934,6 +935,29 @@ int LuaChannel::getModList(lua_State* L) {
     const chmodmap_t mods = chan->getModRecords();
     int i = 1;
     lua_pushstring(L, chan->getOwner().c_str());
+    lua_rawseti(L, -2, i++);
+    for (chmodmap_t::const_iterator itr = mods.begin(); itr != mods.end(); ++itr) {
+        lua_pushstring(L, itr->first.c_str());
+        lua_rawseti(L, -2, i++);
+    }
+    return 1;
+}
+
+/**
+ * Gets a the list of moderators in a channel.
+ * @param LUD channel
+ * @returns [table of string] moderators
+ */
+int LuaChannel::getOwnerList(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    LBase* base = 0;
+    GETLCHAN(base, L, 1, chan);
+    lua_pop(L, 1);
+
+    lua_newtable(L);
+    const chmodmap_t mods = chan->getOwnerRecords();
+    int i = 1;
     lua_rawseti(L, -2, i++);
     for (chmodmap_t::const_iterator itr = mods.begin(); itr != mods.end(); ++itr) {
         lua_pushstring(L, itr->first.c_str());
