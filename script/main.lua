@@ -342,12 +342,12 @@ end
 -- Syntax: canChannelKickban <connection> <target name> <channel handle> <channeltype>
 canChannelKickban =
 function (con, targetname, chan, channeltype)
-	-- [[ we should not check if the user is in the channel:
+	--[[ we should not check if the user is in the channel:
 	-- you should be able to timeout / kick, and then decide later a ban was cooler
 	if ~(c.inChannel(chan, con)) or ~(c.inChannel(chan, target)) then
 		return const.FERR_USER_NOT_IN_CHANNEL
 	end
-	-- ]]
+	--]]
 
 	-- check using user name
 	if c.isBanned(chan, lowertargetname) == true then
