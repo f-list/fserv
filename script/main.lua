@@ -224,9 +224,9 @@ function (con, args)
 		lowertargetname = string.tolower(targetname)
 	end
 	
-	local canban = canChannelKickBan(con, lowertargetname, chan, chantype, args)
-	if cankick ~= nil then
-		return cankick
+	local caban = canChannelKickBan(con, lowertargetname, chan, chantype, args)
+	if canban ~= nil then
+		return canban
 	end
 	
 	if chantype == "public" then
@@ -625,6 +625,11 @@ function (con, args)
 		lowertargetname = string.tolower(targetname)
 	end
 	
+	local cantimeout = canChannelKickBan(con, lowertargetname, chan, chantype, args)
+	if cantimeout ~= nil then
+		return cantimeout
+	end
+
 	if chantype == "public" then
 		s.logAction(con, "CTU", args)
 	elseif chantype == "private" then
