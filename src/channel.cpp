@@ -228,6 +228,8 @@ void Channel::addMod(const string& src, const string& dest) {
     mod.modder = src;
     mod.time = time(0);
     moderators[dest] = mod;
+    // can't be both owner and moderator in this model
+    owners.erase(dest);
 }
 
 void Channel::removeMod(const string& dest) {
@@ -247,11 +249,19 @@ void Channel::addOwner(const string& src, const string& dest) {
     mod.modder = src;
     mod.time = time(0);
     owners[dest] = mod;
+    // if they're an owner, they're not a moderator
+    // also, jesus christ is this permission model hard
+    moderators.erase(dest);
 }
 
 void Channel::removeOwner(const string& dest) {
     if (owners.size() > 1) {
         owners.erase(dest);
+        // Removing an owner makes them "step down"
+        // to the moderator level
+        // another command is required, since the way Fchat sets up
+        // its commands are weird
+        addMod(dest);
     }
 }
 

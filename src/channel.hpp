@@ -130,10 +130,14 @@ public:
 
     void setOwner(const string& name) {
         // simulate old functionality until
-        // web clients get their shit together
+        // web client get their shit together
         if (owners.size() > 0) {
             // TODO: remove this when the time is right
-            owners.erase(owners.begin());
+            // in all honestly, this just picks the first one in the list
+            // it might not even be the person issuing the command
+            // it's almost scary, really!
+            std::string name = owners.begin()->first;
+            removeMod(name);
         }
         addOwner(name);
     }
