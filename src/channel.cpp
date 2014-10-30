@@ -237,7 +237,7 @@ bool Channel::isOnlyMod(const string& name) const {
 }
 
 bool Channel::isOwner(ConnectionPtr con) const {
-    return con->globalModerator || con->admin || isOwner(con->characterName);
+    return con->globalModerator || con->admin || isOwner(con->characterNameLower);
 }
 
 bool Channel::isOwner(const string& name) const {
@@ -245,7 +245,7 @@ bool Channel::isOwner(const string& name) const {
 }
 
 bool Channel::isOnlyOwner(ConnectionPtr con) const {
-    return isOnlyOwner(con.characterName);
+    return isOnlyOwner(con->characterNameLower);
 }
 
 bool Channel::isOnlyOwner(const string& name) const {

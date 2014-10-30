@@ -107,7 +107,7 @@ public:
     const chmodmap_t& getModRecords() const {
         return moderators;
     }
-    bool isMod(ConnectionPtr con);
+    bool isMod(ConnectionPtr con) const;
     bool isMod(const string& name) const;
     bool isOnlyMod(ConnectionPtr con) const;
     bool isOnlyMod(const string& name) const;
@@ -117,8 +117,8 @@ public:
     }
     bool isOwner(ConnectionPtr con) const;
     bool isOwner(const string& name) const;
-    bool isOwner(ConnectionPtr con) const;
-    bool isOwner(const string& name) const;
+    bool isOnlyOwner(ConnectionPtr con) const;
+    bool isOnlyOwner(const string& name) const;
     
     void setOwner(string& name) {
         owner = name;
