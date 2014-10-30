@@ -71,6 +71,7 @@ public:
     static int addMod(lua_State* L);
     static int removeMod(lua_State* L);
     static int isMod(lua_State* L);
+    static int isOnlyMod(lua_State* L);
     static int isOwner(lua_State* L);
     static int getModList(lua_State* L);
 

@@ -845,6 +845,33 @@ int LuaChannel::isMod(lua_State* L) {
 }
 
 /**
+ * Returns a boolean that describes if a connection or name is a moderator in the channel.
+ * @param LUD channel
+ * @param LUD/string connection/name
+ * @returns true if the connection or name is in the channels moderator list, false otherwise.
+ */
+int LuaChannel::isOnlyMod(lua_State* L) {
+    bool ret = false;
+    luaL_checkany(L, 2);
+
+    LBase* base = 0;
+    GETLCHAN(base, L, 1, chan);
+    int type = lua_type(L, 2);
+    if (type == LUA_TLIGHTUSERDATA) {
+        GETLCON(base, L, 2, con);
+        ret = chan->isOnlyMod(con);
+    } else if (type == LUA_TSTRING) {
+        string name = lua_tostring(L, 2);
+        ret = chan->isOnlyMod(name);
+    } else
+        return luaL_error(L, "isMod expects string or ConnectionPtr as argument 2.");
+
+    lua_pop(L, 2);
+    lua_pushboolean(L, ret);
+    return 1;
+}
+
+/**
  * Returns a boolean that describes if a connection or name is the channel owner.
  * @param LUD channel
  * @param LUD/string connection/name
