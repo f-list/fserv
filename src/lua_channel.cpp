@@ -864,7 +864,34 @@ int LuaChannel::isOnlyMod(lua_State* L) {
         string name = lua_tostring(L, 2);
         ret = chan->isOnlyMod(name);
     } else
-        return luaL_error(L, "isMod expects string or ConnectionPtr as argument 2.");
+        return luaL_error(L, "isOnlyMod expects string or ConnectionPtr as argument 2.");
+
+    lua_pop(L, 2);
+    lua_pushboolean(L, ret);
+    return 1;
+}
+
+/**
+ * Returns a boolean that describes if a connection or name is a moderator in the channel.
+ * @param LUD channel
+ * @param LUD/string connection/name
+ * @returns true if the connection or name is an owner, false otherwise
+ */
+int LuaChannel::isOnlyOwner(lua_State* L) {
+    bool ret = false;
+    luaL_checkany(L, 2);
+
+    LBase* base = 0;
+    GETLCHAN(base, L, 1, chan);
+    int type = lua_type(L, 2);
+    if (type == LUA_TLIGHTUSERDATA) {
+        GETLCON(base, L, 2, con);
+        ret = chan->isOnlyOwner(con);
+    } else if (type == LUA_TSTRING) {
+        string name = lua_tostring(L, 2);
+        ret = chan->isOnlyOwner(name);
+    } else
+        return luaL_error(L, "isOnlyOwner expects string or ConnectionPtr as argument 2.");
 
     lua_pop(L, 2);
     lua_pushboolean(L, ret);
