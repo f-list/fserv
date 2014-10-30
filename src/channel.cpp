@@ -222,10 +222,7 @@ bool Channel::isMod(ConnectionPtr con) const {
 }
 
 bool Channel::isMod(const string& name) const {
-    if ((owner == name) || moderators.find(name) != moderators.end())
-        return true;
-
-    return false;
+    return (owner == name) || moderators.find(name) != moderators.end();
 }
 
 bool Channel::isOnlyMod(ConnectionPtr con) const {
