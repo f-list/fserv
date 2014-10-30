@@ -73,6 +73,7 @@ public:
     static int isMod(lua_State* L);
     static int isOnlyMod(lua_State* L);
     static int isOwner(lua_State* L);
+    static int isOnlyOwner(lua_State* L);
     static int getModList(lua_State* L);
 
     static int checkUpdateTimer(lua_State* L);
