@@ -63,7 +63,7 @@ title(""),
 topUsers(0),
 refCount(0) {
     invites.insert(creator->characterNameLower);
-    owner = creator->characterName;
+    addOwner(creator->characterName);
     description = privChanDescriptionDefault;
 }
 
@@ -215,50 +215,60 @@ bool Channel::getBan(string& name, BanRecord& ban) {
     return false;
 }
 
-void Channel::addMod(ConnectionPtr src, string& dest) {
+void Channel::addMod(ConnectionPtr src, const string& dest) {
+    addMod(src->characterName, dest);
+}
+
+void Channel::addMod(const string& dest) {
+    addMod("[System]", dest);
+}
+
+void Channel::addMod(const string& src, const string& dest) {
     ModRecord mod;
-    mod.modder = src->characterName;
+    mod.modder = src;
     mod.time = time(0);
     moderators[dest] = mod;
 }
 
-void Channel::addMod(string& dest) {
-    ModRecord mod;
-    mod.modder = "[System]";
-    mod.time = time(0);
-    moderators[dest] = mod;
-}
-
-void Channel::remMod(string& dest) {
+void Channel::removeMod(const string& dest) {
     moderators.erase(dest);
 }
 
-bool Channel::isMod(ConnectionPtr con) {
-    if (con->globalModerator || con->admin || (owner == con->characterName) || moderators.find(con->characterName) != moderators.end())
-        return true;
-
-    return false;
+void Channel::addOwner(ConnectionPtr src, const string& dest) {
+    addOwner(src->characterName, dest);
 }
 
-bool Channel::isMod(string& name) {
-    if ((owner == name) || moderators.find(name) != moderators.end())
-        return true;
-
-    return false;
+void Channel::addOwner(const string& dest) {
+    addOwner("[System]", dest);
 }
 
-bool Channel::isOwner(ConnectionPtr con) {
-    if (con->globalModerator || con->admin || (owner == con->characterName))
-        return true;
-
-    return false;
+void Channel::addOwner(const string& src, const string& dest) {
+    ModRecord mod;
+    mod.modder = src;
+    mod.time = time(0);
+    owners[dest] = mod;
 }
 
-bool Channel::isOwner(string& name) {
-    if (owner == name)
-        return true;
+void Channel::removeOwner(const string& dest) {
+    if (owners.size() > 1) {
+        owners.erase(dest);
+    }
+}
 
-    return false;
+bool Channel::isMod(ConnectionPtr con) const {
+    return isOwner(con) || moderators.find(name) != moderators.end();
+}
+
+bool Channel::isMod(const string& name) const {
+    return isOwner(name) || moderators.find(name) != moderators.end();
+}
+
+bool Channel::isOwner(ConnectionPtr con) const {
+    return con->globalModerator || con->admin || isOwner(con->characterNameLower);
+}
+
+bool Channel::isOwner(const string& name) const {
+    return owners.find(name) != owners.end();
 }
 
 const double Channel::getTimerEntry(ConnectionPtr con) {
@@ -294,10 +304,7 @@ void Channel::removeInvite(string& dest) {
 }
 
 bool Channel::isInvited(ConnectionPtr con) {
-    if (invites.find(con->characterNameLower) != invites.end())
-        return true;
-
-    return false;
+    return invites.find(con->characterNameLower) != invites.end();
 }
 
 void Channel::setPublic(bool newstatus) {
@@ -317,9 +324,6 @@ json_t* Channel::saveChannel() {
             );
     json_object_set_new_nocheck(ret, "mode",
             json_string_nocheck(modeToString().c_str())
-            );
-    json_object_set_new_nocheck(ret, "owner",
-            json_string_nocheck(owner.c_str())
             );
     json_object_set_new_nocheck(ret, "users",
             json_integer(participants.size())
@@ -355,7 +359,7 @@ json_t* Channel::saveChannel() {
         json_object_set_new_nocheck(ret, "banlist", bansnode);
     }
     {
-        json_t* mods = json_array();
+        json_t* modlist = json_array();
         for (chmodmap_t::const_iterator i = moderators.begin(); i != moderators.end(); ++i) {
             json_t* mod = json_object();
             ModRecord mr = (*i).second;
@@ -368,9 +372,27 @@ json_t* Channel::saveChannel() {
             json_object_set_new_nocheck(mod, "time",
                     json_integer(mr.time)
                     );
-            json_array_append_new(mods, mod);
+            json_array_append_new(modlist, mod);
         }
-        json_object_set_new_nocheck(ret, "modlist", mods);
+        json_object_set_new_nocheck(ret, "modlist", modlist);
+    }
+    {
+        json_t* ownerlist = json_array();
+        for (chmodmap_t::const_iterator i = owners.begin(); i != owners.end(); ++i) {
+            json_t* mod = json_object();
+            ModRecord mr = (*i).second;
+            json_object_set_new_nocheck(mod, "name",
+                    json_string_nocheck((*i).first.c_str())
+                    );
+            json_object_set_new_nocheck(mod, "modder",
+                    json_string_nocheck(mr.modder.c_str())
+                    );
+            json_object_set_new_nocheck(mod, "time",
+                    json_integer(mr.time)
+                    );
+            json_array_append_new(ownerlist, mod);
+        }
+        json_object_set_new_nocheck(ret, "ownerlist", ownerlist);
     }
 
 
@@ -398,17 +420,6 @@ void Channel::loadChannel(const json_t* channode) {
                 chatMode = stringToMode(modestring);
         } else {
             LOG(WARNING) << "Channel json for " << name << " contains no mode item.";
-        }
-    }
-
-    {
-        json_t* ownernode = json_object_get(channode, "owner");
-        if (ownernode) {
-            const char* ownerstring = json_string_value(ownernode);
-            if (ownerstring)
-                owner = ownerstring;
-        } else {
-            LOG(WARNING) << "Channel json for " << name << " contains no owner item.";
         }
     }
 
@@ -530,7 +541,62 @@ void Channel::loadChannel(const json_t* channode) {
                 }
             }
         } else {
-            LOG(WARNING) << "Channel json for " << name << " contains no banlist item.";
+            LOG(WARNING) << "Channel json for " << name << " contains no modlist item.";
+        }
+    }
+    
+    {
+        json_t* modsnode = json_object_get(channode, "ownerlist");
+        if (json_is_array(modsnode)) {
+            int modsize = json_array_size(modsnode);
+            for (int l = 0; l < modsize; ++l) {
+                json_t* mod = json_array_get(modsnode, l);
+                if (!mod) {
+                    LOG(WARNING) << "Calculation error in owner list loop. l:" << l;
+                    break;
+                }
+                ModRecord m;
+
+                {
+                    json_t* moddernode = json_object_get(mod, "modder");
+                    if (moddernode) {
+                        const char* modderstring = json_string_value(moddernode);
+                        if (modderstring) {
+                            m.modder = modderstring;
+                        } else {
+                            m.modder = "";
+                        }
+                    } else {
+                        LOG(WARNING) << "Owner json for channel " << name << " contains no modder item.";
+                        continue;
+                    }
+                }
+
+                {
+                    json_t* timenode = json_object_get(mod, "time");
+                    if (timenode) {
+                        m.time = json_integer_value(timenode);
+                    } else {
+                        LOG(WARNING) << "Owner json for channel " << name << " contains no time item.";
+                        continue;
+                    }
+                }
+
+                {
+                    json_t* namenode = json_object_get(mod, "name");
+                    if (namenode) {
+                        const char* namestring = json_string_value(namenode);
+                        if (namestring) {
+                            owners[namestring] = m;
+                        }
+                    } else {
+                        LOG(WARNING) << "Mod json for channel " << name << " contains no name item.";
+                        continue;
+                    }
+                }
+            }
+        } else {
+            LOG(WARNING) << "Channel json for " << name << " contains no ownerlist item.";
         }
     }
 

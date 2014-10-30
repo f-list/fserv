@@ -73,6 +73,8 @@ static const luaL_Reg luachannel_funcs[] = {
     {"inChannel", LuaChannel::inChannel},
     {"addMod", LuaChannel::addMod},
     {"removeMod", LuaChannel::removeMod},
+    {"addOwner", LuaChannel::addOwner},
+    {"removeOwner", LuaChannel::removeOwner},
     {"isMod", LuaChannel::isMod},
     {"isOwner", LuaChannel::isOwner},
     {"getModList", LuaChannel::getModList},
@@ -810,7 +812,51 @@ int LuaChannel::removeMod(lua_State* L) {
     string dest = luaL_checkstring(L, 2);
     lua_pop(L, 2);
 
-    chan->remMod(dest);
+    chan->removeMod(dest);
+    if (chan->getType() == CT_PUBLIC)
+        ServerState::rebuildChannelOpList();
+
+    return 0;
+}
+
+/**
+ * Adds a name to the channels moderator list.
+ * @param LUD channel
+ * @param LUD source connection
+ * @param string moderator name
+ * @returns Nothing.
+ */
+int LuaChannel::addOwner(lua_State* L) {
+    luaL_checkany(L, 3);
+
+    LBase* base = 0;
+    GETLCHAN(base, L, 1, chan);
+    GETLCON(base, L, 2, src);
+    string dest = luaL_checkstring(L, 3);
+    lua_pop(L, 3);
+
+    chan->addOwner(src, dest);
+    if (chan->getType() == CT_PUBLIC)
+        ServerState::rebuildChannelOpList();
+
+    return 0;
+}
+
+/**
+ * Removes a name from the channels moderator list.
+ * @param LUD channel
+ * @param string moderator name
+ * @returns Nothing.
+ */
+int LuaChannel::removeOwner(lua_State* L) {
+    luaL_checkany(L, 2);
+
+    LBase* base = 0;
+    GETLCHAN(base, L, 1, chan);
+    string dest = luaL_checkstring(L, 2);
+    lua_pop(L, 2);
+
+    chan->removeOwner(dest);
     if (chan->getType() == CT_PUBLIC)
         ServerState::rebuildChannelOpList();
 
