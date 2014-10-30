@@ -231,6 +231,14 @@ bool Channel::isMod(string& name) {
     return false;
 }
 
+bool Channel::isOnlyMod(ConnectionPtr con) const {
+    return isOnlyMod(con->characterNameLower);
+}
+
+bool Channel::isOnlyMod(const string& name) const {
+    return moderators.find(name) != moderators.end();
+}
+
 bool Channel::isOwner(ConnectionPtr con) {
     if (con->globalModerator || con->admin || (owner == con->characterName))
         return true;

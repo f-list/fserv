@@ -109,7 +109,9 @@ public:
     }
     bool isMod(ConnectionPtr con);
     bool isMod(string& name);
-
+    bool isOnlyMod(ConnectionPtr con) const;
+    bool isOnlyMod(const string& name) const;
+    
     const string& getOwner() const {
         return owner;
     }

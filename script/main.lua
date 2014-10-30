@@ -74,6 +74,35 @@ function propagateIgnoreList(con, laction, lcharacter)
 	end
 end
 
+function canChannelKickBan(con, targetname, targetcon, chan)
+	-- Source connection must be a channel op or above.
+	if c.isMod(chan, con) ~= true then
+		return const.FERR_NOT_OP
+	end
+
+	-- Prefer online connection to name if possible.
+	local target = targetname
+	if targetcon ~= nil then
+		target = targetcon
+	end
+
+	if c.isBanned(chan, target) == true then
+		return const.FERR_ALREADY_CHANNEL_BANNED
+	end
+
+	-- Channel owners or above cannot kick/ban/timeout other owners or above.
+	if c.isOwner(chan, con) and c.isOwner(chan, target) then
+			return const.FERR_DENIED_ON_OP
+	end
+
+	-- Channel ops cannot kick/ban/timeout other channel ops.
+	if c.isOnlyMod(chan, con) and c.isOnlyMod(chan, target) then
+		return const.FERR_DENIED_ON_OP
+	end
+
+	return nil
+end
+
 -- Bans a person by their account.
 -- Syntax: ACB <character>
 event.ACB =
@@ -335,51 +364,6 @@ function (con, args)
 	u.send(char, "CIU", {sender=u.getName(con), title=c.getTitle(chan), name=c.getName(chan)})
 	u.send(con, "SYS", {message="Your invitation has been sent."})
 	return const.FERR_OK
-end
-
--- Checks to see if a kick/ban is possible
--- returns nil (no errors) if able to kick/ban, otherwise returns error
--- Syntax: canChannelKickban <connection> <target name> <channel handle> <channeltype>
-canChannelKickban =
-function (con, targetname, chan, channeltype)
-	--[[ we should not check if the user is in the channel:
-	-- you should be able to timeout / kick, and then decide later a ban was cooler
-	if ~(c.inChannel(chan, con)) or ~(c.inChannel(chan, target)) then
-		return const.FERR_USER_NOT_IN_CHANNEL
-	end
-	--]]
-
-	-- check using user name
-	if c.isBanned(chan, lowertargetname) == true then
-		return const.FERR_ALREADY_CHANNEL_BANNED
-	end
-	
-	-- you cannot kick/ban any moderator-type user in a public channel, at all
-	if chantype == "public" then
-		if c.isMod(lowertargetname) then
-			return const.FERR_DENIED_ON_OP
-		end
-	end
-
-	-- check if target is stronger than currnet user (con)
-	if s.isOp(lowertargetname) then
-		if s.isOp(con) ~= true then
-			return const.FERR_DENIED_ON_OP
-		end
-		return nil
-	then
-
-	if c.isOwner(chan, lowertargetname) then
-		if ~c.isOwner(chan, con) then
-			return const.FERR_DENIED_ON_OP
-		end
-	end
-	
-	if c.isMod(chan, lowertargetname) and c.isMod(chan, con) then
-		return const.FERR_DENIED_ON_OP
-	end
-	
-	return nil
 end
 
 -- Kicks a user from a channel.
