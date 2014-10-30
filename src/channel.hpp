@@ -107,15 +107,19 @@ public:
     const chmodmap_t& getModRecords() const {
         return moderators;
     }
-    bool isMod(ConnectionPtr con);
-    bool isMod(string& name);
-
+    bool isMod(ConnectionPtr con) const;
+    bool isMod(const string& name) const;
+    bool isOnlyMod(ConnectionPtr con) const;
+    bool isOnlyMod(const string& name) const;
+    
     const string& getOwner() const {
         return owner;
     }
-    bool isOwner(ConnectionPtr con);
-    bool isOwner(string& name);
-
+    bool isOwner(ConnectionPtr con) const;
+    bool isOwner(const string& name) const;
+    bool isOnlyOwner(ConnectionPtr con) const;
+    bool isOnlyOwner(const string& name) const;
+    
     void setOwner(string& name) {
         owner = name;
     }

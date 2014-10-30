@@ -93,7 +93,12 @@ function canChannelKickBan(con, targetname, targetcon, chan)
 		return const.FERR_ALREADY_CHANNEL_BANNED
 	end
 
-	if c.isMod(chan, con) and c.isMod(chan, target) then
+	-- Channel owners or above cannot kick/ban/timeout other owners or above.
+	if c.isOwner(chan, con) and c.isOwner(chan, target) then
+		return const.FERR_DENIED_ON_OP
+	end
+
+	if c.isOnlyMod(chan, con) and c.isOnlyMod(chan, target) then
 		return const.FERR_DENIED_ON_OP
 	end
 

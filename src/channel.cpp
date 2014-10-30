@@ -63,7 +63,7 @@ title(""),
 topUsers(0),
 refCount(0) {
     invites.insert(creator->characterNameLower);
-    owner = creator->characterName;
+    owner = creator->characterNameLower;
     description = privChanDescriptionDefault;
 }
 
@@ -217,32 +217,39 @@ void Channel::remMod(string& dest) {
     moderators.erase(dest);
 }
 
-bool Channel::isMod(ConnectionPtr con) {
-    if (con->globalModerator || con->admin || (owner == con->characterName) || moderators.find(con->characterName) != moderators.end())
-        return true;
-
-    return false;
+bool Channel::isMod(ConnectionPtr con) const {
+    return con->globalModerator || con->admin || isOnlyOwner(con->characterNameLower) || isOnlyMod(con->characterNameLower);
 }
 
-bool Channel::isMod(string& name) {
+bool Channel::isMod(const string& name) const {
     if ((owner == name) || moderators.find(name) != moderators.end())
         return true;
 
     return false;
 }
 
-bool Channel::isOwner(ConnectionPtr con) {
-    if (con->globalModerator || con->admin || (owner == con->characterName))
-        return true;
-
-    return false;
+bool Channel::isOnlyMod(ConnectionPtr con) const {
+    return isOnlyMod(con->characterNameLower);
 }
 
-bool Channel::isOwner(string& name) {
-    if (owner == name)
-        return true;
+bool Channel::isOnlyMod(const string& name) const {
+    return moderators.find(name) != moderators.end();
+}
 
-    return false;
+bool Channel::isOwner(ConnectionPtr con) const {
+    return con->globalModerator || con->admin || isOwner(con->characterNameLower);
+}
+
+bool Channel::isOwner(const string& name) const {
+    return owner == name;
+}
+
+bool Channel::isOnlyOwner(ConnectionPtr con) const {
+    return isOnlyOwner(con->characterNameLower);
+}
+
+bool Channel::isOnlyOwner(const string& name) const {
+    return owner == name;
 }
 
 const double Channel::getTimerEntry(ConnectionPtr con) {
