@@ -1139,7 +1139,7 @@ function (con, args)
 	
 	local haschannel = args.channel ~= nil
 	local hasrecipient = args.recipient ~= nil
-	if ~haschannel and ~hasrecipient then
+	if not haschannel and not hasrecipient then
 		return const.FERR_BAD_SYNTAX
 	end
 	
@@ -1147,9 +1147,9 @@ function (con, args)
 		return const.FERR_THROTTLE_MESSAGE
 	end
 
+	local lchanname = string.tolower(args.channel)
 	local found, chan = nil
 	if haschannel then
-		local lchanname = string.tolower(args.channel)
 		if lowerchanname == "frontpage" then
 			u.sendError(con, -10, "You may not roll dice or spin the bottle in Frontpage.")
 			return const.FERR_OK
@@ -1173,7 +1173,7 @@ function (con, args)
 	
 	if args.dice == "bottle" then
 		-- gets the right bottle people!
-		local bottlers = haschannel ? c.getBottleList(chan, con) : { conname, args.recipient }
+		local bottlers = haschannel and c.getBottleList(chan, con) or { conname, args.recipient }
 		local bottle = spin_bottle(conn, bottlers, args)
 		if bottle == nil then   
 			u.send(con, "SYS", {message="Couldn't locate anyone who is available to have the bottle land on them."})
