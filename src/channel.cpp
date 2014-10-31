@@ -63,7 +63,7 @@ title(""),
 topUsers(0),
 refCount(0) {
     invites.insert(creator->characterNameLower);
-    owner = creator->characterNameLower;
+    owner = creator->characterName;
     description = privChanDescriptionDefault;
 }
 
