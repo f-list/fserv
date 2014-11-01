@@ -1,9 +1,8 @@
+CXXFLAGS= -g -O3 -DNDEBUG
+OUTDIR = release/
 ifdef DEBUG
 	CXXFLAGS= -O0 -DDEBUG
 	OUTDIR = debug/
-else
-	CXXFLAGS= -g -O3 -DNDEBUG
-	OUTDIR = release/
 endif
 
 CXXFLAGS+=	-g -O2 -Wall -Werror -fno-strict-aliasing -I/usr/local/include -I../lib/lua/src -I../lib/evhttp
@@ -64,5 +63,4 @@ install: fserv facceptor install_folders $(FSERV_SCRIPTS)
 
 clean:
 	@echo "CLEAN *~ *.o *.gch fserv facceptor"
-	@rm -f *~ *.o *.gch fserv facceptor
-	@rm -f $(OUTDIR)fserv $(OUTDIR)facceptor
+	@rm -f *~ *.o *.gch $(OUTDIR)fserv $(OUTDIR)facceptor
