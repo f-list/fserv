@@ -2,7 +2,7 @@ CXXFLAGS= -g -O2 -DNDEBUG
 LDFLAGS= -g
 OUTDIR = release/
 ifdef DEBUG
-	CXXFLAGS= -O0 -DDEBUG
+	CXXFLAGS= -g -O0 -DDEBUG
 	LDFLAGS= -g
 	OUTDIR = debug/
 endif
