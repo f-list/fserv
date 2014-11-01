@@ -11,14 +11,14 @@ LDFLAGS+=	-lpthread
 FACCEPTOR_STRESS_O=	facceptor_stress.o
 FACCEPTOR_STRESS_OBJECTS= $(FACCEPTOR_STRESS_O:%.o=$(TARGETDIR)%.o)
 
-.cpp.o:
-	@echo "CC $(TARGETDIR)$<"
+$(TARGETDIR)%.o: %.cpp
+	@echo "$(CXX) $(TARGETDIR)$<"
 	@$(CXX) -c $(CXXFLAGS) $< -o $(TARGETDIR)$@
 
 all: facceptor_stress
 
-facceptor_stress: $(FACCEPTOR_STRESS_O)
-	@echo "LD $(TARGETDIR)$@"
+facceptor_stress: $(FACCEPTOR_STRESS_OBJECTS)
+	@echo "ld $(CXX) $(TARGETDIR)$@"
 	@$(CXX) $(FACCEPTOR_STRESS_OBJECTS) $(LDFLAGS) -o $(TARGETDIR)$@
 
 clean:
