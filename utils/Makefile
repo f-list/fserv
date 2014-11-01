@@ -1,7 +1,7 @@
 CXXFLAGS= -g -O3 -DNDEBUG
 OUTDIR = release/
 ifdef DEBUG
-	CXXFLAGS= -O0 -DDEBUG
+	CXXFLAGS= -g -O0 -DDEBUG
 	OUTDIR = debug/
 endif
 TARGETDIR = ../$(OUTDIR)
