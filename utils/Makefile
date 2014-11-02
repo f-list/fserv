@@ -1,19 +1,28 @@
-CXXFLAGS=	-O2 -Wall -Werror
-LDFLAGS=	-lpthread
-FACCEPTOR__STRESS_O=	facceptor_stress.o
+CXXFLAGS= -g -O3 -DNDEBUG
+OUTDIR = release/
+ifdef DEBUG
+	CXXFLAGS= -g -O0 -DDEBUG
+	OUTDIR = debug/
+endif
+TARGETDIR = ../$(OUTDIR)
 
-.cpp.o:
-	@echo "CC $<"
-	@$(CXX) -c $(CXXFLAGS) $<
+CXXFLAGS+=	-Wall -Werror
+LDFLAGS+=	-lpthread
+FACCEPTOR_STRESS_O=	facceptor_stress.o
+FACCEPTOR_STRESS_OBJECTS= $(FACCEPTOR_STRESS_O:%.o=$(TARGETDIR)%.o)
+
+$(TARGETDIR)%.o: %.cpp
+	@echo "$(CXX) $(TARGETDIR)$<"
+	@$(CXX) -c $(CXXFLAGS) $< -o $(TARGETDIR)$@
 
 all: facceptor_stress
 
-facceptor_stress: $(FACCEPTOR__STRESS_O)
-	@echo "LD $@"
-	@$(CXX) $(FACCEPTOR__STRESS_O) $(LDFLAGS) -o $@
+facceptor_stress: $(FACCEPTOR_STRESS_OBJECTS)
+	@echo "ld $(CXX) $(TARGETDIR)$@"
+	@$(CXX) $(FACCEPTOR_STRESS_OBJECTS) $(LDFLAGS) -o $(TARGETDIR)$@
 
 clean:
-	@echo "CLEAN *~ *.o facceptor_stress"
-	@rm -f *~ *.o facceptor_stress
+	@echo "CLEAN"
+	rm -f $(TARGETDIR)*~ $(TARGETDIR)*.o $(TARGETDIR)facceptor_stress
 
 install:
