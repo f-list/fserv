@@ -34,7 +34,7 @@ $(TARGETDIR)%.hpp.gch: %.hpp
 
 all: facceptor fserv
 
-fserv: outdir_folders $(PRECOMP_GCH) $(FSERV_OBJECTS) $(FSERV_SCRIPTS)
+fserv: outdir_folders $(PRECOMP_GCH) $(FSERV_OBJECTS)
 	@echo "ld $(CXX) $(TARGETDIR)$@"
 	@$(CXX) $(FSERV_OBJECTS) $(LDFLAGS) -o $(TARGETDIR)$@
 
@@ -59,7 +59,9 @@ install_folders:
 	@echo "Creating $(INSTALLDIR)logs ..."
 	@mkdir -p $(INSTALLDIR)logs
 
-install: fserv facceptor install_folders $(FSERV_SCRIPTS)
+deploy: $(FSERV_SCRIPTS)
+	
+install: fserv facceptor install_folders deploy
 	@echo "Installing fserv from $(TARGETDIR) to $(INSTALLDIR) ..."
 	@cp $(TARGETDIR)fserv ../bin/fserv
 	@echo "Installing facceptor from $(TARGETDIR) to $(INSTALLDIR) ..."
