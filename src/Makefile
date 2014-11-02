@@ -28,8 +28,8 @@ $(TARGETDIR)%.hpp.gch: %.hpp
 	@${CXX} -g -I../lib/lua/src -Wall -Werror -fno-strict-aliasing -c $< -o $(TARGETDIR)$@
 
 %.lua:
-	@echo "INSTALL script/$@"
-	@cp ../script/$@ $(TARGETDIR)/script/$@
+	@echo "deploy $(TARGETDIR)script/$@"
+	@cp ../script/$@ $(TARGETDIR)script/$@
 
 all: facceptor fserv
 
