@@ -59,14 +59,14 @@ install_folders:
 	@echo "Creating $(INSTALLDIR)logs ..."
 	@mkdir -p $(INSTALLDIR)logs
 
-deploy: $(FSERV_SCRIPTS)
-	
 install: fserv facceptor install_folders deploy
 	@echo "Installing fserv from $(TARGETDIR) to $(INSTALLDIR) ..."
 	@cp $(TARGETDIR)fserv ../bin/fserv
 	@echo "Installing facceptor from $(TARGETDIR) to $(INSTALLDIR) ..."
 	@cp $(TARGETDIR)facceptor $(INSTALLDIR)facceptor
 	@cp $(TARGETDIR)script/$@ $(INSTALLDIR)script/$@
+
+deploy: $(FSERV_SCRIPTS)
 
 clean:
 	@echo "Cleaning fserv, facceptor ..."
