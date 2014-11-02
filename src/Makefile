@@ -1,12 +1,13 @@
 CXXFLAGS= -g -O2 -DNDEBUG
 LDFLAGS= -g
-OUTDIR = release/
+OUTDIR= release/
 ifdef DEBUG
 	CXXFLAGS= -g -O0 -DDEBUG
 	LDFLAGS= -g
 	OUTDIR = debug/
 endif
-TARGETDIR = ../$(OUTDIR)
+TARGETDIR= ../$(OUTDIR)
+INSTALLDIR= ../bin/
 
 CXXFLAGS+=	-Wall -Werror -fno-strict-aliasing -I/usr/local/include -I../lib/lua/src -I../lib/evhttp
 LDFLAGS+=	-L/usr/local/lib -L../lib/lua/src -L../lib/glog_install/lib -L../lib/evhttp -levhttpclient -lpthread -lrt -lev -lm -lluajit -lglog -ljansson -lcurl -lhiredis -licuuc -licudata -ltcmalloc
@@ -28,12 +29,12 @@ $(TARGETDIR)%.hpp.gch: %.hpp
 	@${CXX} -g -I../lib/lua/src -Wall -Werror -fno-strict-aliasing -c $< -o $(TARGETDIR)$@
 
 %.lua:
-	@echo "deploy $(TARGETDIR)script/$@"
+	@echo "copy ../script/$@"
 	@cp ../script/$@ $(TARGETDIR)script/$@
 
 all: facceptor fserv
 
-fserv: outdir_folders $(PRECOMP_GCH) $(FSERV_OBJECTS) $(FSERV_SCRIPTS)
+fserv: outdir_folders $(PRECOMP_GCH) $(FSERV_OBJECTS)
 	@echo "ld $(CXX) $(TARGETDIR)$@"
 	@$(CXX) $(FSERV_OBJECTS) $(LDFLAGS) -o $(TARGETDIR)$@
 
@@ -43,29 +44,31 @@ facceptor: outdir_folders $(FACCEPTOR_OBJECTS)
 
 
 outdir_folders:
-	@echo "MKDIR $(TARGETDIR)"
+	@echo "Creating $(TARGETDIR) ..."
 	@mkdir -p $(TARGETDIR)
-	@echo "MKDIR $(TARGETDIR)script"
+	@echo "Creating $(TARGETDIR)script ..."
 	@mkdir -p $(TARGETDIR)script
-	@echo "MKDIR $(TARGETDIR)logs"
+	@echo "Creating $(TARGETDIR)logs ..."
 	@mkdir -p $(TARGETDIR)logs
 
 install_folders:
-	@echo "MKDIR bin"
-	@mkdir -p ../bin
-	@echo "MKDIR bin/script"
-	@mkdir -p ../bin/script
-	@echo "MKDIR bin/logs"
-	@mkdir -p ../bin/logs
+	@echo "Creating $(INSTALLDIR) ..."
+	@mkdir -p $(INSTALLDIR)
+	@echo "Creating $(INSTALLDIR)script ..."
+	@mkdir -p $(INSTALLDIR)script
+	@echo "Creating $(INSTALLDIR)logs ..."
+	@mkdir -p $(INSTALLDIR)logs
 
-install: fserv facceptor install_folders $(FSERV_SCRIPTS)
-	@echo "INSTALL fserv"
-	@cp $(OUTDIR)fserv ../bin/fserv
-	@echo "INSTALL facceptor"
-	@cp $(TARGETDIR)facceptor ../bin/facceptor
-	@cp $(TARGETDIR)/script/$@ ../bin/script/$@
+deploy: $(FSERV_SCRIPTS)
+	
+install: fserv facceptor install_folders deploy
+	@echo "Installing fserv from $(TARGETDIR) to $(INSTALLDIR) ..."
+	@cp $(TARGETDIR)fserv ../bin/fserv
+	@echo "Installing facceptor from $(TARGETDIR) to $(INSTALLDIR) ..."
+	@cp $(TARGETDIR)facceptor $(INSTALLDIR)facceptor
+	@cp $(TARGETDIR)script/$@ $(INSTALLDIR)script/$@
 
 clean:
-	@echo "CLEAN"
+	@echo "Cleaning fserv, facceptor ..."
 	rm -f *~ $(TARGETDIR)*.o $(TARGETDIR)*.gch $(TARGETDIR)fserv $(TARGETDIR)facceptor
 	rm -fr $(TARGETDIR)script $(TARGETDIR)logs
