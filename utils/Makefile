@@ -26,3 +26,5 @@ clean:
 	rm -f $(TARGETDIR)*~ $(TARGETDIR)*.o $(TARGETDIR)facceptor_stress
 
 install:
+
+deploy:
