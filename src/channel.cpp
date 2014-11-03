@@ -150,7 +150,7 @@ void Channel::timeout(ConnectionPtr src, string dest, long length) {
     bans[dest] = ban;
 }
 
-void Channel::unban(string& dest) {
+void Channel::unban(const string& dest) {
     bans.erase(dest);
 }
 
@@ -169,7 +169,7 @@ bool Channel::isBanned(ConnectionPtr con) {
     return isBanned(con->characterNameLower);
 }
 
-bool Channel::isBanned(string& name) {
+bool Channel::isBanned(const string& name) {
     chbanmap_t::const_iterator itr = bans.find(name);
     if (itr != bans.end()) {
         BanRecord b = itr->second;
@@ -187,7 +187,7 @@ bool Channel::getBan(ConnectionPtr con, BanRecord& ban) {
     return getBan(con->characterNameLower, ban);
 }
 
-bool Channel::getBan(string& name, BanRecord& ban) {
+bool Channel::getBan(const string& name, BanRecord& ban) {
     chbanmap_t::const_iterator itr = bans.find(name);
     if (itr != bans.end()) {
         BanRecord tmp = itr->second;
@@ -199,50 +199,54 @@ bool Channel::getBan(string& name, BanRecord& ban) {
     return false;
 }
 
-void Channel::addMod(ConnectionPtr src, string& dest) {
+void Channel::addMod(ConnectionPtr src, const string& dest) {
     ModRecord mod;
     mod.modder = src->characterName;
     mod.time = time(0);
     moderators[dest] = mod;
 }
 
-void Channel::addMod(string& dest) {
+void Channel::addMod(const string& dest) {
     ModRecord mod;
     mod.modder = "[System]";
     mod.time = time(0);
     moderators[dest] = mod;
 }
 
-void Channel::remMod(string& dest) {
+void Channel::remMod(const string& dest) {
     moderators.erase(dest);
 }
 
-bool Channel::isMod(ConnectionPtr con) {
-    if (con->globalModerator || con->admin || (owner == con->characterName) || moderators.find(con->characterName) != moderators.end())
-        return true;
-
-    return false;
+bool Channel::isMod(ConnectionPtr con) const {
+    return con->globalModerator || con->admin || isOwnerOnly(con->characterName) || isModOnly(con->characterName);
 }
 
-bool Channel::isMod(string& name) {
-    if ((owner == name) || moderators.find(name) != moderators.end())
-        return true;
-
-    return false;
+bool Channel::isMod(const string& name) const {
+    return (owner == name) || moderators.find(name) != moderators.end();
 }
 
-bool Channel::isOwner(ConnectionPtr con) {
-    if (con->globalModerator || con->admin || (owner == con->characterName))
-        return true;
-
-    return false;
+bool Channel::isModOnly(ConnectionPtr con) const {
+    return isModOnly(con->characterName);
 }
 
-bool Channel::isOwner(string& name) {
-    if (owner == name)
-        return true;
+bool Channel::isModOnly(const string& name) const {
+    return moderators.find(name) != moderators.end();
+}
 
-    return false;
+bool Channel::isOwner(ConnectionPtr con) const {
+    return con->globalModerator || con->admin || isOwner(con->characterName);
+}
+
+bool Channel::isOwner(const string& name) const {
+    return isOwnerOnly(name);
+}
+
+bool Channel::isOwnerOnly(ConnectionPtr con) const {
+    return isOwnerOnly(con->characterName);
+}
+
+bool Channel::isOwnerOnly(const string& name) const {
+    return owner == name;
 }
 
 const double Channel::getTimerEntry(ConnectionPtr con) {
