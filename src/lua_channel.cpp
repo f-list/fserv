@@ -74,7 +74,9 @@ static const luaL_Reg luachannel_funcs[] = {
     {"addMod", LuaChannel::addMod},
     {"removeMod", LuaChannel::removeMod},
     {"isMod", LuaChannel::isMod},
+    {"isModOnly", LuaChannel::isModOnly},
     {"isOwner", LuaChannel::isOwner},
+    {"isOwnerOnly", LuaChannel::isOwnerOnly},
     {"getModList", LuaChannel::getModList},
     {"checkUpdateTimer", LuaChannel::checkUpdateTimer},
     {"getType", LuaChannel::getType},
@@ -850,7 +852,7 @@ int LuaChannel::isMod(lua_State* L) {
  * @param LUD/string connection/name
  * @returns true if the connection or name is in the channels moderator list, false otherwise.
  */
-int LuaChannel::isOnlyMod(lua_State* L) {
+int LuaChannel::isModOnly(lua_State* L) {
     bool ret = false;
     luaL_checkany(L, 2);
 
@@ -859,10 +861,10 @@ int LuaChannel::isOnlyMod(lua_State* L) {
     int type = lua_type(L, 2);
     if (type == LUA_TLIGHTUSERDATA) {
         GETLCON(base, L, 2, con);
-        ret = chan->isOnlyMod(con);
+        ret = chan->isModOnly(con);
     } else if (type == LUA_TSTRING) {
         string name = lua_tostring(L, 2);
-        ret = chan->isOnlyMod(name);
+        ret = chan->isModOnly(name);
     } else
         return luaL_error(L, "isOnlyMod expects string or ConnectionPtr as argument 2.");
 
@@ -877,7 +879,7 @@ int LuaChannel::isOnlyMod(lua_State* L) {
  * @param LUD/string connection/name
  * @returns true if the connection or name is an owner, false otherwise
  */
-int LuaChannel::isOnlyOwner(lua_State* L) {
+int LuaChannel::isOwnerOnly(lua_State* L) {
     bool ret = false;
     luaL_checkany(L, 2);
 
@@ -886,10 +888,10 @@ int LuaChannel::isOnlyOwner(lua_State* L) {
     int type = lua_type(L, 2);
     if (type == LUA_TLIGHTUSERDATA) {
         GETLCON(base, L, 2, con);
-        ret = chan->isOnlyOwner(con);
+        ret = chan->isOwnerOnly(con);
     } else if (type == LUA_TSTRING) {
         string name = lua_tostring(L, 2);
-        ret = chan->isOnlyOwner(name);
+        ret = chan->isOwnerOnly(name);
     } else
         return luaL_error(L, "isOnlyOwner expects string or ConnectionPtr as argument 2.");
 

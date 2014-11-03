@@ -94,11 +94,7 @@ function canChannelKickBan(con, targetname, targetcon, chan)
 	end
 
 	-- Channel owners or above cannot kick/ban/timeout other owners or above.
-	if c.isOwner(chan, con) and c.isOwner(chan, target) then
-		return const.FERR_DENIED_ON_OP
-	end
-
-	if c.isOnlyMod(chan, con) and c.isOnlyMod(chan, target) then
+	if (c.isOwner(chan, con) or c.isModOnly(chan, con)) and c.isOwner(chan, target) then
 		return const.FERR_DENIED_ON_OP
 	end
 
@@ -372,7 +368,7 @@ function (con, args)
 	local targetname = string.lower(args.character)
 	local targetonline, target = u.getConnection(targetname)
 
-	local cankick = canChannelKickban(con, targetname, target, chan)
+	local cankick = canChannelKickBan(con, targetname, target, chan)
 	if cankick ~= nil then
 		return cankick
 	end
@@ -588,7 +584,7 @@ function (con, args)
 	local targetname = string.lower(args.character)
 	local targetonline, target = u.getConnection(lowertargetname)
 
-	local cantimeout = canChannelKickban(con, targetname, target, chan)
+	local cantimeout = canChannelKickBan(con, targetname, target, chan)
 	if cantimeout ~= nil then
 		return cantimeout
 	end

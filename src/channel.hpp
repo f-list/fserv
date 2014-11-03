@@ -90,35 +90,35 @@ public:
     void ban(ConnectionPtr src, string dest);
     void timeout(ConnectionPtr src, ConnectionPtr dest, long length);
     void timeout(ConnectionPtr src, string dest, long length);
-    void unban(string& dest);
+    void unban(const string& dest);
     bool isBanned(ConnectionPtr con);
-    bool isBanned(string& name);
+    bool isBanned(const string& name);
     bool getBan(ConnectionPtr con, BanRecord& ban);
-    bool getBan(string& name, BanRecord& ban);
+    bool getBan(const string& name, BanRecord& ban);
 
     const chbanmap_t& getBanRecords() const {
         return bans;
     }
 
-    void addMod(ConnectionPtr src, string& dest);
-    void addMod(string& dest);
-    void remMod(string& dest);
+    void addMod(ConnectionPtr src, const string& dest);
+    void addMod(const string& dest);
+    void remMod(const string& dest);
 
     const chmodmap_t& getModRecords() const {
         return moderators;
     }
     bool isMod(ConnectionPtr con) const;
     bool isMod(const string& name) const;
-    bool isOnlyMod(ConnectionPtr con) const;
-    bool isOnlyMod(const string& name) const;
+    bool isModOnly(ConnectionPtr con) const;
+    bool isModOnly(const string& name) const;
     
     const string& getOwner() const {
         return owner;
     }
     bool isOwner(ConnectionPtr con) const;
     bool isOwner(const string& name) const;
-    bool isOnlyOwner(ConnectionPtr con) const;
-    bool isOnlyOwner(const string& name) const;
+    bool isOwnerOnly(ConnectionPtr con) const;
+    bool isOwnerOnly(const string& name) const;
     
     void setOwner(string& name) {
         owner = name;
