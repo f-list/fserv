@@ -8,11 +8,3 @@ src/fconvert
 src/fserv
 src/facceptor
 utils/facceptor_stress
-fserv.config
-*.creator
-fserv.creator.user.3.2-pre1
-*.creator.user*
-fserv.files
-fserv.includes
-debug/
-release/
