@@ -190,7 +190,55 @@ public:
     const int getTopUserCount() const {
         return topUsers;
     }
-
+    
+    bool getCanBottle() const {
+        return canSpinBottle;
+    }
+    
+    void setCanBottle(bool value) {
+        canSpinBottle = value;
+    }
+    
+    bool getCanRoll() const {
+        return canRollDice;
+    }
+    
+    void setCanRoll(bool value) {
+        canRollDice = value;
+    }
+    
+    int getAdThrottle() const {
+        return adThrottle;
+    }
+    
+    void setAdThrottle(int value) {
+        adThrottle = value;
+    }
+    
+    int getAdLength() const {
+        return adLengthLimit;
+    }
+    
+    void setAdLength(int value) {
+        adLengthLimit = value;
+    }
+    
+    int getMessageThrottle() const {
+        return messageThrottle;
+    }
+    
+    void setMessageThrottle(int value) {
+        messageThrottle = value;
+    }
+    
+    int getMessageLength() const {
+        return messageLengthLimit;
+    }
+    
+    void setMessageLength(int value) {
+        messageLengthLimit = value;
+    }
+    
     json_t* saveChannel();
     void loadChannel(const json_t* channode);
 
@@ -214,6 +262,14 @@ protected:
     time_t lastActivity;
     bool canDestroy;
 
+    // settings!
+    bool canSpinBottle;
+    bool canRollDice;
+    int adThrottle;
+    int adLengthLimit;
+    int messageThrottle;
+    int messageLengthLimit;
+    
     string title;
     chstringset_t invites;
     int topUsers;

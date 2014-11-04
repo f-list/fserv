@@ -50,5 +50,76 @@ extern "C" {
                                                 lbase = 0; \
                                                 if( varname == 0 ) \
                                                         return luaL_error(lstate, "#2 Argument "#index" was not a ConnectionPtr.")
+    
+
+namespace lua {
+
+// let's try some extra functions and templates...
+// this struct allows us to overload based on a type we're given
+// (partial specialization)
+template <typename T>
+struct getter {};
+
+// Each specialization allows us to decide what to return
+// if a specialization doesn't exist, then there's a compile-time
+// error telling us we need to add another specialization
+// for the argument type we want to return
+template <>
+struct getter<std::string> {
+    inline static std::string get (lua_State* L, int index) {
+        return luaL_checkstring(L, index);
+    }
+};
+
+template <>
+struct getter<const char*> {
+    inline static std::string get (lua_State* L, int index) {
+        return luaL_checkstring(L, index);
+    }
+};
+
+template <>
+struct getter<int> {
+    inline static int get (lua_State* L, int index) {
+        return luaL_checkinteger(L, index);
+    }
+};
+
+template <>
+struct getter<bool> {
+    inline static bool get (lua_State* L, int index) {
+        return lua_toboolean(L, index);
+    }
+};
+
+// now, we write a function that will call this thing for us
+template <typename T>
+inline T get(lua_State* L, int index) {
+    getter<T> g;
+    return g.get(L, index);
+}
+
+// we don't have to use the same specialization technique
+// for the pusher, rather we just write overloads
+// if one of these functions can't handle the return,
+// we'll get a compile-time error, which is nice
+// when coding new functionality
+inline void push (lua_State* L, bool value) {
+    lua_pushboolean(L, value);
+}
+
+inline void push (lua_State* L, int value) {
+    lua_pushinteger(L, value);
+}
+
+inline void push (lua_State* L, const char* value) {
+    lua_pushstring(L, value);
+}
+
+inline void push (lua_State* L, const std::string& value) {
+    lua_pushstring(L, value.c_str());
+}
+
+} // lua
 
 #endif //FLUA_H
