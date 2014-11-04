@@ -1,5 +1,5 @@
-all clean install:
+deploy all clean install:
 	@cd src && ${MAKE} $@
 	@cd utils && ${MAKE} $@
 
-.PHONY: all clean install
+.PHONY: all clean install deploy
