@@ -12,7 +12,7 @@ FACCEPTOR_STRESS_O=	facceptor_stress.o
 FACCEPTOR_STRESS_OBJECTS= $(FACCEPTOR_STRESS_O:%.o=$(TARGETDIR)%.o)
 
 $(TARGETDIR)%.o: %.cpp
-	@echo "$(CXX) $(TARGETDIR)$<"
+	@echo "$(CXX) $<"
 	@$(CXX) -c $(CXXFLAGS) $< -o $(TARGETDIR)$@
 
 all: facceptor_stress
