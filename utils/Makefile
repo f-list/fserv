@@ -17,9 +17,13 @@ $(TARGETDIR)%.o: %.cpp
 
 all: facceptor_stress
 
-facceptor_stress: $(FACCEPTOR_STRESS_OBJECTS)
+facceptor_stress: outdir_folders $(FACCEPTOR_STRESS_OBJECTS)
 	@echo "ld $(CXX) $(TARGETDIR)$@"
 	@$(CXX) $(FACCEPTOR_STRESS_OBJECTS) $(LDFLAGS) -o $(TARGETDIR)$@
+
+outdir_folders:
+	@echo "Creating $(TARGETDIR) ..."
+	@mkdir -p $(TARGETDIR)
 
 clean:
 	@echo "CLEAN"
