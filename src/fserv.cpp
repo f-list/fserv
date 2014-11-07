@@ -53,20 +53,26 @@ int main(int argc, char* argv[]) {
     FLAGS_log_prefix = argv[0];
     google::InitGoogleLogging(argv[0]);
     LOG(INFO) << "F-Chat Server starting";
-
+    const int desiredlimit = 10000;
     //Common startup
     setup_signals();
     struct rlimit fdlimit;
     getrlimit(RLIMIT_NOFILE, &fdlimit);
-    if (fdlimit.rlim_max < 5000) {
-        LOG(WARNING) << "Could not raise the limit for open files to 5000. C: "
-                << fdlimit.rlim_cur << " M: " << fdlimit.rlim_max;
-        printf("Could not raise the limit for open files to 5000. C: %u M: %u\n", static_cast<unsigned int> (fdlimit.rlim_cur), static_cast<unsigned int> (fdlimit.rlim_max));
-    }
-    fdlimit.rlim_cur = 5000;
-    if (setrlimit(RLIMIT_NOFILE, &fdlimit) != 0) {
-        LOG(WARNING) << "Call to raise the limit for open files failed.";
-        printf("Call to raise the limit for open files failed. Continue with caution\n");
+    if (fdlimit.rlim_max < desiredlimit) {
+        LOG(WARNING) << "File limit was below the desired value of " << desiredlimit << ". Current: "
+                << fdlimit.rlim_cur << " Max: " << fdlimit.rlim_max;
+        fdlimit.rlim_cur = desiredlimit;
+        if (setrlimit(RLIMIT_NOFILE, &fdlimit) != 0) {
+            getrlimit(RLIMIT_NOFILE, &fdlimit);
+            fdlimit.rlim_cur = fdlimit.rlim_max;
+            if (setrlimit(RLIMIT_NOFILE, &fdlimit) != 0) {
+                LOG(WARNING) << "Call to raise the limit for open files failed.";
+                printf("Call to raise the limit for open files failed. Continue with caution\n");
+            }
+            else {
+                printf("Could not raise the limit for open files to %u. Current: %u Max: %u\n", static_cast<unsigned int> (desiredlimit), static_cast<unsigned int> (fdlimit.rlim_cur), static_cast<unsigned int> (fdlimit.rlim_max));            
+            }
+        }
     }
 
     LuaConstants::initClass();
