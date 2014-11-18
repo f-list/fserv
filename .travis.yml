@@ -7,15 +7,6 @@ before-install:
 install: 
   - sudo apt-get install libev-dev libgoogle-perftools-dev libhiredis-dev libicu-dev libcurl4-openssl-dev libboost-dev libluajit-5.1-dev libpth-dev uuid-dev
   
-    
-  # Make fserv use the system-provided LuaJIT headers. (This is dirty...)
-  - cd ~/build
-  - lua_src=f-list/fserv/lib/lua/src
-  - mkdir -p $lua_src
-  - cp /usr/include/luajit-2.0/* $lua_src
-  - cp /usr/lib/x86_64-linux-gnu/libluajit-5.1.a $lua_src/libluajit.a
-  - cp /usr/lib/x86_64-linux-gnu/libluajit-5.1.so $lua_src/libluajit.so
-  
   # Get libjansson version 2.5, the one in Ubuntu 12.04's repos is way outdated.
   - cd ~/build
   - wget http://www.digip.org/jansson/releases/jansson-2.5.tar.gz
