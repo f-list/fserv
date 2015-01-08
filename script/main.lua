@@ -526,7 +526,7 @@ function (con, args)
 		end
 	end
 	opl = string.sub(opl, 3)
-	u.send(con, "COL", {channel==args.channel, array_oplist=oplist})
+	u.send(con, "COL", {channel=args.channel, array_oplist=oplist})
 	u.send(con, "SYS", {channel=args.channel, message=opmessage..opl})
 	return const.FERR_OK
 end
