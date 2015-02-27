@@ -1739,6 +1739,7 @@ function chat_init()
 	const.status["away"] = 6
 	--const.status["crown"] = 5
 
+	const.typing = {}
 	const.typing["clear"] = 1
 	const.typing["paused"] = 2
 	const.typing["typing"] = 3
