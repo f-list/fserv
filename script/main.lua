@@ -1431,6 +1431,10 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
+	if const.typing[args.status] == nil then
+		return const.FERR_OK
+	end
+
 	local found, target = u.getConnection(string.lower(args.character))
 	if found ~= true then
 		return const.FERR_OK
@@ -1734,6 +1738,10 @@ function chat_init()
 	const.status["idle"] = 5
 	const.status["away"] = 6
 	--const.status["crown"] = 5
+
+	const.typing["clear"] = 1
+	const.typing["paused"] = 2
+	const.typing["typing"] = 3
 end
 
 function string:split(sep)
