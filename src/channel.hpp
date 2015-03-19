@@ -194,8 +194,6 @@ public:
     json_t* saveChannel();
     void loadChannel(const json_t* channode);
 
-    friend void intrusive_ptr_release(Channel* p);
-    friend void intrusive_ptr_add_ref(Channel* p);
 protected:
     string modeToString();
     ChannelMessageMode stringToMode(string modestring);
@@ -218,7 +216,15 @@ protected:
     chstringset_t invites;
     int topUsers;
 
-    volatile size_t refCount; //Does this need to be volatile?
+    int refCount;
+
+    friend inline void intrusive_ptr_release(Channel* p)
+    {
+        if (__sync_sub_and_fetch(&p->refCount, 1) <= 0) {
+            delete p;
+        }
+    }
+    friend inline void intrusive_ptr_add_ref(Channel* p) { __sync_fetch_and_add(&p->refCount, 1); }
 private:
     static string privChanDescriptionDefault;
 };

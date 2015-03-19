@@ -57,8 +57,8 @@ pingEvent(0),
 timerEvent(0),
 readEvent(0),
 writeEvent(0),
-refCount(0),
-debugL(0) {
+debugL(0),
+refCount(0) {
 }
 
 ConnectionInstance::~ConnectionInstance() {
@@ -68,19 +68,6 @@ ConnectionInstance::~ConnectionInstance() {
     if (debugL) {
         lua_close(debugL);
     }
-}
-
-void intrusive_ptr_release(ConnectionInstance* p) {
-    if ((--p->refCount) <= 0) {
-        if (p->closed != true) {
-            LOG(FATAL) << "[BUG] Deleting a connection not marked as closed.";
-        }
-        delete p;
-    }
-}
-
-void intrusive_ptr_add_ref(ConnectionInstance* p) {
-    ++p->refCount;
 }
 
 bool ConnectionInstance::send(MessagePtr message) {
