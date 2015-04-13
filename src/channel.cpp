@@ -67,16 +67,6 @@ refCount(0) {
     description = privChanDescriptionDefault;
 }
 
-void intrusive_ptr_release(Channel* p) {
-    if ((--p->refCount) <= 0) {
-        delete p;
-    }
-}
-
-void intrusive_ptr_add_ref(Channel* p) {
-    ++p->refCount;
-}
-
 Channel::~Channel() {
     assert(participants.size() == 0);
 }

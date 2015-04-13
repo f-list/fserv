@@ -138,13 +138,19 @@ public:
     ev_io* writeEvent;
     ev_tstamp lastActivity;
 
-    volatile size_t refCount; //Does this need to be volatile?
-
-    friend void intrusive_ptr_release(ConnectionInstance* p);
-    friend void intrusive_ptr_add_ref(ConnectionInstance* p);
-
     //Lua
     struct lua_State* debugL;
+
+protected:
+    int refCount;
+
+    friend inline void intrusive_ptr_release(ConnectionInstance* p)
+    {
+        if (__sync_sub_and_fetch(&p->refCount, 1) <= 0) {
+            delete p;
+        }
+    }
+    friend inline void intrusive_ptr_add_ref(ConnectionInstance* p) { __sync_fetch_and_add(&p->refCount, 1); }
 };
 
 typedef intrusive_ptr<ConnectionInstance> ConnectionPtr;
