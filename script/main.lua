@@ -1298,7 +1298,7 @@ function (con, args)
 
 	s.logAction(con, "RWD", args)
 	local oldstatus, statusmesg = u.getStatus(target)
-	u.setStatus(con, "crown", statusmesg)
+	u.setStatus(target, "crown", statusmesg)
 
 	s.broadcast("STA", {character=u.getName(target), status="crown", statusmsg=statusmesg})
 	return const.FERR_OK
