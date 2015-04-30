@@ -1519,7 +1519,7 @@ function (con, args)
 	u.setAccountID(con, args.account.account_id)
 
 	local isadmin = false
-	if args.account.admin == "1" or lname == "kira" or lname == "vera" or lname == "melvin" then
+	if args.account.admin == "1" or lname == "kira" then
 		u.setAdmin(con, true)
 		isadmin = true
 	end
