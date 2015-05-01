@@ -787,11 +787,16 @@ function (con, args)
 	if args.action == "list" then
 		u.send(con, "IGN", {action="list", array_characters=u.getIgnoreList(con)})
 	elseif args.action == "add" and args.character ~= nil then
-		if #u.getIgnoreList(con) < 100 then
+		local ignorecount = #u.getIgnoreList(con)
+		local maxignores = const.MAX_IGNORES
+		if u.getMiscData(con, "subscribed") ~= nil then
+			maxignores = const.MAX_IGNORES_SUBSCRIBED
+		end
+		if ignorecount < maxignores then
 			u.addIgnore(con, string.lower(args.character))
 			propagateIgnoreList(con, "add", args.character)
 		else
-			u.sendError(con, 64, "Your ignore list may not exceed 100 people.")
+			u.sendError(con, 64, "Your ignore list may not exceed "..maxignores.." people.")
 			return const.FERR_OK
 		end
 	elseif args.action == "delete" and args.character == "*" then
@@ -1604,6 +1609,9 @@ function (con, args)
 		if args.bits.hellban == 1 then
 			u.setMiscData(con, "hellban", "yes")
 		end
+		if args.bits.subscribed == 1 then
+			u.setMiscData(con, "subscribed", "yes")
+		end
 		if (args.bits.coder == 1) or (args.bits.admin == 1) or (args.bits.moderator == 1) or (args.bits.helpdesk == 1)
 			or (args.bits.chanop == 1) or (args.bits.chatop == 1) then
 			isstaff = true
@@ -1711,6 +1719,8 @@ function chat_init()
 	const.VERSION = s.getConfigString("version")
 	const.IP_MAX = s.getConfigDouble("max_per_ip")
 	const.MAX_TITLE_LEN = 64.4999
+	const.MAX_IGNORES = 150
+	const.MAX_IGNORES_SUBSCRIBED = 300
 	if c.getChannel("adh-staffroomforstaffppl") ~= true then
 		local staffchan = c.createSpecialPrivateChannel("ADH-STAFFROOMFORSTAFFPPL", "Moderation Staff Room")
 		c.setDescription(staffchan, "This room is CHAT STAFF ONLY. You can /invite regular users if necessary for staff discussion. [b]Everything other people need to know about goes on the [url=http://www.f-list.net/group.php?group=staff%20discussion]staff board[/url].[/b]")
