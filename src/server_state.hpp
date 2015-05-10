@@ -33,6 +33,7 @@
 
 #include "connection.hpp"
 #include "channel.hpp"
+#include "comparison_utils.hpp"
 
 using std::list;
 using std::tr1::unordered_map;
@@ -63,7 +64,7 @@ typedef unordered_map<string, ConnectionPtr> conptrmap_t; //character name lower
 typedef unordered_map<int, int> concountmap_t; //IP, count
 typedef unordered_map<string, ChannelPtr> chanptrmap_t; //channel name lower, channel
 typedef list<ConnectionPtr> conptrlist_t;
-typedef list<string> oplist_t; //op name
+typedef unordered_set<string, case_insensitive_hash, case_insensitive_compare> oplist_t; //op name
 typedef unordered_map<long, string> banlist_t; //account id, character name lower
 typedef unordered_map<long, TimeoutRecord> timeoutmap_t; //account id, timeout record
 typedef unordered_map<long, AltWatchRecord> altwatchmap_t; //account id, alt watch record

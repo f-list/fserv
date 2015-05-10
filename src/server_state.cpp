@@ -430,18 +430,16 @@ ChannelPtr ServerState::getChannel(string& name) {
 }
 
 void ServerState::addOp(string& op) {
-    opList.push_back(op);
+    opList.insert(op);
 }
 
 void ServerState::removeOp(string& op) {
-    opList.remove(op);
+    opList.erase(op);
 }
 
 bool ServerState::isOp(string& op) {
-    for (oplist_t::const_iterator i = opList.begin(); i != opList.end(); ++i) {
-        if (op == *i)
-            return true;
-    }
+    if (opList.find(op) != opList.end())
+        return true;
     return false;
 }
 

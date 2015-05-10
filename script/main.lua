@@ -787,6 +787,9 @@ function (con, args)
 	if args.action == "list" then
 		u.send(con, "IGN", {action="list", array_characters=u.getIgnoreList(con)})
 	elseif args.action == "add" and args.character ~= nil then
+		if s.isOp(args.character) == true then
+			return const.FERR_DENIED_ON_OP
+		end
 		local ignorecount = #u.getIgnoreList(con)
 		local maxignores = const.MAX_IGNORES
 		if u.getMiscData(con, "subscribed") ~= nil then
@@ -1761,3 +1764,4 @@ function string:split(sep)
 	self:gsub(pattern, function(c) fields[#fields+1] = c end)
 	return fields
 end
+
