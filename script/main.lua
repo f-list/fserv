@@ -38,7 +38,7 @@ function broadcastChannelOps(event, message, channel)
 	for i,v in ipairs(chanops) do
 		local confound, opcon = u.getConnection(string.lower(v))
 		if confound == true then
-			u.send(event, message)
+			u.send(opcon, event, message)
 		end
 	end
 end
@@ -1377,7 +1377,7 @@ function (con, args)
 			authorized_ops = c.getModList(chan)
 		end
 		if authorized_ops ~= nil then
-			local lname = string.lower(u.GetName(con))
+			local lname = string.lower(u.getName(con))
 			for i,v in ipairs(authorized_ops) do
 				if string.lower(v) == lname then
 					channel_override = true
