@@ -33,6 +33,16 @@
 event = {}
 rtb = {}
 
+function broadcastChannelOps(event, message, channel)
+	local chanops = c.getModList(channel)
+	for i,v in ipairs(chanops) do
+		local confound, opcon = u.getConnection(string.lower(v))
+		if confound == true then
+			u.send(event, message)
+		end
+	end
+end
+
 -- Parts a connection from a channel.
 function partChannel(chan, con, is_disconnect)
 	local cname = c.getName(chan)
@@ -1333,27 +1343,57 @@ function (con, args)
 		local ltimestamp = s.getTime()
 		local lcallid = ltimestamp..":"..lname
 		local llogid = tonumber(args.logid)
+		local ltab = "Unknown Tab"
+		if args.tab ~= nil then
+			ltab = args.tab
+		end
 		local lreport = s.escapeHTML(args.report)
 		if llogid == 0 or llogid == nil then
 			llogid = -1
 		end
-		s.addStaffCall(lcallid, lname, lreport, llogid)
-		local lsfc = {callid=lcallid, action="report", report=lreport, timestamp=ltimestamp, character=lname}
+		s.addStaffCall(lcallid, lname, lreport, llogid, ltab)
+		local lsfc = {callid=lcallid, action="report", report=lreport, timestamp=ltimestamp, character=lname, tab=s.escapeHTML(ltab)}
 		if llogid ~= -1 then
 			lsfc.logid = llogid
 		end
 		s.broadcastOps("SFC", lsfc)
+		local chanfound, chan = c.getChannel(string.lower(ltab))
+		if chanfound == true and c.getType(chan) == "public" then
+			broadcastChannelOps("SFC", lsfc, chan)
+		end
 		u.send(con, "SYS", {message="The moderators have been alerted."})
 	elseif args.action == "confirm" then
-		if u.isGlobMod(con) ~= true and u.isAdmin(con) ~= true then
-			return const.FERR_NOT_OP
-		end
 		local call = s.getStaffCall(args.callid)
 		if call == false then
 			return const.FERR_OK
 		end
+		local authorized_ops = nil
+		local channel_override = false
+		local chanfound, chan = c.getChannel(string.lower(call.tab))
+		if chanfound == true and c.getType(chan) ~= "public" then
+			chanfound = false
+		end
+		if chanfound == true then
+			authorized_ops = c.getModList(chan)
+		end
+		if authorized_ops ~= nil then
+			local lname = string.lower(u.GetName(con))
+			for i,v in ipairs(authorized_ops) do
+				if string.lower(v) == lname then
+					channel_override = true
+					break
+				end
+			end
+		end
+		if channel_override == false and u.isGlobMod(con) ~= true and u.isAdmin(con) ~= true then
+			return const.FERR_NOT_OP
+		end
 		s.removeStaffCall(args.callid)
-		s.broadcastOps("SFC", {action="confirm", moderator=u.getName(con), character=call.character, timestamp=call.timestamp})
+		local lsfc = {action="confirm", moderator=u.getName(con), character=call.character, timestamp=call.timestamp, tab=s.escapeHTML(call.tab)}
+		s.broadcastOps("SFC", lsfc)
+		if chanfound == true then
+			broadcastChannelOps("SFC", lsfc, chan)
+		end
 	else
 		return const.FERR_BAD_SYNTAX
 	end

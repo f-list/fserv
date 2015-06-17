@@ -44,7 +44,7 @@ using std::string;
 
 static const luaL_Reg luachat_funcs[] = {
     {"broadcast", LuaChat::broadcast},
-    {"broadcastraw", LuaChat::broadcastRaw},
+    {"broadcastRaw", LuaChat::broadcastRaw},
     {"broadcastOps", LuaChat::broadcastOps},
     {"getConfigBool", LuaChat::getConfigBool},
     {"getConfigDouble", LuaChat::getConfigDouble},
@@ -503,13 +503,14 @@ int LuaChat::getAltWatch(lua_State* L) {
  * @returns Nothing.
  */
 int LuaChat::addStaffCall(lua_State* L) {
-    luaL_checkany(L, 4);
+    luaL_checkany(L, 5);
 
     string callid = luaL_checkstring(L, 1);
     string character = luaL_checkstring(L, 2);
     string report = luaL_checkstring(L, 3);
     long logid = luaL_checkinteger(L, 4);
-    lua_pop(L, 4);
+    string tab = luaL_checkstring(L, 5);
+    lua_pop(L, 5);
 
     StaffCallRecord r;
     r.callid = callid;
@@ -517,6 +518,7 @@ int LuaChat::addStaffCall(lua_State* L) {
     r.report = report;
     r.logid = logid;
     r.action = "report";
+    r.tab = tab;
     r.timestamp = time(NULL);
     ServerState::addStaffCall(callid, r);
     return 0;
@@ -560,6 +562,8 @@ int LuaChat::getStaffCall(lua_State* L) {
     lua_setfield(L, -2, "logid");
     lua_pushinteger(L, r.timestamp);
     lua_setfield(L, -2, "timestamp");
+    lua_pushstring(L, r.tab.c_str());
+    lua_setfield(L, -2, "tab");
     return 1;
 }
 
@@ -596,6 +600,10 @@ int LuaChat::sendStaffCalls(lua_State* L) {
         if (!report)
             report = json_string_nocheck("Report contained invalid UTF-8 and could not be encoded. Please contact the sender about this!");
         json_object_set_new_nocheck(rootnode, "report", report);
+        json_t* tab = json_string(UnicodeTools::escapeHTML(r.tab).c_str());
+        if (!tab)
+            tab = json_string_nocheck("Invalid Tab");
+        json_object_set_new_nocheck(rootnode, "tab", tab);
         if (r.logid != -1) {
             json_object_set_new_nocheck(rootnode, "logid",
                     json_integer(r.logid)

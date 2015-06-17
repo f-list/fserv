@@ -57,6 +57,7 @@ typedef struct {
     time_t timestamp;
     string callid;
     long logid;
+    string tab;
 } StaffCallRecord;
 
 
