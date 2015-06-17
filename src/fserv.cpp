@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
     FLAGS_log_prefix = argv[0];
     google::InitGoogleLogging(argv[0]);
     LOG(INFO) << "F-Chat Server starting";
-    const int desiredlimit = 10000;
+    unsigned const int desiredlimit = 10000;
     //Common startup
     setup_signals();
     struct rlimit fdlimit;
