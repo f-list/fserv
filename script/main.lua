@@ -1744,6 +1744,20 @@ function (args)
 	return const.FERR_OK
 end
 
+rtb.CDL =
+function (args)
+	local account_cons = u.getByAccountID(args.a)
+	local name = string.lower(args.n)
+	for i, v in ipairs(account_cons) do
+		local cname = string.lower(u.getName(v))
+		if cname == name then
+			u.sendError(v, const.FERR_KICKED)
+			u.close(v)
+		end
+	end
+	return const.FERR_OK
+end
+
 --[[ While this function is called before most other Lua functions,	it is discouraged that you store anything in Lua
 		that is not entirely disposable.
 --]]
