@@ -674,7 +674,7 @@ function (con, args)
 	local targetonline, char = u.getConnection(string.lower(args.character))
 	local chantype = c.getType(chan)
 	if chantype == "public" then
-		if c.isMod(chan, char) == true then
+		if targetonline == true and c.isMod(chan, char) == true then
 			return const.FERR_DENIED_ON_OP
 		end
 		s.logAction(con, "CTU", args)
