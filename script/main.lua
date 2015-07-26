@@ -1775,7 +1775,7 @@ function chat_init()
 	const.IP_MAX = s.getConfigDouble("max_per_ip")
 	const.MAX_TITLE_LEN = 64.4999
 	const.MAX_IGNORES = 300
-	const.NO_ICON_CHANNELS = ["frontpage"]
+	const.NO_ICON_CHANNELS = ["frontpage", "sex driven lfrp", "story driven lfrp"]
 	if c.getChannel("adh-staffroomforstaffppl") ~= true then
 		local staffchan = c.createSpecialPrivateChannel("ADH-STAFFROOMFORSTAFFPPL", "Moderation Staff Room")
 		c.setDescription(staffchan, "This room is CHAT STAFF ONLY. You can /invite regular users if necessary for staff discussion. [b]Everything other people need to know about goes on the [url=http://www.f-list.net/group.php?group=staff%20discussion]staff board[/url].[/b]")
