@@ -802,9 +802,6 @@ function (con, args)
 		end
 		local ignorecount = #u.getIgnoreList(con)
 		local maxignores = const.MAX_IGNORES
-		if u.getMiscData(con, "subscribed") ~= nil then
-			maxignores = const.MAX_IGNORES_SUBSCRIBED
-		end
 		if ignorecount < maxignores then
 			u.addIgnore(con, string.lower(args.character))
 			propagateIgnoreList(con, "add", args.character)
@@ -1776,8 +1773,7 @@ function chat_init()
 	const.VERSION = s.getConfigString("version")
 	const.IP_MAX = s.getConfigDouble("max_per_ip")
 	const.MAX_TITLE_LEN = 64.4999
-	const.MAX_IGNORES = 150
-	const.MAX_IGNORES_SUBSCRIBED = 300
+	const.MAX_IGNORES = 300
 	if c.getChannel("adh-staffroomforstaffppl") ~= true then
 		local staffchan = c.createSpecialPrivateChannel("ADH-STAFFROOMFORSTAFFPPL", "Moderation Staff Room")
 		c.setDescription(staffchan, "This room is CHAT STAFF ONLY. You can /invite regular users if necessary for staff discussion. [b]Everything other people need to know about goes on the [url=http://www.f-list.net/group.php?group=staff%20discussion]staff board[/url].[/b]")
