@@ -1665,6 +1665,7 @@ function (con, args)
 	u.send(con, "VAR", {variable="lfrp_flood", value=const.LRP_FLOOD})
 	u.send(con, "VAR", {variable="msg_flood", value=const.MSG_FLOOD})
 	u.send(con, "VAR", {variable="permissions", value=args.permissions})
+	u.send(con, "VAR", {variable="icon_blacklist", array_value=const.NO_ICON_CHANNELS})
 
 	u.send(con, "HLO", {message="Welcome. Running F-Chat (".. const.VERSION .."). Enjoy your stay."})
 	u.send(con, "CON", {count=s.getUserCount()})
@@ -1774,6 +1775,7 @@ function chat_init()
 	const.IP_MAX = s.getConfigDouble("max_per_ip")
 	const.MAX_TITLE_LEN = 64.4999
 	const.MAX_IGNORES = 300
+	const.NO_ICON_CHANNELS = ["frontpage"]
 	if c.getChannel("adh-staffroomforstaffppl") ~= true then
 		local staffchan = c.createSpecialPrivateChannel("ADH-STAFFROOMFORSTAFFPPL", "Moderation Staff Room")
 		c.setDescription(staffchan, "This room is CHAT STAFF ONLY. You can /invite regular users if necessary for staff discussion. [b]Everything other people need to know about goes on the [url=http://www.f-list.net/group.php?group=staff%20discussion]staff board[/url].[/b]")
