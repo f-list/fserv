@@ -100,7 +100,7 @@ function dice_roll (con, diceargs)
 		if #roll == 1 then
 			local num = tonumber(roll[1])
 			if finite(num) ~= true then
-				c.close(con)
+				u.close(con)
 				return nil
 			end
 			if num == nil or num > 10000 or num < -10000 then
@@ -111,7 +111,7 @@ function dice_roll (con, diceargs)
 			local rolls = tonumber(roll[1])
 			local sides = tonumber(roll[2])
 			if finite(rolls) ~= true or finite(sides) ~= true then
-				c.close(con)
+				u.close(con)
 				return nil
 			end
 			local mod = 0
