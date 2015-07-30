@@ -1826,5 +1826,6 @@ function string:split(sep)
 end
 
 function finite(num)
-	return num == num and num ~= math.inf and num ~= -math.inf
+	local inf = 1/0
+	return num == num and num ~= inf and num ~= -inf
 end
