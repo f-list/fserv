@@ -99,13 +99,21 @@ function dice_roll (con, diceargs)
 		local roll = string.split(step, "d")
 		if #roll == 1 then
 			local num = tonumber(roll[1])
-			if num == nil or num > 10000 then
+			if finite(num) ~= true then
+				c.close(con)
+				return nil
+			end
+			if num == nil or num > 10000 or num < -10000 then
 				return nil
 			end
 			table.insert(results, num)
 		else
 			local rolls = tonumber(roll[1])
 			local sides = tonumber(roll[2])
+			if finite(rolls) ~= true or finite(sides) ~= true then
+				c.close(con)
+				return nil
+			end
 			local mod = 0
 			if rolls == nil or sides == nil or rolls > 9  or sides > 500 or sides < 2 then
 				return nil
@@ -1817,3 +1825,6 @@ function string:split(sep)
 	return fields
 end
 
+function finite(num)
+	return num == num and num ~= math.inf and num ~= -math.inf
+end
