@@ -3,13 +3,13 @@
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met: 
- * 
+ * modification, are permitted provided that the following conditions are met:
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer. 
+ *   list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution. 
+ *   and/or other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -1158,13 +1158,13 @@ function (con, args)
 	if args.dice == nil then
 		return const.FERR_BAD_SYNTAX
 	end
-	
+
 	local haschannel = args.channel ~= nil
 	local hasrecipient = args.recipient ~= nil
 	if not haschannel and not hasrecipient then
 		return const.FERR_BAD_SYNTAX
 	end
-	
+
 	if u.checkUpdateTimer(con, "msg", const.MSG_FLOOD) == true then
 		return const.FERR_THROTTLE_MESSAGE
 	end
@@ -1183,7 +1183,7 @@ function (con, args)
 			u.sendError(con, -10, "You may not roll dice or spin the bottle in Frontpage.")
 			return const.FERR_OK
 		end
-	
+
 		if c.getMode(chan) == "ads" then
 			return const.FERR_ADS_ONLY
 		end
@@ -1194,11 +1194,11 @@ function (con, args)
 		end
 	end
 
-	-- Hellban comes last	
+	-- Hellban comes last
 	if u.getMiscData(con, "hellban") ~= nil then
 		return const.FERR_OK
 	end
-	
+
 	if args.dice == "bottle" then
 		-- gets the right bottle people!
 		local bottlers = haschannel and c.getBottleList(chan, con) or { u.getName(con), u.getName(target) }
@@ -1217,7 +1217,7 @@ function (con, args)
 			end
 		end
 		return const.FERR_OK
-	end	
+	end
 
 	-- Assume dice roll if not bottle
 	local roll = dice_roll(con, args.dice)
@@ -1232,7 +1232,7 @@ function (con, args)
 		u.send(target, "RLL", roll)
 		u.send(con, "RLL", roll)
 	end
-	
+
 	return const.FERR_OK
 end
 
@@ -1690,15 +1690,6 @@ function (con, args)
 
 	s.broadcast("NLN", {identity=name, status="online", gender=u.getGender(con)})
 
-	if isop then
-		local found, chan = c.getChannel("adh-staffroomforstaffppl")
-		if found == true then
-			c.invite(chan, con)
-			joinChannel(chan, con)
-		end
-		s.sendStaffCalls(con)
-	end
-
 	if isstaff or isop or (s.isChanOp(con) == true) then
 		local found, chan = c.getChannel("adh-uberawesomestaffroom")
 		if found == true then
@@ -1784,10 +1775,6 @@ function chat_init()
 	const.MAX_TITLE_LEN = 64.4999
 	const.MAX_IGNORES = 300
 	const.NO_ICON_CHANNELS = {"frontpage", "sex driven lfrp", "story driven lfrp"}
-	if c.getChannel("adh-staffroomforstaffppl") ~= true then
-		local staffchan = c.createSpecialPrivateChannel("ADH-STAFFROOMFORSTAFFPPL", "Moderation Staff Room")
-		c.setDescription(staffchan, "This room is CHAT STAFF ONLY. You can /invite regular users if necessary for staff discussion. [b]Everything other people need to know about goes on the [url=http://www.f-list.net/group.php?group=staff%20discussion]staff board[/url].[/b]")
-	end
 	if c.getChannel("adh-uberawesomestaffroom") ~= true then
 		local chanopchan = c.createSpecialPrivateChannel("ADH-UBERAWESOMESTAFFROOM", "Staff Room")
 		c.setDescription(chanopchan, "This room is for website and chat staff.")
