@@ -1690,6 +1690,10 @@ function (con, args)
 
 	s.broadcast("NLN", {identity=name, status="online", gender=u.getGender(con)})
 
+	if isop then
+		s.sendStaffCalls(con)
+	end
+
 	if isstaff or isop or (s.isChanOp(con) == true) then
 		local found, chan = c.getChannel("adh-uberawesomestaffroom")
 		if found == true then
