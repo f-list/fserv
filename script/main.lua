@@ -1184,6 +1184,12 @@ function (con, args)
 			return const.FERR_OK
 		end
 
+		local chantype = c.getType(chan)
+		if args.dice == "bottle" and chantype == "public" then
+			u.sendError(con, -10, "You spin the bottle, but nobody came.")
+			return const.FERR_OK
+		end
+
 		if c.getMode(chan) == "ads" then
 			return const.FERR_ADS_ONLY
 		end
