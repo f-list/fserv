@@ -17,3 +17,13 @@ fserv.includes
 debug/
 release/
 scratch-space/
+
+src/cmake_config.hpp
+
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+*.cmake
+install_manifest.txt
+/cotire
