@@ -90,8 +90,8 @@ namespace Websocket {
 
             // Copy the forwarded for ip into our output if it exists.
             // Caller checks for proper remote address before trusting this.
-            if (headers.count("x-forwarded-for") != 0) {
-                ip = headers["x-forwarded-for"];
+            if (headers.count("x-real-ip") != 0) {
+                ip = headers["x-real-ip"];
             }
             if (headers.count("sec-websocket-version") != 0 && headers.count("sec-websocket-key") != 0) {
                 DLOG(INFO) << "Found a Hybi websocket header.";
