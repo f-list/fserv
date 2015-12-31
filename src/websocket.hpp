@@ -3,13 +3,13 @@
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met: 
- * 
+ * modification, are permitted provided that the following conditions are met:
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer. 
+ *   list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution. 
+ *   and/or other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -30,6 +30,8 @@
 #define WEBSOCKET_H
 
 #include <string>
+
+class ConnectionInstance;
 
 enum ProtocolVersion {
     PROTOCOL_HYBI, //Complex framing!
@@ -71,8 +73,12 @@ namespace Websocket {
     public:
         static WebSocketResult accept(std::string& key, std::string& origin,
                                       std::string& output);
-        static WebSocketResult receive(std::string& input, std::string& output);
-        static void send(std::string& input, std::string& output);
+        static WebSocketResult receive(ConnectionInstance* con, std::string& input,
+                                       std::string& output);
+        static void sendMessage(unsigned int opcode, std::string& input,
+                                std::string& output);
+        static void sendText(std::string& input, std::string& output);
+        static void sendPong(std::string& input, std::string& output);
     private:
 
         Hybi() { }

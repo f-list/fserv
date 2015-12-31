@@ -130,7 +130,7 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
             while (--repeat && con->readBuffer.size()) {
                 switch (con->protocol) {
                     case PROTOCOL_HYBI:
-                        ret = Websocket::Hybi::receive(con->readBuffer, message);
+                        ret = Websocket::Hybi::receive(con.get(), con->readBuffer, message);
                         break;
                     default:
                         break;
@@ -204,8 +204,8 @@ void Server::connectionWriteCallback(struct ev_loop* loop, ev_io* w, int revents
     } else if (revents & EV_WRITE) {
         if (con->writeQueue.size()) {
             MessagePtr outMessage = con->writeQueue.front();
-            int len = outMessage->Length() - con->writePosition;
-            int sent = send(w->fd, outMessage->Buffer() + con->writePosition, len, 0);
+            int len = outMessage->length() - con->writePosition;
+            int sent = send(w->fd, outMessage->buffer() + con->writePosition, len, 0);
             if (sent < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
                 return;
             } else if (sent <= 0) {
@@ -443,7 +443,7 @@ void Server::prepareCallback(struct ev_loop* loop, ev_prepare* w, int revents) {
 void Server::pingCallback(struct ev_loop* loop, ev_timer* w, int revents) {
     static string ping_command("PIN");
     ConnectionPtr con(static_cast<ConnectionInstance*> (w->data));
-    MessagePtr outMessage(MessageBuffer::FromString(ping_command));
+    MessagePtr outMessage(MessageBuffer::fromString(ping_command));
     con->send(outMessage);
     ev_timer_again(server_loop, w);
 }

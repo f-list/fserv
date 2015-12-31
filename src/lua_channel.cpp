@@ -130,7 +130,7 @@ int LuaChannel::sendCHA(lua_State* L) {
     json_object_set_new_nocheck(root, "channels", array);
     const char* chanstring = json_dumps(root, JSON_COMPACT);
     message += chanstring;
-    MessagePtr outMessage(MessageBuffer::FromString(message));
+    MessagePtr outMessage(MessageBuffer::fromString(message));
     con->send(outMessage);
     free((void*) chanstring);
     json_decref(root);
@@ -172,7 +172,7 @@ int LuaChannel::sendORS(lua_State* L) {
     json_object_set_new_nocheck(root, "channels", array);
     const char* chanstring = json_dumps(root, JSON_COMPACT);
     message += chanstring;
-    MessagePtr outMessage(MessageBuffer::FromString(message));
+    MessagePtr outMessage(MessageBuffer::fromString(message));
     con->send(outMessage);
     free((void*) chanstring);
     json_decref(root);
@@ -339,7 +339,7 @@ int LuaChannel::destroyChannel(lua_State* L) {
             msg += leavestr;
             free((void*) leavestr);
             json_decref(root);
-            MessagePtr outMessage(MessageBuffer::FromString(msg));
+            MessagePtr outMessage(MessageBuffer::fromString(msg));
             (*i)->send(outMessage);
             chan->part((*i));
         }
@@ -479,7 +479,7 @@ int LuaChannel::sendICH(lua_State* L) {
     string msg = "ICH ";
     const char* ichstr = json_dumps(root, JSON_COMPACT);
     msg += ichstr;
-    MessagePtr outMessage(MessageBuffer::FromString(msg));
+    MessagePtr outMessage(MessageBuffer::fromString(msg));
     con->send(outMessage);
     free((void*) ichstr);
     json_decref(root);

@@ -72,14 +72,14 @@ Channel::~Channel() {
 }
 
 void Channel::sendToAll(string& message) {
-    MessagePtr outMessage(MessageBuffer::FromString(message));
+    MessagePtr outMessage(MessageBuffer::fromString(message));
     for (chconlist_t::iterator i = participants.begin(); i != participants.end(); ++i) {
         (*i)->send(outMessage);
     }
 }
 
 void Channel::sendToChannel(ConnectionPtr src, string& message) {
-    MessagePtr outMessage(MessageBuffer::FromString(message));
+    MessagePtr outMessage(MessageBuffer::fromString(message));
     for (chconlist_t::iterator i = participants.begin(); i != participants.end(); ++i) {
         ConnectionPtr p = *i;
         if (p != src)

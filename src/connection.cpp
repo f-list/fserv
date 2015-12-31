@@ -86,7 +86,7 @@ bool ConnectionInstance::sendRaw(string& message) {
 
     MessageBuffer* buffer = new MessageBuffer();
     MessagePtr outMessage(buffer);
-    buffer->Set(message.data(), message.length());
+    buffer->set(message.data(), message.length());
 
     writeQueue.push_back(outMessage);
     ev_io_start(loop, writeEvent);
@@ -104,7 +104,7 @@ void ConnectionInstance::sendError(int error) {
             );
     const char* errstr = json_dumps(topnode, JSON_COMPACT);
     outstr += errstr;
-    MessagePtr message(MessageBuffer::FromString(outstr));
+    MessagePtr message(MessageBuffer::fromString(outstr));
     send(message);
     free((void*) errstr);
     json_decref(topnode);
@@ -123,7 +123,7 @@ void ConnectionInstance::sendError(int error, string message) {
     json_object_set_new_nocheck(topnode, "message", messagenode);
     const char* errstr = json_dumps(topnode, JSON_COMPACT);
     outstr += errstr;
-    MessagePtr outMessage(MessageBuffer::FromString(outstr));
+    MessagePtr outMessage(MessageBuffer::fromString(outstr));
     send(outMessage);
     free((void*) errstr);
     json_decref(topnode);
@@ -141,7 +141,7 @@ void ConnectionInstance::sendDebugReply(string message) {
     outstr += replystr;
     free((void*) replystr);
     json_decref(topnode);
-    MessagePtr outMessage(MessageBuffer::FromString(outstr));
+    MessagePtr outMessage(MessageBuffer::fromString(outstr));
     send(outMessage);
 }
 

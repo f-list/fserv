@@ -40,37 +40,37 @@ public:
 
     MessageBuffer()
     :
-    length(0),
-    buffer(0),
+    length_(0),
+    buffer_(0),
     refCount(0) { }
 
     ~MessageBuffer() {
-        if (buffer) {
-            delete[] buffer;
+        if (buffer_) {
+            delete[] buffer_;
         }
     }
 
-    inline void Set(const char* source, size_t inLength) {
-        if (buffer) {
-            delete[] buffer;
-            buffer = 0;
+    inline void set(const char* source, size_t inLength) {
+        if (buffer_) {
+            delete[] buffer_;
+            buffer_ = 0;
         }
-        buffer = new uint8_t[inLength];
-        memcpy(buffer, source, inLength);
-        length = inLength;
+        buffer_ = new uint8_t[inLength];
+        memcpy(buffer_, source, inLength);
+        length_ = inLength;
     }
 
-    static MessageBuffer* FromString(string& message);
+    static MessageBuffer* fromString(string& message);
     
-    const size_t Length() const {
-        return length;
+    const size_t length() const {
+        return length_;
     }
-    const uint8_t* Buffer() const {
-        return buffer;
+    const uint8_t* buffer() const {
+        return buffer_;
     }
 private:
-    size_t length;
-    uint8_t* buffer;
+    size_t length_;
+    uint8_t* buffer_;
     //StreamedList* list;
 
     volatile size_t refCount;

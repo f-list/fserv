@@ -324,7 +324,7 @@ FReturnCode NativeCommand::SearchCommand(intrusive_ptr< ConnectionInstance >& co
     message += fksstr;
     free((void*) fksstr);
     json_decref(newroot);
-    MessagePtr outMessage(MessageBuffer::FromString(message));
+    MessagePtr outMessage(MessageBuffer::fromString(message));
     con->send(outMessage);
     json_decref(rootnode);
     //DLOG(INFO) << "Finished search.";

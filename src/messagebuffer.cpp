@@ -29,10 +29,10 @@
 #include "websocket.hpp"
 
 
-MessageBuffer* MessageBuffer::FromString(string& message) {
+MessageBuffer* MessageBuffer::fromString(string& message) {
     string buffer;
-    Websocket::Hybi::send(message, buffer);
+    Websocket::Hybi::sendText(message, buffer);
     MessageBuffer* messageBuffer = new MessageBuffer();
-    messageBuffer->Set(buffer.data(), buffer.length());
+    messageBuffer->set(buffer.data(), buffer.length());
     return messageBuffer;
 }

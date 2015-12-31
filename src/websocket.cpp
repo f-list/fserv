@@ -36,6 +36,7 @@
 #include <exception>
 #include "startup_config.hpp"
 #include "logging.hpp"
+#include "connection.hpp"
 
 #include <map>
 #include <vector>
@@ -123,18 +124,16 @@ namespace Websocket {
     static const unsigned int wsTwoByteLength = 126;
     static const unsigned int wsEightByteLength = 127;
     static const unsigned int wsOpcodeText = 0x01;
+    static const unsigned int wsOpcodeBinary = 0x02;
     static const unsigned int wsOpcodeClose = 0x08;
+    static const unsigned int wsOpcodePing = 0x09;
+    static const unsigned int wsOpcodePong = 0x0A;
     static const unsigned int wsMaximumClientFrameSize = 0x80000; //512kB should be sufficient for any client->server message.
     static const char* const wsMagicalGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
     WebSocketResult Hybi::accept(string& key, string& origin, string& output) {
         if (key.empty())
             return WS_RESULT_ERROR;
-
-        //		if(origin.find("f-list.net") == string::npos)
-        //		{
-        //			return WS_RESULT_ERROR;
-        //		}
 
         char buf[4096];
         bzero(&buf[0], sizeof (buf));
@@ -154,7 +153,8 @@ namespace Websocket {
         return WS_RESULT_OK;
     }
 
-    WebSocketResult Hybi::receive(std::string& input, std::string& output) {
+    WebSocketResult Hybi::receive(ConnectionInstance* con, std::string& input,
+                                  std::string& output) {
         unsigned long rlen = input.length();
         if (rlen < wsHeaderSize)
             return WS_RESULT_INCOMPLETE;
@@ -174,6 +174,8 @@ namespace Websocket {
         switch (opcode) {
                 // Text
             case wsOpcodeText:
+            case wsOpcodePing:
+            case wsOpcodePong:
                 break;
                 // Close
             case wsOpcodeClose:
@@ -207,6 +209,19 @@ namespace Websocket {
         if (rlen < (wsHeaderSize + lengthsize + totallen))
             return WS_RESULT_INCOMPLETE;
 
+        // Immediately dump pongs.
+        if (opcode == wsOpcodePong) {
+            input = input.substr(wsHeaderSize + lengthsize + totallen);
+            return WS_RESULT_OK;
+        } else if (opcode == wsOpcodePing) {
+            string pingData(msg, payload_length);
+            string pongData;
+            Hybi::sendPong(pingData, pongData);
+            con->sendRaw(pongData);
+            input = input.substr(wsHeaderSize + lengthsize + totallen);
+            return WS_RESULT_OK;
+        }
+
         if (masked) {
             output.resize(payload_length);
             const char* mask = msg;
@@ -225,12 +240,11 @@ namespace Websocket {
         return WS_RESULT_OK;
     }
 
-    void Hybi::send(string& input, string& output) {
+    void Hybi::sendMessage(unsigned int opcode, string& input, string& output) {
         std::vector<unsigned char> frame;
         unsigned int length = input.length();
 
-        frame.push_back(0x80 | wsOpcodeText);
-
+        frame.push_back(0x80 | opcode);
         if (length <= wsSingleByteLength) {
             frame.push_back(static_cast<unsigned char> (length));
         } else if (length <= 0xFFFF) {
@@ -241,12 +255,20 @@ namespace Websocket {
             uint64_t qlength = length;
             frame.push_back(wsEightByteLength);
             for (size_t i = 0; i < 8; ++i) {
-                unsigned char length_piece = (qlength >> 8*(7-i)) & 0xFF;
+                unsigned char length_piece = (qlength >> 8 * (7 - i)) & 0xFF;
                 frame.push_back(length_piece);
             }
         }
         frame.insert(frame.end(), input.data(), input.data() + length);
         string tmp(frame.begin(), frame.end());
         output.swap(tmp);
+    }
+
+    void Hybi::sendText(string& input, string& output) {
+        Hybi::sendMessage(wsOpcodeText, input, output);
+    }
+
+    void Hybi::sendPong(string& input, string& output) {
+        Hybi::sendMessage(wsOpcodePong, input, output);
     }
 }
