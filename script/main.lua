@@ -892,10 +892,12 @@ function (con, args)
 	end
 
 	if c.isOwner(chan, con) then
-		s.logAction(con, "KIC", args)
+		if u.isGlobMod(con) then
+			s.logAction(con, "KIC", args)
+		end
 		c.sendAll(chan, "BRO", {message="You are being removed from the channel ".. c.getName(chan) ..". The channel is being destroyed."})
 		c.destroyChannel(string.lower(args.channel))
-		u.send(con, "SYS", {message=args.channel .. " has been removed as a public channel."})
+		u.send(con, "SYS", {message=args.channel .. " has been removed as a channel."})
 	else
 		return const.FERR_NOT_OP
 	end
