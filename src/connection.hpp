@@ -100,6 +100,7 @@ public:
     long accountID;
     string characterName;
     string characterNameLower;
+    bool authStarted;
     bool identified;
     bool admin;
     bool globalModerator;

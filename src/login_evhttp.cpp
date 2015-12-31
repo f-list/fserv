@@ -125,7 +125,7 @@ void LoginEvHTTPClient::processLogin(LoginRequest* request) {
         return;
     }
     
-    LOG(INFO) << "Sending request: " << url;
+    DLOG(INFO) << "Sending request: " << url;
     if(client->makeGet(LoginEvHTTPClient::response_callback, url, login_headers, (void*)reply) != 0) {
         DLOG(WARNING) << "Loginservice: Get failed for " << url;
         addReply(reply);
