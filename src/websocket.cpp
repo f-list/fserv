@@ -3,13 +3,13 @@
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met: 
- * 
+ * modification, are permitted provided that the following conditions are met:
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer. 
+ *   list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution. 
+ *   and/or other materials provided with the distribution.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -212,28 +212,28 @@ namespace Websocket {
         // Immediately dump pongs.
         if (opcode == wsOpcodePong) {
             input = input.substr(wsHeaderSize + lengthsize + totallen);
-            return WS_RESULT_OK;
+            return WS_RESULT_PING_PONG;
         } else if (opcode == wsOpcodePing) {
-            string pingData(msg, payload_length);
+            string pingData;
+            pingData.resize(payload_length);
+            const char* mask = msg;
+            msg += wsMaskingKeySize;
+            for (unsigned int i = 0; i < payload_length; ++i) {
+                pingData[i] = msg[i] ^ mask[i % wsMaskingKeySize];
+            }
             string pongData;
             Hybi::sendPong(pingData, pongData);
             con->sendRaw(pongData);
             input = input.substr(wsHeaderSize + lengthsize + totallen);
-            return WS_RESULT_OK;
+            return WS_RESULT_PING_PONG;
         }
 
-        if (masked) {
-            output.resize(payload_length);
-            const char* mask = msg;
-            msg += wsMaskingKeySize;
-            for (unsigned int i = 0; i < payload_length; ++i) {
-                output[i] = msg[i] ^ mask[i % wsMaskingKeySize];
-            }
-        } else {
-            string tmp(msg, payload_length);
-            output.swap(tmp);
+        output.resize(payload_length);
+        const char* mask = msg;
+        msg += wsMaskingKeySize;
+        for (unsigned int i = 0; i < payload_length; ++i) {
+            output[i] = msg[i] ^ mask[i % wsMaskingKeySize];
         }
-
 
         input = input.substr(wsHeaderSize + lengthsize + totallen);
 

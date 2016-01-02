@@ -44,6 +44,7 @@ enum WebSocketResult {
     WS_RESULT_OK,
     WS_RESULT_ERROR,
     WS_RESULT_INCOMPLETE,
+    WS_RESULT_PING_PONG,
     WS_RESULT_CLOSE
 };
 

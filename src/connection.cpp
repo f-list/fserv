@@ -72,7 +72,6 @@ ConnectionInstance::~ConnectionInstance() {
 }
 
 bool ConnectionInstance::send(MessagePtr message) {
-    // This will disconnect the client as a side effect.
     if (closed || writeQueue.size() > MAX_SEND_QUEUE_ITEMS)
         return false;
 

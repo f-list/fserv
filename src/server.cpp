@@ -136,7 +136,7 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
                         break;
                 }
 
-                if (ret == WS_RESULT_INCOMPLETE)
+                if (ret == WS_RESULT_INCOMPLETE || ret == WS_RESULT_PING_PONG)
                     return;
                 else if (ret == WS_RESULT_ERROR || ret == WS_RESULT_CLOSE) {
                     //DLOG(INFO) << "Closing connection because it requested a WS close or caused a WS error.";
