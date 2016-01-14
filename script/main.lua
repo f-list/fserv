@@ -1074,6 +1074,17 @@ function (con, args)
 	return const.FERR_OK
 end
 
+-- Gets a list of pending chat reports.
+-- Syntax: PCR
+event.PCR =
+function (con, args)
+	if (u.isAdmin(con) ~= true) and (u.isGlobMod(con) ~= true) and (s.isChanOp(con) ~= true) then
+		return const.FERR_NOT_OP
+	end
+	s.sendStaffCalls(con)
+	return const.FERR_OK
+end
+
 -- Sends a private message to another user.
 -- Syntax: PRI <recipient> <message>
 event.PRI =
