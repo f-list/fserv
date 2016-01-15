@@ -1734,11 +1734,9 @@ function (con)
 		partChannel(v, con, true)
 	end
 	s.broadcast("FLN", {character=name})
-	if (u.isAdmin(con) == true) or (u.isGlobMod(con) == true) or (s.isChanOp(con) == true) then
-		local found, chan = c.getChannel("adh-uberawesomestaffroom")
-		if found == true then
-			c.removeInvite(chan, string.lower(name))
-		end
+	local found, chan = c.getChannel("adh-uberawesomestaffroom")
+	if found == true and c.isInvited(chan, con) == true then
+		c.removeInvite(chan, string.lower(name))
 	end
 end
 
