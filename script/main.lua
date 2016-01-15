@@ -1735,7 +1735,7 @@ function (con)
 	end
 	s.broadcast("FLN", {character=name})
 	local found, chan = c.getChannel("adh-uberawesomestaffroom")
-	if found == true and c.isInvited(chan, con) == true then
+	if found == true then
 		c.removeInvite(chan, string.lower(name))
 	end
 end
