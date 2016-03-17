@@ -124,7 +124,7 @@ namespace Websocket {
     static const unsigned int wsTwoByteLength = 126;
     static const unsigned int wsEightByteLength = 127;
     static const unsigned int wsOpcodeText = 0x01;
-    static const unsigned int wsOpcodeBinary = 0x02;
+    //static const unsigned int wsOpcodeBinary = 0x02;
     static const unsigned int wsOpcodeClose = 0x08;
     static const unsigned int wsOpcodePing = 0x09;
     static const unsigned int wsOpcodePong = 0x0A;
