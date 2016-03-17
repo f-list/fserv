@@ -1107,7 +1107,7 @@ int LuaChannel::getBottleList(lua_State* L) {
     lua_newtable(L);
     int n = 1;
     for (chconlist_t::const_iterator i = participants.begin(); i != participants.end(); ++i) {
-        if (((*i)->status != "busy") && ((*i)->status != "dnd") && ((*i)->characterNameLower != con->characterNameLower)) {
+        if (((*i)->status == "online" || (*i)->status == "looking") && ((*i)->characterNameLower != con->characterNameLower)) {
             lua_pushstring(L, (*i)->characterName.c_str());
             lua_rawseti(L, -2, n++);
         }
