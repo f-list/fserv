@@ -56,6 +56,7 @@ static const luaL_Reg luaconnection_funcs[] = {
     {"isAdmin", LuaConnection::isAdmin},
     {"setGlobMod", LuaConnection::setGlobalModerator},
     {"isGlobMod", LuaConnection::isGlobalModerator},
+    {"isChanOp", LuaConnection::isChannelOperator},
     {"setFriends", LuaConnection::setFriends},
     {"removeFriend", LuaConnection::removeFriend},
     {"getFriendList", LuaConnection::getFriends},
@@ -437,6 +438,17 @@ int LuaConnection::isGlobalModerator(lua_State* L) {
     lua_pop(L, 1);
 
     lua_pushboolean(L, con->globalModerator);
+    return 1;
+}
+
+int LuaConnection::isChannelOperator(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
+
+    lua_pushboolean(L, ServerState::isChannelOperator(con->characterName));
     return 1;
 }
 

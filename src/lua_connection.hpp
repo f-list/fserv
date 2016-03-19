@@ -58,6 +58,8 @@ public:
     static int setGlobalModerator(lua_State* L);
     static int isGlobalModerator(lua_State* L);
 
+    static int isChannelOperator(lua_State* L);
+
     static int setFriends(lua_State* L);
     static int removeFriend(lua_State* L);
     static int getFriends(lua_State* L);
