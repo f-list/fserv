@@ -448,7 +448,7 @@ int LuaConnection::isChannelOperator(lua_State* L) {
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
-    lua_pushboolean(L, ServerState::isChannelOperator(con->characterName));
+    lua_pushboolean(L, ServerState::isChannelOp(con->characterName));
     return 1;
 }
 
