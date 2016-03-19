@@ -1359,7 +1359,7 @@ function (con, args)
 		if args.report == nil then
 			return const.FERR_BAD_SYNTAX
 		end
-		if u.isGlobMod(con) ~= true and u.isAdmin(con) ~= true and u.isChanOp ~= true then
+		if u.isGlobMod(con) ~= true and u.isAdmin(con) ~= true and s.isChanOp(con) ~= true then
 			if u.checkUpdateTimer(con, "sfc", const.SFC_FLOOD) == true then
 				return const.FERR_THROTTLE_STAFF_CALL
 			end
