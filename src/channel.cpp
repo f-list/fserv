@@ -242,7 +242,7 @@ void Channel::remMod(string& dest) {
 }
 
 bool Channel::isMod(ConnectionPtr con) {
-    lowername = con->characterName;
+    string lowername = con->characterName;
     for (int i = 0, len = lowername.length(); i < len; ++i) {
       lowername[i] = (char)tolower(lowername[i]);
     }
@@ -253,7 +253,7 @@ bool Channel::isMod(ConnectionPtr con) {
 }
 
 bool Channel::isMod(string& name) {
-    lowername = name;
+    string lowername = name;
     for (int i = 0, len = lowername.length(); i < len; ++i) {
       lowername[i] = (char)tolower(lowername[i]);
     }
