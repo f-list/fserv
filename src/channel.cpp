@@ -536,7 +536,6 @@ void Channel::loadChannel(const json_t* channode) {
                     json_t* namenode = json_object_get(mod, "name");
                     if (namenode) {
                       const char* namestring = json_string_value(namenode);
-                      string namestringLower;
                       if (namestring) {
                         string lowername = namestring;
                         for (int i = 0, len = lowername.length(); i < len; ++i) {
