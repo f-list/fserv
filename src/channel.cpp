@@ -207,31 +207,57 @@ bool Channel::getBan(string& name, BanRecord& ban) {
 
 void Channel::addMod(ConnectionPtr src, string& dest) {
     ModRecord mod;
+    string lowername;
     mod.modder = src->characterName;
     mod.time = time(0);
     moderators[dest] = mod;
+    lowername = dest;
+    for (int i = 0, len = lowername.length(); i < len; ++i) {
+      lowername[i] = (char)tolower(lowername[i]);
+    }
+    moderatorsMap[lowername] = dest;
 }
 
 void Channel::addMod(string& dest) {
     ModRecord mod;
+    string lowername;
     mod.modder = "[System]";
     mod.time = time(0);
     moderators[dest] = mod;
+    lowername = dest;
+    for (int i = 0, len = lowername.length(); i < len; ++i) {
+      lowername[i] = (char)tolower(lowername[i]);
+    }
+    moderatorsMap[lowername] = dest;
 }
 
 void Channel::remMod(string& dest) {
+    string lowername;
     moderators.erase(dest);
+    lowername = dest;
+    for (int i = 0, len = lowername.length(); i < len; ++i) {
+      lowername[i] = (char)tolower(lowername[i]);
+    }
+    moderatorsMap.erase(dest);
 }
 
 bool Channel::isMod(ConnectionPtr con) {
-    if (con->globalModerator || con->admin || (owner == con->characterName) || moderators.find(con->characterName) != moderators.end())
+    lowername = con->characterName;
+    for (int i = 0, len = lowername.length(); i < len; ++i) {
+      lowername[i] = (char)tolower(lowername[i]);
+    }
+    if (con->globalModerator || con->admin || (owner == con->characterName) || moderatorsMap.find(lowername) != moderatorsMap.end())
         return true;
 
     return false;
 }
 
 bool Channel::isMod(string& name) {
-    if ((owner == name) || moderators.find(name) != moderators.end())
+    lowername = name;
+    for (int i = 0, len = lowername.length(); i < len; ++i) {
+      lowername[i] = (char)tolower(lowername[i]);
+    }
+    if ((owner == name) || moderatorsMap.find(lowername) != moderatorsMap.end())
         return true;
 
     return false;
@@ -509,10 +535,16 @@ void Channel::loadChannel(const json_t* channode) {
                 {
                     json_t* namenode = json_object_get(mod, "name");
                     if (namenode) {
-                        const char* namestring = json_string_value(namenode);
-                        if (namestring) {
-                            moderators[namestring] = m;
+                      const char* namestring = json_string_value(namenode);
+                      string namestringLower;
+                      if (namestring) {
+                        string lowername = namestring;
+                        for (int i = 0, len = lowername.length(); i < len; ++i) {
+                          lowername[i] = (char)tolower(lowername[i]);
                         }
+                        moderatorsMap[lowername] = namestring; 
+                        moderators[namestring] = m;
+                      }
                     } else {
                         LOG(WARNING) << "Mod json for channel " << name << " contains no name item.";
                         continue;
