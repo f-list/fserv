@@ -83,7 +83,7 @@ void setLower(string& str) {
   const size_t length = str.length();
 
   if (length > INT_MAX) {
-    throw overflow_error("string exceeds maximum signed int length."); // For the rare, rare case that this may occur.
+    throw std::overflow_error("string exceeds maximum signed int length."); // For the rare, rare case that this may occur.
   }
 
   intLength = static_cast<int>(length);
@@ -103,7 +103,7 @@ string getLower(string str) {
   const size_t length = str.length();
 
   if (length > INT_MAX) {
-    throw overflow_error("string exceeds maximum signed int length."); // For the rare, rare case that this may occur.
+    throw std::overflow_error("string exceeds maximum signed int length."); // For the rare, rare case that this may occur.
   }
 
   intLength = static_cast<int>(length);
@@ -261,7 +261,7 @@ void Channel::addMod(string& dest) {
     mod.modder = "[System]";
     mod.time = time(0);
     moderators[dest] = mod;
-    moderatorsMap[getLower(lowername)] = dest;
+    moderatorsMap[getLower(dest)] = dest;
 }
 
 void Channel::remMod(string& dest) {
