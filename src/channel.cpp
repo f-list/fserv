@@ -71,6 +71,49 @@ Channel::~Channel() {
     assert(participants.size() == 0);
 }
 
+// Minor utils defined here until we have a utility function file.
+
+/**
+* Change a string's pointer value to a lowercased version.
+* @param string& str string pointer reference
+* @returns void
+*/
+void setLower(string& str) {
+  int intLength;
+  const size_t length = str.length();
+
+  if (length > INT_MAX) {
+    throw overflow_error("string exceeds maximum signed int length."); // For the rare, rare case that this may occur.
+  }
+
+  intLength = static_cast<int>(length);
+
+  for (int i = 0; i < intLength; ++i) {
+    str[i] = (char)tolower(str[i]);
+  }
+}
+
+/**
+* Returns a copy of the string in lowercase.
+* @param string str string
+* @returns string
+*/
+string getLower(string str) {
+  int intLength;
+  const size_t length = str.length();
+
+  if (length > INT_MAX) {
+    throw overflow_error("string exceeds maximum signed int length."); // For the rare, rare case that this may occur.
+  }
+
+  intLength = static_cast<int>(length);
+
+  for (int i = 0; i < intLength; ++i) {
+    str[i] = (char)tolower(str[i]);
+  }
+  return str;
+}
+
 void Channel::sendToAll(string& message) {
     MessagePtr outMessage(MessageBuffer::fromString(message));
     for (chconlist_t::iterator i = participants.begin(); i != participants.end(); ++i) {
@@ -207,57 +250,34 @@ bool Channel::getBan(string& name, BanRecord& ban) {
 
 void Channel::addMod(ConnectionPtr src, string& dest) {
     ModRecord mod;
-    string lowername;
     mod.modder = src->characterName;
     mod.time = time(0);
     moderators[dest] = mod;
-    lowername = dest;
-    for (int i = 0, len = lowername.length(); i < len; ++i) {
-      lowername[i] = (char)tolower(lowername[i]);
-    }
-    moderatorsMap[lowername] = dest;
+    moderatorsMap[getLower(dest)] = dest;
 }
 
 void Channel::addMod(string& dest) {
     ModRecord mod;
-    string lowername;
     mod.modder = "[System]";
     mod.time = time(0);
     moderators[dest] = mod;
-    lowername = dest;
-    for (int i = 0, len = lowername.length(); i < len; ++i) {
-      lowername[i] = (char)tolower(lowername[i]);
-    }
-    moderatorsMap[lowername] = dest;
+    moderatorsMap[getLower(lowername)] = dest;
 }
 
 void Channel::remMod(string& dest) {
-    string lowername;
     moderators.erase(dest);
-    lowername = dest;
-    for (int i = 0, len = lowername.length(); i < len; ++i) {
-      lowername[i] = (char)tolower(lowername[i]);
-    }
-    moderatorsMap.erase(dest);
+    moderatorsMap.erase(getLower(dest));
 }
 
 bool Channel::isMod(ConnectionPtr con) {
-    string lowername = con->characterName;
-    for (int i = 0, len = lowername.length(); i < len; ++i) {
-      lowername[i] = (char)tolower(lowername[i]);
-    }
-    if (con->globalModerator || con->admin || (owner == con->characterName) || moderatorsMap.find(lowername) != moderatorsMap.end())
+    if (con->globalModerator || con->admin || (owner == con->characterName) || moderatorsMap.find(con->characterNameLower) != moderatorsMap.end())
         return true;
 
     return false;
 }
 
 bool Channel::isMod(string& name) {
-    string lowername = name;
-    for (int i = 0, len = lowername.length(); i < len; ++i) {
-      lowername[i] = (char)tolower(lowername[i]);
-    }
-    if ((owner == name) || moderatorsMap.find(lowername) != moderatorsMap.end())
+    if ((owner == name) || moderatorsMap.find(getLower(name)) != moderatorsMap.end())
         return true;
 
     return false;
@@ -537,11 +557,7 @@ void Channel::loadChannel(const json_t* channode) {
                     if (namenode) {
                       const char* namestring = json_string_value(namenode);
                       if (namestring) {
-                        string lowername = namestring;
-                        for (int i = 0, len = lowername.length(); i < len; ++i) {
-                          lowername[i] = (char)tolower(lowername[i]);
-                        }
-                        moderatorsMap[lowername] = namestring; 
+                        moderatorsMap[getLower(namestring)] = namestring; 
                         moderators[namestring] = m;
                       }
                     } else {
