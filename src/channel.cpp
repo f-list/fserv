@@ -83,7 +83,7 @@ void setLower(string& str) {
   const size_t length = str.length();
 
   if (length > INT_MAX) {
-    LOG(WARNING) << "String size_t const exceeds maxium signed integer size. Overflow immenent."; // For the rare, rare case that this may occur.
+    LOG(WARNING) << "String size_t const exceeds maximum signed integer size. Overflow immenent."; // For the rare, rare case that this may occur.
   }
 
   intLength = static_cast<int>(length);
@@ -103,7 +103,7 @@ string getLower(string str) {
   const size_t length = str.length();
 
   if (length > INT_MAX) {
-    LOG(WARNING) << "String size_t const exceeds maxium signed integer size. Overflow immenent.";
+    LOG(WARNING) << "String size_t const exceeds maximum signed integer size. Overflow immenent.";
   }
 
   intLength = static_cast<int>(length);
