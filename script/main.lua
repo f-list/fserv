@@ -1616,7 +1616,7 @@ function (con, args)
 	end
 
 	if args.select ~= nil then
-		if args.select.Gender ~= nil then
+		if args.select.Gender ~= nil and const.gender[string.lower(args.select.Gender)] ~= nil then
 			u.setGender(con, args.select.Gender)
 		else
 			args.select.Gender="None"
