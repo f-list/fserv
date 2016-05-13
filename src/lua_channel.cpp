@@ -463,7 +463,7 @@ int LuaChannel::sendToOps(lua_State* L) {
     string ownerName = chan->getOwner().c_str();
     ConnectionPtr conDesc;
     string message = luaL_checkstring(L, 2);
-    
+
     json_t* json = LuaChat::luaToJson(L);
     const char* jsonstr = json_dumps(json, JSON_COMPACT);
 
@@ -476,10 +476,12 @@ int LuaChannel::sendToOps(lua_State* L) {
     
     lua_pop(L, 3);
 
+    MessageBuffer outMessage(MessageBuffer::fromString(message));
+
     conDesc = ServerState::getConnection(ownerName);
 
     if (conDesc) {
-        conDesc->sendRaw(message);
+        conDesc->send(outMessage);
     }
 
     for (chmodmap_t::const_iterator itr = mods.begin(); itr != mods.end(); ++itr) {
@@ -488,7 +490,7 @@ int LuaChannel::sendToOps(lua_State* L) {
         conDesc = ServerState::getConnection(modName);
 
         if (conDesc) {
-            conDesc->sendRaw(message);
+            conDesc->send(outMessage);
         }
     }
     return 0;
