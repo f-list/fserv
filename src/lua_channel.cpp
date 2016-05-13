@@ -58,6 +58,7 @@ static const luaL_Reg luachannel_funcs[] = {
     {"sendAllRaw", LuaChannel::sendToAllRaw},
     {"sendChannel", LuaChannel::sendToChannel},
     {"sendChannelRaw", LuaChannel::sendToChannelRaw},
+    {"sendToOps", LuaChannel::sendToOps},
     {"sendICH", LuaChannel::sendICH},
     {"join", LuaChannel::joinChannel},
     {"part", LuaChannel::partChannel},
@@ -441,6 +442,56 @@ int LuaChannel::sendToChannelRaw(lua_State* L) {
     lua_pop(L, 3);
 
     chan->sendToChannel(con, message);
+    return 0;
+}
+
+/**
+ * Gets a the list of moderators in a channel.
+ * @param LUD channel
+ * @param string protocol
+ * @param table JSON
+ * @returns void
+ */
+int LuaChannel::sendToOps(lua_State* L) {
+    luaL_checkany(L, 3);
+
+    LBase* base = 0;
+    GETLCHAN(base, L, 1, chan);
+
+    const chmodmap_t mods = chan->getModRecords();
+    string modName;
+    string ownerName = chan->getOwner().c_str();
+    ConnectionPtr conDesc;
+
+    json_t* json = LuaChat::luaToJson(L);
+    const char* jsonstr = json_dumps(json, JSON_COMPACT);
+
+    string message = luaL_checkstring(L, 2);
+    message += " " + jsonstr;
+
+    free((void*) jsonstr);
+    
+    json_decref(json);
+    
+    lua_pop(L, 3);
+
+    conDesc = ServerState::getConnection(ownerName);
+
+    MessageBuffer outMessage(MessageBuffer::fromString(message));
+
+    if (conDesc) {
+        conDesc->send(outMessage)
+    }
+
+    for (chmodmap_t::const_iterator itr = mods.begin(); itr != mods.end(); ++itr) {
+        modName = itr->first.c_str();
+
+        conDesc = ServerState::getConnection(modName);
+
+        if (conDesc) {
+            conDesc->send(outMessage);
+        }
+    }
     return 0;
 }
 

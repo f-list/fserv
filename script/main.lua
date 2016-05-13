@@ -737,7 +737,7 @@ function (con, args)
 	end
 
 	c.unban(chan, string.lower(args.character))
-	u.send(con, "SYS", {channel=args.channel, message=args.character.." has been removed from the channel ban list."})
+	c.sendToOps(chan, "SYS", {channel=args.channel, message=args.character.." has been removed from the channel ban list."})
 	return const.FERR_OK
 end
 
