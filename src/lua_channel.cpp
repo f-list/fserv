@@ -446,7 +446,7 @@ int LuaChannel::sendToChannelRaw(lua_State* L) {
 }
 
 /**
- * Gets a the list of moderators in a channel.
+ * Send a protocol message to all operators in this channel instance.
  * @param LUD channel
  * @param string protocol
  * @param table JSON
