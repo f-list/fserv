@@ -744,7 +744,7 @@ function (con, args)
 		local found, connection = u.getConnection(string.lower(value))
 
 		if found ~= true then
-			u.send(connection, chan, "SYS", {
+			u.send(connection, "SYS", {
 				channel = args.channel
 				message = args.character.." has been removed from the channel ban list."
 			})
