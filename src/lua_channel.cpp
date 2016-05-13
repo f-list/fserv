@@ -462,11 +462,11 @@ int LuaChannel::sendToOps(lua_State* L) {
     string modName;
     string ownerName = chan->getOwner().c_str();
     ConnectionPtr conDesc;
-
+    string message = luaL_checkstring(L, 2);
+    
     json_t* json = LuaChat::luaToJson(L);
     const char* jsonstr = json_dumps(json, JSON_COMPACT);
 
-    string message = luaL_checkstring(L, 2);
     message += " ";
     message += jsonstr;
 
