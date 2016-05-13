@@ -49,6 +49,7 @@ public:
     static int sendToAllRaw(lua_State* L);
     static int sendToChannel(lua_State* L);
     static int sendToChannelRaw(lua_State* L);
+    static int sendToOps(lua_State* L);
 
     static int sendICH(lua_State* L);
 
