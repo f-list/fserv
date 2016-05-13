@@ -476,7 +476,7 @@ int LuaChannel::sendToOps(lua_State* L) {
     
     lua_pop(L, 3);
 
-    MessageBuffer outMessage(MessageBuffer::fromString(message));
+    MessagePtr outMessage(MessageBuffer::fromString(message));
 
     conDesc = ServerState::getConnection(ownerName);
 
