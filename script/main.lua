@@ -1806,7 +1806,7 @@ function chat_init()
 	const.NO_ICON_CHANNELS = {"frontpage", "sex driven lfrp", "story driven lfrp"}
 	if c.getChannel("adh-uberawesomestaffroom") ~= true then
 		local chanopchan = c.createSpecialPrivateChannel("ADH-UBERAWESOMESTAFFROOM", "Staff Room")
-		c.setDescription(chanopchan, "This room is for website and chat staff.")
+		c.setDescription(chanopchan, "This room is for website and chat staff.\nPlease take any questions and official discussion to Slack.")
 	end
 	-- The numbers have no meaning.
 	const.gender = {}
