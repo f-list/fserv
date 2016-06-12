@@ -1095,7 +1095,7 @@ function (con, args)
 		end
 
 		return const.FERR_NOT_OP
-	else
+	end
 
 	s.sendStaffCalls(con)
 	u.send(con, "SYS", {message="Pending chat reports sent."})
