@@ -1738,7 +1738,7 @@ function (con, args)
 			joinChannel(chan, con)
 		end
 	end
-	
+
 	return const.FERR_OK
 end
 
