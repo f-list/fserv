@@ -1079,8 +1079,24 @@ end
 event.PCR =
 function (con, args)
 	if (u.isAdmin(con) ~= true) and (u.isGlobMod(con) ~= true) and (s.isChanOp(con) ~= true) then
+		if s.isChanOp(con) == false
+			-- Debugging: check existing name --
+			local debugmsg = "[DBG] PCR: isChanOp returned false for: "..u.getName(con)
+
+			local found, conKira = u.getConnection("kira")
+			if found == true
+				u.send(conKira, "SYS", {message=debugmsg})
+			end
+			
+			local found, conKali = u.getConnection("kali")
+			if found == true
+				u.send(conKali, "SYS", {message=debugmsg})
+			end
+		end
+
 		return const.FERR_NOT_OP
-	end
+	else
+
 	s.sendStaffCalls(con)
 	u.send(con, "SYS", {message="Pending chat reports sent."})
 	return const.FERR_OK
@@ -1721,7 +1737,6 @@ function (con, args)
 			c.invite(chan, con)
 			joinChannel(chan, con)
 		end
-	end
 
 	return const.FERR_OK
 end
