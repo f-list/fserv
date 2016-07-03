@@ -1,11 +1,12 @@
 language: cpp
 compiler: clang
+dist: trusty
 
 before-install: 
   - sudo apt-get update
 
 install: 
-  - sudo apt-get install libev-dev libgoogle-perftools-dev libhiredis-dev libicu-dev libcurl4-openssl-dev libboost-dev libluajit-5.1-dev libpth-dev uuid-dev
+  - sudo apt-get install -qq libev-dev libgoogle-perftools-dev libhiredis-dev libicu-dev libcurl4-openssl-dev libboost-dev libluajit-5.1-dev libpth-dev uuid-dev
   
   # Get libjansson version 2.5, the one in Ubuntu 12.04's repos is way outdated.
   - cd ~/build
@@ -23,7 +24,7 @@ install:
   
   # Fetch and build evHTTPClient
   - cd ~/build
-  - git clone https://github.com/jspotter/evhttpclient
+  - git clone https://github.com/larsven/evhttpclient
   - cd evhttpclient
   - make
   - sudo cp *.h /usr/include
@@ -31,5 +32,7 @@ install:
   
 script: 
   # Finally, build fserv.
-  - cd ~/build/f-list/fserv
-  - make all
+  - cd $HOME/build/$TRAVIS_REPO_SLUG
+  - mkdir build && cd build
+  - cmake ..
+  - make

@@ -28,6 +28,7 @@
  */
 
 #include "precompiled_headers.hpp"
+#include "cmake_config.hpp"
 
 #include "server.hpp"
 #include "connection.hpp"
@@ -50,7 +51,13 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include <google/malloc_extension.h>
+// gperftools/tcmalloc < 2.0 has its includes under google/
+// since 2.0 they're under gperftools/ and the google/ stubs throw a compiler warning
+#ifdef HAVE_NEW_TCMALLOC
+    #include <gperftools/malloc_extension.h>
+#else
+    #include <google/malloc_extension.h>
+#endif
 
 struct ev_loop* Server::server_loop = 0;
 ev_async* Server::server_async = 0;
