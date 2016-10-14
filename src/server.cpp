@@ -91,7 +91,7 @@ static void sock_nonblock(int socket) {
     flags = fcntl(socket, F_GETFL, 0);
     if (flags != -1)
         fcntl(socket, F_SETFL, flags | O_NONBLOCK);
-    static const char dokeepalive = 1;
+    static const int dokeepalive = 1;
     setsockopt(socket, SOL_SOCKET, SO_KEEPALIVE, &dokeepalive, sizeof (dokeepalive));
 }
 
@@ -386,7 +386,7 @@ void Server::rtbCallback(struct ev_loop* loop, ev_io* w, int revents) {
     if (!(revents & EV_READ))
         return;
 
-    static char buffer[513];
+    static char buffer[1501];
     int addrlen = sizeof (client_addr);
     int recvd = recvfrom(w->fd, buffer, sizeof (buffer) - 1, 0, (struct sockaddr*) &client_addr, (socklen_t *) & addrlen);
 
@@ -473,6 +473,7 @@ void Server::prepareShutdownConnection(ConnectionInstance* instance) {
         return;
 
     if (instance->identified) {
+        luaCanTimeout = false;
         lua_getglobal(sL, "on_error");
         lua_getglobal(sL, "event");
         lua_getfield(sL, -1, "pre_disconnect");
@@ -481,6 +482,7 @@ void Server::prepareShutdownConnection(ConnectionInstance* instance) {
             LOG(WARNING) << "Lua error while calling pre_disconnect. Error returned was: " << lua_tostring(sL, -1);
         }
         lua_pop(sL, 2);
+        luaCanTimeout = true;
 
         RedisRequest* req = new RedisRequest;
         req->key = Redis::onlineUsersKey;
@@ -577,12 +579,15 @@ void Server::sendWakeup() {
 
 int Server::bindAndListen() {
     struct sockaddr_in server_addr;
-    char re_use = 1;
+    int re_use = 1;
     int listensock = socket(AF_INET, SOCK_STREAM, 0);
     if (listensock < 0)
         LOG(FATAL) << "Could not create a socket to listen on.";
-    setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR, &re_use, 1);
     sock_nonblock(listensock);
+    if(setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR, &re_use, sizeof(re_use)) == -1)
+        LOG(FATAL) << "Could not set REUSEADDR";
+    if(setsockopt(listensock, SOL_SOCKET, SO_REUSEPORT, &re_use, sizeof(re_use)) == -1)
+        LOG(FATAL) << "Could not set REUSEPORT";
     bzero(&server_addr, sizeof (server_addr));
     bzero(&client_addr, sizeof (client_addr));
     server_addr.sin_family = AF_INET;
@@ -613,12 +618,15 @@ int Server::bindAndListenRTB() {
     struct hostent* restrict_addr = gethostbyname(StartupConfig::getString("rtbaddress").c_str());
     memcpy(&rtb_addr_allow.sin_addr.s_addr, restrict_addr->h_addr, restrict_addr->h_length);
     struct sockaddr_in server_addr;
-    char re_use = 1;
+    int re_use = 1;
     int listensock = socket(AF_INET, SOCK_DGRAM, 0);
     if (listensock < 0)
         LOG(FATAL) << "Could not create a RTB socket to listen on.";
-    setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR, &re_use, 1);
     sock_nonblock(listensock);
+    if(setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR, &re_use, sizeof(re_use)) == -1)
+        LOG(FATAL) << "Could not set REUSEADDR";
+    if(setsockopt(listensock, SOL_SOCKET, SO_REUSEPORT, &re_use, sizeof(re_use)) == -1)
+        LOG(FATAL) << "Could not set REUSEPORT";
     bzero(&server_addr, sizeof (server_addr));
     bzero(&client_addr, sizeof (client_addr));
     server_addr.sin_family = AF_INET;
@@ -830,6 +838,8 @@ int Server::luaError(lua_State* L1) {
 }
 
 void Server::luaTimeHook(lua_State* L1, lua_Debug* db) {
+    if(!luaCanTimeout)
+        return;
     DLOG(INFO) << "Event timeout check.";
     double timeout = (luaInTimeout ? luaRepeatTimeout : luaTimeout);
     if (luaGetTime() > luaTimer + timeout) {

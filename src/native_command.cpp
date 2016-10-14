@@ -34,6 +34,8 @@
 #include "startup_config.hpp"
 #include "server_state.hpp"
 
+#include <google/profiler.h>
+
 FReturnCode NativeCommand::DebugCommand(ConnectionPtr& con, string& payload) {
     if (con->admin != true)
         return FERR_NOT_ADMIN;
@@ -72,6 +74,10 @@ FReturnCode NativeCommand::DebugCommand(ConnectionPtr& con, string& payload) {
             con->deisolateLua();
             con->sendDebugReply("Your connection has been returned to the global Lua state.");
         }
+    } else if (command == "profile-start") {
+        ProfilerStart("./cpu.out");
+    } else if (command == "profile-stop") {
+        ProfilerStop();
     } else if (command == "status") {
         //TODO: Make this command do something.
         string statusmessage = "Status: ";

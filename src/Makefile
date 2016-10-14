@@ -10,7 +10,7 @@ TARGETDIR= ../$(OUTDIR)
 INSTALLDIR= ../bin/
 
 CXXFLAGS+=	-Wall -Werror -fno-strict-aliasing -I/usr/include/luajit-2.0 -I/usr/local/include -I../lib/lua/src -I../lib/evhttp
-LDFLAGS+=	-L/usr/local/lib -L../lib/lua/src -L../lib/glog_install/lib -L../lib/evhttp -levhttpclient -lpthread -lrt -lev -lm -lluajit-5.1 -lglog -ljansson -lcurl -lhiredis -licuuc -licudata -ltcmalloc
+LDFLAGS+=	-L/usr/local/lib -L../lib/lua/src -L../lib/glog_install/lib -L../lib/evhttp -levhttpclient -lpthread -lrt -lev -lm -lluajit-5.1 -lglog -ljansson -lcurl -lhiredis -licuuc -licudata -ltcmalloc -lprofiler
 
 FSERV_O=	channel.o connection.o fserv.o login_evhttp.o lua_channel.o lua_chat.o lua_connection.o lua_constants.o messagebuffer.o native_command.o redis.o server.o server_state.o startup_config.o unicode_tools.o websocket.o base64.o md5.o modp_b64.o sha1.o
 PRECOMP_GCH=	$(TARGETDIR)precompiled_headers.hpp.gch
