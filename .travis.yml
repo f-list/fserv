@@ -25,7 +25,7 @@ install:
   
   # Fetch and build evHTTPClient
   - cd ~/build
-  - git clone https://github.com/jspotter/evhttpclient
+  - git clone https://github.com/zwagoth/evhttpclient
   - cd evhttpclient
   - make
   - sudo cp *.h /usr/include
