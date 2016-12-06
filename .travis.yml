@@ -9,16 +9,16 @@ install:
   
   # Get libjansson version 2.5, the one in Ubuntu 12.04's repos is way outdated.
   - cd ~/build
-  - wget http://www.digip.org/jansson/releases/jansson-2.5.tar.gz
-  - tar xvzf jansson-2.5.tar.gz
-  - cd jansson-2.5
+  - wget http://www.digip.org/jansson/releases/jansson-2.9.tar.gz
+  - tar xvzf jansson-2.9.tar.gz
+  - cd jansson-2.9
   - ./configure --prefix=/usr/ && make && sudo make install
   
   # We need to get and build libglog because Ubuntu 12.04 doesn't have that in its repos.
   - cd ~/build
-  - wget https://google-glog.googlecode.com/files/glog-0.3.3.tar.gz
-  - tar xvzf glog-0.3.3.tar.gz
-  - cd glog-0.3.3
+  - wget https://github.com/google/glog/archive/v0.3.4.tar.gz
+  - tar xvzf v0.3.4.tar.gz
+  - cd glog-0.3.4
   - ./configure && make && sudo make install
   
   # Fetch and build evHTTPClient
