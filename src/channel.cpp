@@ -90,7 +90,7 @@ void Channel::sendToChannel(ConnectionPtr src, string& message) {
 void Channel::join(ConnectionPtr con) {
     lastActivity = time(0);
     ++participantCount;
-    participants.push_back(con);
+    participants.insert(con);
     con->joinChannel(this);
     if (participantCount > topUsers)
         topUsers = participantCount;
@@ -100,7 +100,7 @@ void Channel::part(ConnectionPtr con) {
     lastActivity = time(0);
     --participantCount;
     timerMap.erase(con->characterNameLower);
-    participants.remove(con);
+    participants.erase(con);
     con->leaveChannel(this);
 }
 

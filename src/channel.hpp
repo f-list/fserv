@@ -27,7 +27,7 @@
 #define CHANNEL_H
 
 #include <boost/intrusive_ptr.hpp>
-#include <list>
+#include <boost/functional/hash.hpp>
 #include <string>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
@@ -66,7 +66,7 @@ typedef struct {
     time_t timeout;
 } BanRecord;
 
-typedef list<ConnectionPtr> chconlist_t;
+typedef unordered_set<ConnectionPtr, boost::hash<ConnectionPtr> > chconlist_t;
 typedef unordered_set<string> chstringset_t;
 typedef unordered_map<string, BanRecord> chbanmap_t;
 typedef unordered_map<string, ModRecord> chmodmap_t;

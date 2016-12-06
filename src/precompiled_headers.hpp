@@ -32,7 +32,9 @@
 #include <string>
 #include <list>
 #include <queue>
+#include <deque>
 #include <boost/intrusive_ptr.hpp>
+#include <boost/functional/hash.hpp>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
