@@ -394,6 +394,9 @@ end
 -- Syntax: CHA
 event.CHA =
 function (con, args)
+	if u.checkUpdateTimer(con, "cha", const.CHA_FLOOD) == true then
+		return const.FERR_OK
+	end
 	c.sendCHA(con)
 	return const.FERR_OK
 end
@@ -1070,6 +1073,9 @@ end
 -- Syntax: ORS
 event.ORS =
 function (con, args)
+	if u.checkUpdateTimer(con, "ors", const.ORS_FLOOD) == true then
+		return const.FERR_OK
+	end
 	c.sendORS(con)
 	return const.FERR_OK
 end
@@ -1799,6 +1805,8 @@ function chat_init()
 	const.SFC_FLOOD = s.getConfigDouble("staffcall_flood")
 	const.IGN_FLOOD = s.getConfigDouble("ignore_flood")
 	const.STA_FLOOD = 5
+	const.CHA_FLOOD = 5
+	const.ORS_FLOOD = 5
 	const.VERSION = s.getConfigString("version")
 	const.IP_MAX = s.getConfigDouble("max_per_ip")
 	const.MAX_TITLE_LEN = 64.4999
