@@ -27,10 +27,11 @@
 #define CONNECTION_H
 
 #include <boost/intrusive_ptr.hpp>
+#include <boost/functional/hash.hpp>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 #include <string>
-#include <list>
+#include <deque>
 #include <ev.h>
 #include <netinet/in.h>
 #include "websocket.hpp"
@@ -41,7 +42,7 @@
 using std::string;
 using std::tr1::unordered_map;
 using std::tr1::unordered_set;
-using std::list;
+using std::deque;
 using boost::intrusive_ptr;
 
 struct lua_State;
@@ -49,12 +50,12 @@ struct lua_State;
 class Channel;
 
 
-typedef list< intrusive_ptr<Channel> > chanlist_t;
+typedef unordered_set< intrusive_ptr<Channel>, boost::hash< intrusive_ptr<Channel> > > chanlist_t;
 typedef unordered_set<int> intlist_t;
 typedef unordered_set<string> stringset_t;
 typedef unordered_map<string, string> stringmap_t;
 typedef unordered_map<string, double> timermap_t;
-typedef list<MessagePtr> messagelist_t;
+typedef deque<MessagePtr> messagelist_t;
 
 class ConnectionInstance : public LBase {
 public:

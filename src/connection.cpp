@@ -155,12 +155,12 @@ void ConnectionInstance::setDelayClose() {
 
 void ConnectionInstance::joinChannel(Channel* channel) {
     ChannelPtr chan(channel);
-    channelList.push_back(chan);
+    channelList.insert(chan);
 }
 
 void ConnectionInstance::leaveChannel(Channel* channel) {
     ChannelPtr chan(channel);
-    channelList.remove(chan);
+    channelList.erase(chan);
 }
 
 FReturnCode ConnectionInstance::reloadIsolation(string& output) {
