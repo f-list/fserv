@@ -33,6 +33,7 @@
 #include "logging.hpp"
 #include "fthread.hpp"
 #include "login_evhttp.hpp"
+#include "logger_thread.hpp"
 #include "server.hpp"
 #include "startup_config.hpp"
 #include "lua_constants.hpp"
@@ -81,6 +82,12 @@ int main(int argc, char* argv[]) {
         LOG(ERROR) << "Curl global startup failed.";
     LoginEvHTTPClient::setMaxLoginSlots(static_cast<unsigned int> (StartupConfig::getDouble("loginslots")));
 
+    pthread_t loggingThread;
+    pthread_attr_t loggingAttr;
+    pthread_attr_init(&loggingAttr);
+    pthread_attr_setdetachstate(&loggingAttr, PTHREAD_CREATE_JOINABLE);
+    pthread_create(&loggingThread, &loggingAttr, &ChatLogThread::runThread, 0);
+
     pthread_t loginThread;
     pthread_attr_t loginAttr;
     pthread_attr_init(&loginAttr);
@@ -108,6 +115,9 @@ int main(int argc, char* argv[]) {
     //Shutdown
     LoginEvHTTPClient::stopThread();
     pthread_join(loginThread, 0);
+
+    ChatLogThread::stopThread();
+    pthread_join(loggingThread, 0);
 
     if (Redis::isRunning() && StartupConfig::getBool("enableredis")) {
         Redis::stopThread();

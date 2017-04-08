@@ -90,6 +90,8 @@ public:
     static int toJsonString(lua_State* L);
     static int fromJsonString(lua_State* L);
 
+    static int logMessage(lua_State* L);
+
     static json_t* luaToJson(lua_State* L);
     static void jsonToLua(lua_State* L, json_t* json);
 private:

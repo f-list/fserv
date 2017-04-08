@@ -877,6 +877,7 @@ function (con, args)
 		return const.FERR_NOT_INVITED
 	end
 
+	s.logMessage("join_channel", con, chan, nil, nil)
 	joinChannel(chan, con)
 	return const.FERR_OK
 end
@@ -984,6 +985,7 @@ function (con, args)
 		return const.FERR_OK
 	end
 
+	s.logMessage("part_channel", con, chan, nil, nil)
 	partChannel(chan, con)
 	return const.FERR_OK
 end
@@ -1025,6 +1027,7 @@ function (con, args)
 		return const.FERR_OK
 	end
 
+	s.logMessage("message_ad", con, chan, nil, args.message)
 	c.sendChannel(chan, con, "LRP", {channel=c.getName(chan), character=u.getName(con), message=s.escapeHTML(args.message)})
 	return const.FERR_OK
 end
@@ -1065,6 +1068,7 @@ function (con, args)
 		return const.FERR_OK
 	end
 
+	s.logMessage("message", con, chan, nil, args.message)
 	c.sendChannel(chan, con, "MSG", {channel=c.getName(chan), character=u.getName(con), message=s.escapeHTML(args.message)})
 	return const.FERR_OK
 end
@@ -1117,6 +1121,7 @@ function (con, args)
 		return const.FERR_OK
 	end
 
+	s.logMessage("private_message", con, nil, target, args.message)
 	u.send(target, "PRI", {character=u.getName(con), message=s.escapeHTML(args.message), recipient=args.recipient})
 	return const.FERR_OK
 end
@@ -1493,6 +1498,7 @@ function (con, args)
 	local reason = s.escapeHTML(args.reason)
 
 	s.logAction(con, "TMO", args)
+	s.logMessage("global_timeout", con, nil, char, "Length: "..length.." Reason: "..reason)
 	s.addTimeout(char, length*60)
 	u.send(con, "SYS", {message=u.getName(char).." has been given a "..length.." minute time out for: "..reason})
 	local account_cons = u.getByAccount(char)
@@ -1536,6 +1542,7 @@ function (con, args)
 	end
 
 	s.logAction(con, "UNB", args)
+	s.logMessage("global_unban", con, nil, args.character, nil)
 	s.removeTimeout(string.lower(args.character))
 	if s.removeBan(string.lower(args.character)) == true then
 		u.send(con, "SYS", {message="Removed ban successfully."})
@@ -1597,6 +1604,11 @@ function (con, args)
 		return const.FERR_IDENT_FAILED
 	end
 	u.setAccountID(con, args.account.account_id)
+	if tonumber(args.char.character_id) == 0 then
+		print("Failed to login because the character id was zero")
+		return const.FERR_IDENT_FAILED
+	end
+	u.setCharacterID(con, args.char.character_id)
 
 	local isadmin = false
 	if args.account.admin == "1" or lname == "kira" then
@@ -1715,6 +1727,7 @@ function (con, args)
 
 	s.sendUserList(con, "LIS", 100)
 
+	s.logMessage("connect", con, nil, nil, nil)
 	s.broadcast("NLN", {identity=name, status="online", gender=u.getGender(con)})
 
 	if isop then
@@ -1740,6 +1753,7 @@ function (con)
 		partChannel(v, con, true)
 	end
 	s.broadcast("FLN", {character=name})
+	s.logMessage("disconnect", con, nil, nil, nil)
 	local found, chan = c.getChannel("adh-uberawesomestaffroom")
 	if found == true then
 		c.removeInvite(chan, string.lower(name))

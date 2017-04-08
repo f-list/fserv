@@ -21,6 +21,10 @@ rtbaddress="127.0.0.1"
 --- RTB MAC secret.
 rtbsecret="anotherlongandcomplicatedrandomizedpassword"
 
+
+-- Logging
+log_socket_path="/home/kira/fserv/bin/log.sock"
+
 --Login (evHTTPClient)
 logintimeout=30
 ---Number of concurrent connections to the login server.

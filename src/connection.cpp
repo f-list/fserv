@@ -43,6 +43,7 @@ ConnectionInstance::ConnectionInstance()
 :
 LBase(),
 accountID(0),
+characterID(0),
 authStarted(false),
 identified(false),
 admin(false),

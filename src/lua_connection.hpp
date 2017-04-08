@@ -51,6 +51,7 @@ public:
     static int setIdent(lua_State* L);
 
     static int setAccountID(lua_State* L);
+    static int setCharacterID(lua_State* L);
 
     static int setAdmin(lua_State* L);
     static int isAdmin(lua_State* L);

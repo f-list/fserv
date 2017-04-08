@@ -34,6 +34,7 @@
 #include "unicode_tools.hpp"
 #include "startup_config.hpp"
 #include "server.hpp"
+#include "logger_thread.hpp"
 #include <time.h>
 #include <stdio.h>
 #include <string>
@@ -43,44 +44,109 @@ using std::string;
 #define LUACHAT_MODULE_NAME "s"
 
 static const luaL_Reg luachat_funcs[] = {
-    {"broadcast", LuaChat::broadcast},
-    {"broadcastRaw", LuaChat::broadcastRaw},
-    {"broadcastOps", LuaChat::broadcastOps},
-    {"getConfigBool", LuaChat::getConfigBool},
-    {"getConfigDouble", LuaChat::getConfigDouble},
-    {"getConfigString", LuaChat::getConfigString},
-    {"getTime", LuaChat::getTime},
-    {"getUserCount", LuaChat::getUserCount},
-    {"sendUserList", LuaChat::sendUserList},
-    {"getOpList", LuaChat::getOpList},
-    {"isOp", LuaChat::isOp},
-    {"addOp", LuaChat::addOp},
-    {"removeOp", LuaChat::removeOp},
-    {"addBan", LuaChat::addBan},
-    {"removeBan", LuaChat::removeBan},
-    {"isBanned", LuaChat::isBanned},
-    {"addTimeout", LuaChat::addTimeout},
-    {"removeTimeout", LuaChat::removeTimeout},
-    {"isTimedOut", LuaChat::isTimedOut},
-    {"addAltWatch", LuaChat::addAltWatch},
-    {"getAltWatch", LuaChat::getAltWatch},
-    {"addStaffCall", LuaChat::addStaffCall},
-    {"removeStaffCall", LuaChat::removeStaffCall},
-    {"getStaffCall", LuaChat::getStaffCall},
-    {"sendStaffCalls", LuaChat::sendStaffCalls},
-    {"isChanOp", LuaChat::isChanOp},
-    {"escapeHTML", LuaChat::escapeHTML},
-    {"reload", LuaChat::reload},
-    //{"shutdown", LuaChat::shutdown},
-    {"getStats", LuaChat::getStats},
-    {"logAction", LuaChat::logAction},
-    {"toJSON", LuaChat::toJsonString},
-    {"fromJSON", LuaChat::fromJsonString},
-    {NULL, NULL}
+        {"broadcast",       LuaChat::broadcast},
+        {"broadcastRaw",    LuaChat::broadcastRaw},
+        {"broadcastOps",    LuaChat::broadcastOps},
+        {"getConfigBool",   LuaChat::getConfigBool},
+        {"getConfigDouble", LuaChat::getConfigDouble},
+        {"getConfigString", LuaChat::getConfigString},
+        {"getTime",         LuaChat::getTime},
+        {"getUserCount",    LuaChat::getUserCount},
+        {"sendUserList",    LuaChat::sendUserList},
+        {"getOpList",       LuaChat::getOpList},
+        {"isOp",            LuaChat::isOp},
+        {"addOp",           LuaChat::addOp},
+        {"removeOp",        LuaChat::removeOp},
+        {"addBan",          LuaChat::addBan},
+        {"removeBan",       LuaChat::removeBan},
+        {"isBanned",        LuaChat::isBanned},
+        {"addTimeout",      LuaChat::addTimeout},
+        {"removeTimeout",   LuaChat::removeTimeout},
+        {"isTimedOut",      LuaChat::isTimedOut},
+        {"addAltWatch",     LuaChat::addAltWatch},
+        {"getAltWatch",     LuaChat::getAltWatch},
+        {"addStaffCall",    LuaChat::addStaffCall},
+        {"removeStaffCall", LuaChat::removeStaffCall},
+        {"getStaffCall",    LuaChat::getStaffCall},
+        {"sendStaffCalls",  LuaChat::sendStaffCalls},
+        {"isChanOp",        LuaChat::isChanOp},
+        {"escapeHTML",      LuaChat::escapeHTML},
+        {"reload",          LuaChat::reload},
+        {"logMessage",      LuaChat::logMessage},
+        //{"shutdown", LuaChat::shutdown},
+        {"getStats",        LuaChat::getStats},
+        {"logAction",       LuaChat::logAction},
+        {"toJSON",          LuaChat::toJsonString},
+        {"fromJSON",        LuaChat::fromJsonString},
+        {NULL, NULL}
 };
 
 int LuaChat::openChatLib(lua_State* L) {
     luaL_register(L, LUACHAT_MODULE_NAME, luachat_funcs);
+    return 0;
+}
+
+/**
+ * Adds a message to be logged to persisted storage.
+ * @param string type
+ * @param LUD connection from connection
+ * @param LUD channel
+ * @param LUD|string to_character target connection
+ * @params string body
+ * @return
+ */
+int LuaChat::logMessage(lua_State* L) {
+    luaL_checkany(L, 5);
+    string type = luaL_checkstring(L, 1);
+
+    Channel* to_channel = 0;
+    string to_character_string;
+    ConnectionPtr to_connection(0);
+
+    LBase* base = 0;
+    GETLCON(base, L, 2, from_connection);
+    if (lua_type(L, 3) != LUA_TNIL) {
+        GETLCHAN(base, L, 3, channel);
+        to_channel = channel;
+    }
+    int arg_type = lua_type(L, 4);
+    if (arg_type == LUA_TLIGHTUSERDATA) {
+        GETLCON(base, L, 4, to_connection_temp);
+        to_connection = to_connection_temp;
+    } else if (arg_type == LUA_TSTRING) {
+        to_character_string = luaL_checkstring(L, 4);
+    } else if (arg_type != LUA_TNIL) {
+        luaL_error(L, "Character target needs to be connection or string or nil.");
+    }
+    string body;
+    if (lua_type(L, 5) != LUA_TNIL) {
+        body = luaL_checkstring(L, 5);
+    }
+    lua_pop(L, 5);
+
+    LogEntry* entry = new LogEntry();
+    entry->time = time(0);
+    entry->messageType = type;
+    entry->fromAccountID = from_connection->accountID;
+    entry->fromCharacterID = from_connection->characterID;
+    entry->fromCharacter = from_connection->characterName;
+    if (to_channel) {
+        entry->toChannel = to_channel->getName();
+        entry->toChannelTitle = to_channel->getTitle();
+    }
+    if (to_connection) {
+        entry->toAccountID = to_connection->accountID;
+        entry->toCharacterID = to_connection->characterID;
+        entry->toCharacter = to_connection->characterName;
+    } else if (to_character_string.length()) {
+        entry->toCharacter = to_character_string;
+    }
+    if (body.length()) {
+        entry->messageBody = body;
+    }
+    ChatLogThread::addLogEntry(entry);
+    ChatLogThread::sendWakeup();
+
     return 0;
 }
 
@@ -241,14 +307,14 @@ int LuaChat::sendUserList(lua_State* L) {
     for (conptrmap_t::const_iterator i = cons.begin(); i != cons.end(); ++i) {
         json_t* cha = json_array();
         json_array_append_new(cha,
-                json_string_nocheck(i->second->characterName.c_str())
-                );
+                              json_string_nocheck(i->second->characterName.c_str())
+        );
         json_array_append_new(cha,
-                json_string_nocheck(i->second->gender.c_str())
-                );
+                              json_string_nocheck(i->second->gender.c_str())
+        );
         json_array_append_new(cha,
-                json_string_nocheck(i->second->status.c_str())
-                );
+                              json_string_nocheck(i->second->status.c_str())
+        );
         json_t* status = json_string(i->second->statusMessage.c_str());
         if (!status)
             status = json_string_nocheck("");
@@ -585,20 +651,21 @@ int LuaChat::sendStaffCalls(lua_State* L) {
         string message("SFC ");
         json_t* rootnode = json_object();
         json_object_set_new_nocheck(rootnode, "action",
-                json_string_nocheck("report")
-                );
+                                    json_string_nocheck("report")
+        );
         json_object_set_new_nocheck(rootnode, "callid",
-                json_string_nocheck(r.callid.c_str())
-                );
+                                    json_string_nocheck(r.callid.c_str())
+        );
         json_object_set_new_nocheck(rootnode, "character",
-                json_string_nocheck(r.character.c_str())
-                );
+                                    json_string_nocheck(r.character.c_str())
+        );
         json_object_set_new_nocheck(rootnode, "timestamp",
-                json_integer(r.timestamp)
-                );
+                                    json_integer(r.timestamp)
+        );
         json_t* report = json_string(r.report.c_str());
         if (!report)
-            report = json_string_nocheck("Report contained invalid UTF-8 and could not be encoded. Please contact the sender about this!");
+            report = json_string_nocheck(
+                    "Report contained invalid UTF-8 and could not be encoded. Please contact the sender about this!");
         json_object_set_new_nocheck(rootnode, "report", report);
         json_t* tab = json_string(UnicodeTools::escapeHTML(r.tab).c_str());
         if (!tab)
@@ -606,8 +673,8 @@ int LuaChat::sendStaffCalls(lua_State* L) {
         json_object_set_new_nocheck(rootnode, "tab", tab);
         if (r.logid != -1) {
             json_object_set_new_nocheck(rootnode, "logid",
-                    json_integer(r.logid)
-                    );
+                                        json_integer(r.logid)
+            );
         }
         const char* sfcstring = json_dumps(rootnode, JSON_COMPACT);
         message += sfcstring;
@@ -693,13 +760,13 @@ int LuaChat::getStats(lua_State* L) {
     lua_pushinteger(L, time(NULL));
     lua_pushinteger(L, Server::getAcceptedConnections());
     char buffer[200];
-    bzero(&buffer, sizeof (buffer));
+    bzero(&buffer, sizeof(buffer));
     time_t t = (time_t) Server::getStartTime();
     struct tm* tmp = gmtime(&t);
     if (tmp == 0) {
         lua_pushnil(L);
     }
-    if (strftime(&buffer[0], sizeof (buffer), "%a, %d %b %Y %T %z", tmp) == 0) {
+    if (strftime(&buffer[0], sizeof(buffer), "%a, %d %b %Y %T %z", tmp) == 0) {
         lua_pushnil(L);
     } else {
         lua_pushstring(L, &buffer[0]);
@@ -725,22 +792,22 @@ int LuaChat::logAction(lua_State* L) {
     json_t* root = json_object();
     json_object_set_new_nocheck(root, "args", args);
     json_object_set_new_nocheck(root, "name",
-            json_string_nocheck(con->characterName.c_str())
-            );
+                                json_string_nocheck(con->characterName.c_str())
+    );
     json_object_set_new_nocheck(root, "type",
-            json_string_nocheck(type.c_str())
-            );
+                                json_string_nocheck(type.c_str())
+    );
     json_object_set_new_nocheck(root, "time",
-            json_integer(time(0))
-            );
+                                json_integer(time(0))
+    );
     const char* logstr = json_dumps(root, JSON_COMPACT);
     string message(logstr);
     free((void*) logstr);
     json_decref(root);
 
     char buffer[255];
-    bzero(&buffer[0], sizeof (buffer));
-    snprintf(&buffer[0], sizeof (buffer), "./oplogs/%s.%d.log", type.c_str(), (int) time(NULL));
+    bzero(&buffer[0], sizeof(buffer));
+    snprintf(&buffer[0], sizeof(buffer), "./oplogs/%s.%d.log", type.c_str(), (int) time(NULL));
     if (!ServerState::fsaveFile(&buffer[0], message))
         LOG(WARNING) << "Failed to save log message with contents " << message;
 
@@ -813,7 +880,7 @@ json_t* LuaChat::luaToJson(lua_State* L) {
     return ret;
 }
 
-json_t* LuaChat::l2jParseItem(lua_State* L, string& key) {
+json_t* LuaChat::l2jParseItem(lua_State* L, string &key) {
     lua_checkstack(L, 20);
     json_t* n = 0;
     if (lua_type(L, -2) == LUA_TSTRING)
@@ -822,7 +889,7 @@ json_t* LuaChat::l2jParseItem(lua_State* L, string& key) {
     int type = lua_type(L, -1);
     switch (type) {
         case LUA_TBOOLEAN:
-            n = (bool)lua_toboolean(L, -1) ? json_true() : json_false();
+            n = (bool) lua_toboolean(L, -1) ? json_true() : json_false();
             break;
         case LUA_TNUMBER:
             n = json_real(lua_tonumber(L, -1));
@@ -832,8 +899,7 @@ json_t* LuaChat::l2jParseItem(lua_State* L, string& key) {
             if (!n)
                 n = json_string_nocheck("");
             break;
-        case LUA_TTABLE:
-        {
+        case LUA_TTABLE: {
             bool is_array = false;
             if (key.find("array_") == 0) {
                 is_array = true;
@@ -874,7 +940,8 @@ void LuaChat::jsonToLua(lua_State* L, json_t* json) {
     const char* key;
     json_t* value;
 
-    json_object_foreach(json, key, value) {
+    json_object_foreach(json, key, value)
+    {
         j2lParseItem(L, key, value);
     }
 }
@@ -882,8 +949,7 @@ void LuaChat::jsonToLua(lua_State* L, json_t* json) {
 void LuaChat::j2lParseItem(lua_State* L, const char* key, json_t* json, int index) {
     lua_checkstack(L, 20);
     switch (json_typeof(json)) {
-        case JSON_TRUE:
-        {
+        case JSON_TRUE: {
             lua_pushboolean(L, 1);
             if (index == -1)
                 lua_setfield(L, -2, key);
@@ -891,8 +957,7 @@ void LuaChat::j2lParseItem(lua_State* L, const char* key, json_t* json, int inde
                 lua_rawseti(L, -2, index);
             break;
         }
-        case JSON_FALSE:
-        {
+        case JSON_FALSE: {
             lua_pushboolean(L, 0);
             if (index == -1)
                 lua_setfield(L, -2, key);
@@ -900,8 +965,7 @@ void LuaChat::j2lParseItem(lua_State* L, const char* key, json_t* json, int inde
                 lua_rawseti(L, -2, index);
             break;
         }
-        case JSON_REAL:
-        {
+        case JSON_REAL: {
             lua_pushnumber(L, json_real_value(json));
             if (index == -1)
                 lua_setfield(L, -2, key);
@@ -909,8 +973,7 @@ void LuaChat::j2lParseItem(lua_State* L, const char* key, json_t* json, int inde
                 lua_rawseti(L, -2, index);
             break;
         }
-        case JSON_INTEGER:
-        {
+        case JSON_INTEGER: {
             lua_pushinteger(L, json_integer_value(json));
             if (index == -1)
                 lua_setfield(L, -2, key);
@@ -918,8 +981,7 @@ void LuaChat::j2lParseItem(lua_State* L, const char* key, json_t* json, int inde
                 lua_rawseti(L, -2, index);
             break;
         }
-        case JSON_STRING:
-        {
+        case JSON_STRING: {
             lua_pushstring(L, json_string_value(json));
             if (index == -1)
                 lua_setfield(L, -2, key);
@@ -927,8 +989,7 @@ void LuaChat::j2lParseItem(lua_State* L, const char* key, json_t* json, int inde
                 lua_rawseti(L, -2, index);
             break;
         }
-        case JSON_ARRAY:
-        {
+        case JSON_ARRAY: {
             lua_newtable(L);
             size_t len = json_array_size(json);
             for (size_t i = 0; i < len; ++i) {
@@ -943,13 +1004,13 @@ void LuaChat::j2lParseItem(lua_State* L, const char* key, json_t* json, int inde
                 lua_rawseti(L, -2, index);
             break;
         }
-        case JSON_OBJECT:
-        {
+        case JSON_OBJECT: {
             lua_newtable(L);
             const char* itemkey;
             json_t* itemvalue;
 
-            json_object_foreach(json, itemkey, itemvalue) {
+            json_object_foreach(json, itemkey, itemvalue)
+            {
                 j2lParseItem(L, itemkey, itemvalue);
             }
             if (index == -1)

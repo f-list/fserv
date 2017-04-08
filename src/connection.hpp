@@ -99,6 +99,7 @@ public:
 
 public:
     long accountID;
+    long characterID;
     string characterName;
     string characterNameLower;
     bool authStarted;

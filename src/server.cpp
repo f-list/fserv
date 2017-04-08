@@ -202,7 +202,7 @@ void Server::connectionWriteCallback(struct ev_loop* loop, ev_io* w, int revents
         prepareShutdownConnection(con.get());
         close(w->fd);
     } else if (revents & EV_WRITE) {
-        if (con->writeQueue.size()) {
+        while (con->writeQueue.size()) {
             MessagePtr outMessage = con->writeQueue.front();
             int len = outMessage->length() - con->writePosition;
             int sent = send(w->fd, outMessage->buffer() + con->writePosition, len, 0);
@@ -211,16 +211,17 @@ void Server::connectionWriteCallback(struct ev_loop* loop, ev_io* w, int revents
             } else if (sent <= 0) {
                 prepareShutdownConnection(con.get());
                 close(w->fd);
+                return;
             } else if (sent != len) {
-                DLOG(WARNING) << "Short write to socket. Expected to write " << len << "bytes but only wrote " << sent << " bytes.";
+                // We've properly filled the buffer, come back later.
                 con->writePosition += sent;
+                return;
             } else {
                 con->writeQueue.pop_front();
                 con->writePosition = 0;
             }
-        } else {
-            ev_io_stop(loop, w);
         }
+        ev_io_stop(loop, w);
     }
 }
 
@@ -343,7 +344,7 @@ void Server::listenCallback(struct ev_loop* loop, ev_io* w, int revents) {
     //DLOG(INFO) << "Listen callback.";
 
     int socklen = sizeof (client_addr);
-    int newfd = accept(w->fd, (sockaddr*) & client_addr, (socklen_t*) & socklen);
+    int newfd = accept(w->fd, (sockaddr*) &client_addr, (socklen_t*) &socklen);
     if (newfd > 0) {
         ++statAcceptedConnections;
         {
