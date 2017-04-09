@@ -142,6 +142,7 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
                     //DLOG(INFO) << "Closing connection because it requested a WS close or caused a WS error.";
                     prepareShutdownConnection(con.get());
                     close(w->fd);
+                    return;
                 } else {
                     // Smallest valid message size is 3 characters long.
                     size_t message_size = message.size();
@@ -149,6 +150,7 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
                         //DLOG(INFO) << "Closing connection because it sent a message that was too short.";
                         prepareShutdownConnection(con.get());
                         close(w->fd);
+                        return;
                     }
 
                     string command(message.substr(0, 3));
