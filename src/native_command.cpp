@@ -78,6 +78,10 @@ FReturnCode NativeCommand::DebugCommand(ConnectionPtr& con, string& payload) {
         ProfilerStart("./cpu.out");
     } else if (command == "profile-stop") {
         ProfilerStop();
+    } else if (command == "logger-start") {
+        Server::loggerStart();
+    } else if (command == "logger-stop") {
+        Server::loggerStop();
     } else if (command == "status") {
         //TODO: Make this command do something.
         string statusmessage = "Status: ";

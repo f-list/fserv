@@ -32,6 +32,7 @@
 #include "flua.hpp"
 #include "fthread.hpp"
 #include "login_evhttp.hpp"
+#include "logger_thread.hpp"
 #include "redis.hpp"
 #include "ferror.hpp"
 
@@ -58,6 +59,13 @@ public:
     static unsigned long long getStartTime() {
         return statStartTime;
     }
+
+    static inline ChatLogThread* logger() {
+        return chatLogger;
+    }
+
+    static void loggerStart();
+    static void loggerStop();
 
 private:
 
@@ -111,6 +119,8 @@ private:
     static double luaRepeatTimeout;
     static bool luaInTimeout;
     static bool luaCanTimeout;
+
+    static ChatLogThread* chatLogger;
 
     // Stats
     static unsigned long long statAcceptedConnections;

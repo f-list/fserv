@@ -33,6 +33,7 @@
 #include "connection.hpp"
 #include "startup_config.hpp"
 #include "native_command.hpp"
+#include "logger_thread.hpp"
 #include "lua_chat.hpp"
 #include "lua_channel.hpp"
 #include "lua_connection.hpp"
@@ -58,6 +59,7 @@ ev_timer* Server::server_timer = 0;
 ev_io* Server::server_listen = 0;
 ev_io* Server::rtb_listen = 0;
 ev_prepare* Server::server_prepare = 0;
+ChatLogThread* Server::chatLogger = 0;
 
 lua_State* Server::sL = 0;
 ev_tstamp Server::luaTimer = 0;
@@ -92,7 +94,7 @@ static void sock_nonblock(int socket) {
     if (flags != -1)
         fcntl(socket, F_SETFL, flags | O_NONBLOCK);
     static const int dokeepalive = 1;
-    setsockopt(socket, SOL_SOCKET, SO_KEEPALIVE, &dokeepalive, sizeof (dokeepalive));
+    setsockopt(socket, SOL_SOCKET, SO_KEEPALIVE, &dokeepalive, sizeof(dokeepalive));
 }
 
 void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents) {
@@ -106,14 +108,16 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
         close(w->fd);
     } else if (revents & EV_READ) {
         if (con->readBuffer.size() > MAX_CONNECTION_READ_BUFFER) {
-            LOG(WARNING) << "Connection " << inet_ntoa(con->clientAddress.sin_addr) << ":" << ntohs(con->clientAddress.sin_port) <<
-                    " exceeded the maximum read buffer size of " << (MAX_CONNECTION_READ_BUFFER / 1024) << "kB and is being closed.";
+            LOG(WARNING) << "Connection " << inet_ntoa(con->clientAddress.sin_addr) << ":"
+                         << ntohs(con->clientAddress.sin_port) <<
+                         " exceeded the maximum read buffer size of " << (MAX_CONNECTION_READ_BUFFER / 1024)
+                         << "kB and is being closed.";
             prepareShutdownConnection(con.get());
             close(w->fd);
         }
         char recvbuffer[8192];
-        bzero(&recvbuffer[0], sizeof (recvbuffer));
-        int received = recv(w->fd, &recvbuffer[0], sizeof (recvbuffer), 0);
+        bzero(&recvbuffer[0], sizeof(recvbuffer));
+        int received = recv(w->fd, &recvbuffer[0], sizeof(recvbuffer), 0);
         if (received < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
             return;
         } else if (received <= 0) {
@@ -260,7 +264,8 @@ void Server::connectionTimerCallback(struct ev_loop* loop, ev_timer* w, int reve
     }
 
     ev_tstamp now = ev_now(loop);
-    ev_tstamp timeout = con->lastActivity + (con->protocol != PROTOCOL_UNKNOWN ? CONNECTION_TIMEOUT_PERIOD : CONNECTION_TIMEOUT_PERIOD_IDENT);
+    ev_tstamp timeout = con->lastActivity + (con->protocol != PROTOCOL_UNKNOWN ? CONNECTION_TIMEOUT_PERIOD
+                                                                               : CONNECTION_TIMEOUT_PERIOD_IDENT);
     if (now > timeout) {
         //HACK: Have to cheat to get the FD here.
         prepareShutdownConnection(con.get());
@@ -282,14 +287,16 @@ void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents) {
         close(w->fd);
     } else if (revents & EV_READ) {
         if (con->readBuffer.size() > MAX_HANDSHAKE_READ_BUFFER) {
-            LOG(WARNING) << "Connection " << inet_ntoa(con->clientAddress.sin_addr) << ":" << ntohs(con->clientAddress.sin_port) <<
-                    " exceeded the maximum handshake buffer size of " << (MAX_HANDSHAKE_READ_BUFFER / 1024) << "kB and is being closed.";
+            LOG(WARNING) << "Connection " << inet_ntoa(con->clientAddress.sin_addr) << ":"
+                         << ntohs(con->clientAddress.sin_port) <<
+                         " exceeded the maximum handshake buffer size of " << (MAX_HANDSHAKE_READ_BUFFER / 1024)
+                         << "kB and is being closed.";
             prepareShutdownConnection(con.get());
             close(w->fd);
         }
         char recvbuffer[8192];
-        bzero(&recvbuffer[0], sizeof (recvbuffer));
-        int received = recv(w->fd, &recvbuffer[0], sizeof (recvbuffer), 0);
+        bzero(&recvbuffer[0], sizeof(recvbuffer));
+        int received = recv(w->fd, &recvbuffer[0], sizeof(recvbuffer), 0);
         if (received < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
             return;
         } else if (received <= 0) {
@@ -323,7 +330,8 @@ void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents) {
                     close(w->fd);
                     return;
                 }
-                LOG(INFO) << "Accepted connection from TLS proxy for endpoint: " << inet_ntoa(con->clientAddress.sin_addr);
+                LOG(INFO) << "Accepted connection from TLS proxy for endpoint: "
+                          << inet_ntoa(con->clientAddress.sin_addr);
             }
             con->sendRaw(buffer);
             con->protocol = ver;
@@ -345,7 +353,7 @@ void Server::listenCallback(struct ev_loop* loop, ev_io* w, int revents) {
 
     //DLOG(INFO) << "Listen callback.";
 
-    int socklen = sizeof (client_addr);
+    int socklen = sizeof(client_addr);
     int newfd = accept(w->fd, (sockaddr*) &client_addr, (socklen_t*) &socklen);
     if (newfd > 0) {
         ++statAcceptedConnections;
@@ -357,7 +365,7 @@ void Server::listenCallback(struct ev_loop* loop, ev_io* w, int revents) {
         sock_nonblock(newfd);
         ConnectionPtr newcon(new ConnectionInstance);
         ServerState::addUnidentified(newcon);
-        memcpy(&(newcon->clientAddress), &client_addr, sizeof (client_addr));
+        memcpy(&(newcon->clientAddress), &client_addr, sizeof(client_addr));
 
         newcon->loop = loop;
 
@@ -367,7 +375,8 @@ void Server::listenCallback(struct ev_loop* loop, ev_io* w, int revents) {
         newcon->pingEvent = ping;
 
         ev_timer* timeout = new ev_timer;
-        ev_timer_init(timeout, Server::connectionTimerCallback, CONNECTION_TIMEOUT_PERIOD_IDENT, CONNECTION_TIMEOUT_PERIOD_IDENT);
+        ev_timer_init(timeout, Server::connectionTimerCallback, CONNECTION_TIMEOUT_PERIOD_IDENT,
+                      CONNECTION_TIMEOUT_PERIOD_IDENT);
         timeout->data = newcon.get();
         ev_timer_start(server_loop, timeout);
         newcon->timerEvent = timeout;
@@ -390,15 +399,16 @@ void Server::rtbCallback(struct ev_loop* loop, ev_io* w, int revents) {
         return;
 
     static char buffer[1501];
-    int addrlen = sizeof (client_addr);
-    int recvd = recvfrom(w->fd, buffer, sizeof (buffer) - 1, 0, (struct sockaddr*) &client_addr, (socklen_t *) & addrlen);
+    int addrlen = sizeof(client_addr);
+    int recvd = recvfrom(w->fd, buffer, sizeof(buffer) - 1, 0, (struct sockaddr*) &client_addr, (socklen_t*) &addrlen);
 
     if (recvd < 37)
         return;
 
     buffer[recvd] = '\0';
 
-    if ((client_addr.sin_addr.s_addr != rtb_addr_allow.sin_addr.s_addr) && (client_addr.sin_addr.s_addr != 0x7f000001)) {
+    if ((client_addr.sin_addr.s_addr != rtb_addr_allow.sin_addr.s_addr) &&
+        (client_addr.sin_addr.s_addr != 0x7f000001)) {
         char ntopbuf[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &(client_addr.sin_addr), &ntopbuf[0], INET_ADDRSTRLEN);
         LOG(INFO) << "Dropping RTB message from unauthorized address " << &ntopbuf[0];
@@ -430,10 +440,11 @@ void Server::idleTasksCallback(struct ev_loop* loop, ev_timer* w, int revents) {
     ServerState::saveChannels();
     ServerState::cleanAltWatchList();
     ServerState::sendUserListToRedis();
-    int inuse = lua_gc(sL, LUA_GCCOUNT, 0)*1024 + lua_gc(sL, LUA_GCCOUNTB, 0);
+    int inuse = lua_gc(sL, LUA_GCCOUNT, 0) * 1024 + lua_gc(sL, LUA_GCCOUNTB, 0);
     lua_gc(sL, LUA_GCCOLLECT, 0);
-    int after = lua_gc(sL, LUA_GCCOUNT, 0)*1024 + lua_gc(sL, LUA_GCCOUNTB, 0);
-    DLOG(INFO) << "Garbage collected " << ((inuse - after) / 1024.) << "kB of memory. B: " << (inuse / 1024.) << " A: " << (after / 1024.);
+    int after = lua_gc(sL, LUA_GCCOUNT, 0) * 1024 + lua_gc(sL, LUA_GCCOUNTB, 0);
+    DLOG(INFO) << "Garbage collected " << ((inuse - after) / 1024.) << "kB of memory. B: " << (inuse / 1024.) << " A: "
+               << (after / 1024.);
     //Force TCMalloc to free up some system memory. We suffer a performance penalty for this, but it is small.
     MallocExtension::instance()->ReleaseFreeMemory();
     ev_timer_again(server_loop, server_timer);
@@ -537,6 +548,8 @@ void Server::run() {
     initLua();
     initAsyncLoop();
     initTimer();
+    if (StartupConfig::getBool("log_start"))
+        loggerStart();
 
     int listensock = bindAndListen();
     server_listen = new ev_io;
@@ -564,6 +577,7 @@ void Server::run() {
         rtb_listen = 0;
     }
 
+    loggerStop();
     ServerState::saveChannels();
     ServerState::saveOps();
     ServerState::saveBans();
@@ -587,12 +601,12 @@ int Server::bindAndListen() {
     if (listensock < 0)
         LOG(FATAL) << "Could not create a socket to listen on.";
     sock_nonblock(listensock);
-    if(setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR, &re_use, sizeof(re_use)) == -1)
+    if (setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR, &re_use, sizeof(re_use)) == -1)
         LOG(FATAL) << "Could not set REUSEADDR";
-    if(setsockopt(listensock, SOL_SOCKET, SO_REUSEPORT, &re_use, sizeof(re_use)) == -1)
+    if (setsockopt(listensock, SOL_SOCKET, SO_REUSEPORT, &re_use, sizeof(re_use)) == -1)
         LOG(FATAL) << "Could not set REUSEPORT";
-    bzero(&server_addr, sizeof (server_addr));
-    bzero(&client_addr, sizeof (client_addr));
+    bzero(&server_addr, sizeof(server_addr));
+    bzero(&client_addr, sizeof(client_addr));
     server_addr.sin_family = AF_INET;
     struct hostent* bindaddr = gethostbyname(StartupConfig::getString("bindaddr").c_str());
     memcpy(&server_addr.sin_addr.s_addr, bindaddr->h_addr, bindaddr->h_length);
@@ -600,7 +614,7 @@ int Server::bindAndListen() {
 
     int bindcount = 5;
     while (bindcount--) {
-        int ret = bind(listensock, reinterpret_cast<const sockaddr*> (&server_addr), sizeof (server_addr));
+        int ret = bind(listensock, reinterpret_cast<const sockaddr*> (&server_addr), sizeof(server_addr));
         if ((ret < 0) && bindcount) {
             LOG(WARNING) << "Could not bind to socket. Retrying.";
             usleep(BIND_RETRY_TIMEOUT);
@@ -626,12 +640,12 @@ int Server::bindAndListenRTB() {
     if (listensock < 0)
         LOG(FATAL) << "Could not create a RTB socket to listen on.";
     sock_nonblock(listensock);
-    if(setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR, &re_use, sizeof(re_use)) == -1)
+    if (setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR, &re_use, sizeof(re_use)) == -1)
         LOG(FATAL) << "Could not set REUSEADDR";
-    if(setsockopt(listensock, SOL_SOCKET, SO_REUSEPORT, &re_use, sizeof(re_use)) == -1)
+    if (setsockopt(listensock, SOL_SOCKET, SO_REUSEPORT, &re_use, sizeof(re_use)) == -1)
         LOG(FATAL) << "Could not set REUSEPORT";
-    bzero(&server_addr, sizeof (server_addr));
-    bzero(&client_addr, sizeof (client_addr));
+    bzero(&server_addr, sizeof(server_addr));
+    bzero(&client_addr, sizeof(client_addr));
     server_addr.sin_family = AF_INET;
     struct hostent* bindaddr = gethostbyname(StartupConfig::getString("bindaddr").c_str());
     memcpy(&server_addr.sin_addr.s_addr, bindaddr->h_addr, bindaddr->h_length);
@@ -639,7 +653,7 @@ int Server::bindAndListenRTB() {
 
     int bindcount = 5;
     while (bindcount--) {
-        int ret = bind(listensock, reinterpret_cast<const sockaddr*> (&server_addr), sizeof (server_addr));
+        int ret = bind(listensock, reinterpret_cast<const sockaddr*> (&server_addr), sizeof(server_addr));
         if ((ret < 0) && bindcount) {
             LOG(WARNING) << "Could not bind to RTB socket. Retrying.";
             usleep(BIND_RETRY_TIMEOUT);
@@ -653,7 +667,7 @@ int Server::bindAndListenRTB() {
     return listensock;
 }
 
-FReturnCode Server::processLogin(ConnectionInstance* instance, string& message, bool success) {
+FReturnCode Server::processLogin(ConnectionInstance* instance, string &message, bool success) {
     FReturnCode ret = FERR_FATAL_INTERNAL;
     if (!success)
         return FERR_LOGIN_TIMED_OUT;
@@ -684,7 +698,7 @@ FReturnCode Server::processLogin(ConnectionInstance* instance, string& message, 
     return ret;
 }
 
-FReturnCode Server::runLuaEvent(ConnectionInstance* instance, string& event, string& payload) {
+FReturnCode Server::runLuaEvent(ConnectionInstance* instance, string &event, string &payload) {
     luaTimer = luaGetTime();
 
     json_t* root = json_loads(payload.c_str(), 0, 0);
@@ -712,7 +726,8 @@ FReturnCode Server::runLuaEvent(ConnectionInstance* instance, string& event, str
     json_decref(root);
     int ret = lua_pcall(L, 2, 1, LUA_ABSINDEX(L, -5));
     if (ret != 0) {
-        LOG(WARNING) << "Lua error while calling command '" << event << "' with message '" << payload << "'. Error return by Lua: \n" << lua_tostring(L, -1);
+        LOG(WARNING) << "Lua error while calling command '" << event << "' with message '" << payload
+                     << "'. Error return by Lua: \n" << lua_tostring(L, -1);
         //if(instance->admin)
         instance->sendError(FERR_LUA, lua_tostring(L, -1));
         lua_pop(L, 3);
@@ -732,7 +747,7 @@ FReturnCode Server::runLuaEvent(ConnectionInstance* instance, string& event, str
     return FERR_FATAL_INTERNAL;
 }
 
-void Server::runLuaRTB(string& event, string& payload) {
+void Server::runLuaRTB(string &event, string &payload) {
     luaTimer = luaGetTime();
 
     json_t* root = json_loads(payload.c_str(), 0, 0);
@@ -758,7 +773,8 @@ void Server::runLuaRTB(string& event, string& payload) {
     json_decref(root);
     int ret = lua_pcall(L, 1, 1, LUA_ABSINDEX(L, -4));
     if (ret != 0) {
-        LOG(WARNING) << "Lua error while calling RTB command '" << event << "' with message '" << payload << "'. Error return by Lua: \n" << lua_tostring(L, -1);
+        LOG(WARNING) << "Lua error while calling RTB command '" << event << "' with message '" << payload
+                     << "'. Error return by Lua: \n" << lua_tostring(L, -1);
     }
     lua_pop(L, 3);
     if (top != lua_gettop(L)) {
@@ -766,10 +782,10 @@ void Server::runLuaRTB(string& event, string& payload) {
     }
 }
 
-#define LEVELS1	12	/* size of the first part of the stack */
-#define LEVELS2	10	/* size of the second part of the stack */
+#define LEVELS1    12    /* size of the first part of the stack */
+#define LEVELS2    10    /* size of the second part of the stack */
 
-int Server::luaOnError(lua_State *L1) {
+int Server::luaOnError(lua_State* L1) {
     int level = 1;
     int firstpart = 1; /* still before eventual `...' */
     int arg = 0;
@@ -798,7 +814,8 @@ int Server::luaOnError(lua_State *L1) {
         if (ar.currentline > 0)
             lua_pushfstring(L1, "%d:", ar.currentline);
         if (*ar.namewhat != '\0') /* is there a name? */
-            lua_pushfstring(L1, " in function " LUA_QS, ar.name);
+            lua_pushfstring(L1, " in function "
+        LUA_QS, ar.name);
         else {
             if (*ar.what == 'm') /* main? */
                 lua_pushfstring(L1, " in main chunk");
@@ -806,13 +823,14 @@ int Server::luaOnError(lua_State *L1) {
                 lua_pushliteral(L1, " ?"); /* C function or tail call */
             else
                 lua_pushfstring(L1, " in function <%s:%d>",
-                    ar.short_src, ar.linedefined);
+                                ar.short_src, ar.linedefined);
         }
         lua_concat(L1, lua_gettop(L1) - arg);
     }
     lua_concat(L1, lua_gettop(L1) - arg);
     return 1;
 }
+
 #undef LEVELS1
 #undef LEVELS2
 
@@ -841,7 +859,7 @@ int Server::luaError(lua_State* L1) {
 }
 
 void Server::luaTimeHook(lua_State* L1, lua_Debug* db) {
-    if(!luaCanTimeout)
+    if (!luaCanTimeout)
         return;
     DLOG(INFO) << "Event timeout check.";
     double timeout = (luaInTimeout ? luaRepeatTimeout : luaTimeout);
@@ -863,7 +881,22 @@ double Server::getEventTime() {
     return ev_now(server_loop);
 }
 
-FReturnCode Server::reloadLuaState(string& output) {
+void Server::loggerStart() {
+    if (chatLogger)
+        return;
+    chatLogger = new ChatLogThread();
+    chatLogger->startThread();
+}
+
+void Server::loggerStop() {
+    if (!chatLogger)
+        return;
+    chatLogger->stopThread();
+    delete chatLogger;
+    chatLogger = 0;
+}
+
+FReturnCode Server::reloadLuaState(string &output) {
     lua_State* newstate = luaL_newstate();
     FReturnCode ret = loadLuaIntoState(newstate, output, false);
     if (ret == FERR_OK) {
@@ -879,7 +912,7 @@ FReturnCode Server::reloadLuaState(string& output) {
 
 // HACK: This function is gross. It messes with the global timeout variables even when it is not modifying the global state.
 
-FReturnCode Server::loadLuaIntoState(lua_State* tL, string& output, bool testing) {
+FReturnCode Server::loadLuaIntoState(lua_State* tL, string &output, bool testing) {
     static const char* mainscript = "./script/main.lua";
     static const char* maintestscript = "./script/main_test.lua";
     DLOG(INFO) << "Loading Lua into an existing state.";
@@ -1037,7 +1070,8 @@ void Server::initLua() {
 
     lua_getglobal(sL, "on_error");
     if (lua_type(sL, -1) != LUA_TFUNCTION) {
-        LOG(DFATAL) << "Could not find 'on_error' function. Unexpected type for 'on_error', expected function, got " << lua_typename(sL, -1);
+        LOG(DFATAL) << "Could not find 'on_error' function. Unexpected type for 'on_error', expected function, got "
+                    << lua_typename(sL, -1);
     }
     lua_pop(sL, 1);
 
@@ -1051,7 +1085,8 @@ void Server::initLua() {
         }
         luaInTimeout = false;
     } else {
-        LOG(WARNING) << "Could not call 'chat_init' function. Unexpected type for 'chat_init', expected function, got " << lua_typename(sL, -1);
+        LOG(WARNING) << "Could not call 'chat_init' function. Unexpected type for 'chat_init', expected function, got "
+                     << lua_typename(sL, -1);
     }
     lua_pop(sL, 1);
 }
@@ -1065,7 +1100,8 @@ void Server::shutdownLua() {
 void Server::initTimer() {
     DLOG(INFO) << "Initializing idle timer.";
     server_timer = new ev_timer;
-    ev_timer_init(server_timer, Server::idleTasksCallback, StartupConfig::getDouble("saveinterval"), StartupConfig::getDouble("saveinterval"));
+    ev_timer_init(server_timer, Server::idleTasksCallback, StartupConfig::getDouble("saveinterval"),
+                  StartupConfig::getDouble("saveinterval"));
     ev_timer_start(server_loop, server_timer);
 }
 

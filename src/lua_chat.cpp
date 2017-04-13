@@ -97,6 +97,10 @@ int LuaChat::openChatLib(lua_State* L) {
  */
 int LuaChat::logMessage(lua_State* L) {
     luaL_checkany(L, 5);
+    if(Server::logger() == 0) {
+        lua_pop(L, 5);
+        return 0;
+    }
     string type = luaL_checkstring(L, 1);
 
     Channel* to_channel = 0;
@@ -144,8 +148,8 @@ int LuaChat::logMessage(lua_State* L) {
     if (body.length()) {
         entry->messageBody = body;
     }
-    ChatLogThread::addLogEntry(entry);
-    ChatLogThread::sendWakeup();
+    Server::logger()->addLogEntry(entry);
+    Server::logger()->sendWakeup();
 
     return 0;
 }

@@ -23,6 +23,7 @@ rtbsecret="anotherlongandcomplicatedrandomizedpassword"
 
 
 -- Logging
+log_start=false
 log_socket_path="/home/kira/fserv/bin/log.sock"
 
 --Login (evHTTPClient)
