@@ -67,7 +67,11 @@ install: fserv facceptor install_folders deploy
 	@echo "Installing '$(FSERV_SCRIPTS)' from $(TARGETDIR)script to $(INSTALLDIR)script ..."
 	@cp -r $(TARGETDIR)script/ $(INSTALLDIR)
 
-deploy: $(FSERV_SCRIPTS)
+deploy: pre_deploy $(FSERV_SCRIPTS)
+
+pre_deploy:
+	@echo "Creating startup config script if it doesn't exist..."
+	@cp -u ../script/startup_config.lua.sample ../script/startup_config.lua
 
 clean:
 	@echo "Cleaning fserv, facceptor ..."
