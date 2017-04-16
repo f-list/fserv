@@ -99,32 +99,54 @@ public:
     const chbanmap_t& getBanRecords() const {
         return bans;
     }
-
-    void addMod(ConnectionPtr src, string& dest);
-    void addMod(string& dest);
-    void remMod(string& dest);
-
+    
+    void addMod(ConnectionPtr src, const string& dest);
+    void addMod(const string& src, const string& dest);
+    void addMod(const string& dest);
+    void removeMod(const string& dest);
+    
+    void addOwner(ConnectionPtr src, const string& dest);
+    void addOwner(const string& src, const string& dest);
+    void addOwner(const string& dest);
+    void removeOwner(const string& dest);
+    
     const chmodmap_t& getModRecords() const {
         return moderators;
     }
-    bool isMod(ConnectionPtr con);
-    bool isMod(string& name);
+    
+    const chmodmap_t& getOwnerRecords() const {
+        return owners;
+    }
+    
+    bool isMod(ConnectionPtr con) const;
+    bool isMod(const string& name) const;
 
     const string& getOwner() const {
-        return owner;
+        return owners.begin()->first;
     }
-    bool isOwner(ConnectionPtr con);
-    bool isOwner(string& name);
+    
+    bool isOwner(ConnectionPtr con) const;
+    bool isOwner(const string& name) const;
 
-    void setOwner(string& name) {
-        owner = name;
+    void setOwner(const string& name) {
+        // simulate old functionality until
+        // web client get their shit together
+        if (owners.size() > 0) {
+            // TODO: remove this when the time is right
+            // in all honestly, this just picks the first one in the list
+            // it might not even be the person issuing the command
+            // it's almost scary, really!
+            std::string name = owners.begin()->first;
+            removeMod(name);
+        }
+        addOwner(name);
     }
 
     const string& getDescription() const {
         return description;
     }
 
-    void setDescription(string& newdesc) {
+    void setDescription(const string& newdesc) {
         description = newdesc;
     }
 
@@ -205,7 +227,7 @@ protected:
     ChannelMessageMode chatMode;
     chconlist_t participants;
     chmodmap_t moderators;
-    string owner;
+    chmodmap_t owners;
     chbanmap_t bans;
     int participantCount;
     chtimermap_t timerMap;

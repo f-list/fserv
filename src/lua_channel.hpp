@@ -70,10 +70,13 @@ public:
 
     static int addMod(lua_State* L);
     static int removeMod(lua_State* L);
+    static int addOwner(lua_State* L);
+    static int removeOwner(lua_State* L);
     static int isMod(lua_State* L);
     static int isOwner(lua_State* L);
     static int getModList(lua_State* L);
-
+    static int getOwnerList(lua_State* L);
+    
     static int checkUpdateTimer(lua_State* L);
 
     static int getType(lua_State* L);
