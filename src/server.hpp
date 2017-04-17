@@ -47,6 +47,7 @@ public:
     static void run();
 
     static void sendWakeup();
+    static void sendHTTPWakeup() {}
     static FReturnCode loadLuaIntoState(lua_State* tL, string& output, bool testing);
     static FReturnCode reloadLuaState(string& output);
     static void startShutdown();

@@ -35,11 +35,15 @@
 
 using std::queue;
 
+class HTTPReply;
+
 class LoginEvHTTPClient {
 public:
     static void* runThread(void* param);
     static bool addRequest(LoginRequest* newRequest);
     static LoginReply* getReply();
+
+    static void responseCallback(HTTPReply* reply);
 
     static void setMaxLoginSlots(unsigned int slots) {
         maxLoginSlots = slots;

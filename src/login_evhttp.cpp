@@ -34,7 +34,7 @@
 #include "logging.hpp"
 #include "startup_config.hpp"
 #include "server.hpp"
-#include "connection.hpp"
+#include "http_request.hpp"
 
 pthread_mutex_t LoginEvHTTPClient::requestMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t LoginEvHTTPClient::replyMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -92,8 +92,31 @@ void LoginEvHTTPClient::response_callback(ResponseInfo *response, void *requestD
     addReply(reply);
 }
 
+void LoginEvHTTPClient::responseCallback(HTTPReply* reply) {
+    LoginReply* loginReply = new LoginReply();
+    loginReply->connection = reply->connection();
+    loginReply->success = (reply->status() == 200);
+    loginReply->message = reply->body();
+    addReply(loginReply);
+    delete reply;
+    reply = nullptr;
+}
+
 void LoginEvHTTPClient::processLogin(LoginRequest* request) {
-    bool res = false;
+    string url = StartupConfig::getString("login_url");
+    HTTPRequest* httpRequest = new HTTPRequest();
+    httpRequest->url(url);
+    httpRequest->connection(request->connection);
+    httpRequest->method("POST");
+    httpRequest->postField("method", "ticket");
+    httpRequest->postField("account", request->account);
+    httpRequest->postField("ticket", request->ticket);
+    httpRequest->postField("char", request->characterName);
+    httpRequest->codeCallback(LoginEvHTTPClient::responseCallback);
+    HTTPClient::addRequest(httpRequest);
+
+
+/*    bool res = false;
     LoginReply* reply = new LoginReply;
     reply->connection = request->connection;
     reply->success = false;
@@ -131,7 +154,7 @@ void LoginEvHTTPClient::processLogin(LoginRequest* request) {
         addReply(reply);
         return;
     }
-    return;
+    return;*/
 }
 
 void LoginEvHTTPClient::processQueue(struct ev_loop* loop, ev_async* w, int revents) {
@@ -165,13 +188,6 @@ void* LoginEvHTTPClient::runThread(void* param) {
 
     login_loop = ev_loop_new(EVFLAG_AUTO);
 
-    double timeout = StartupConfig::getDouble("logintimeout");
-    int connection_pool = StartupConfig::getDouble("login_connection_pool");
-    client = new EvHttpClient(login_loop, StartupConfig::getString("loginhost"), timeout, NULL, connection_pool);
-    
-    login_timer = new ev_timer;
-    ev_timer_init(login_timer, LoginEvHTTPClient::timeoutCallback, 0, 5.);
-    ev_timer_start(login_loop, login_timer);
     login_async = new ev_async;
     ev_async_init(login_async, LoginEvHTTPClient::processQueue);
     ev_async_start(login_loop, login_async);

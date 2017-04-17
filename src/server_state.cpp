@@ -502,6 +502,7 @@ AltWatchRecord ServerState::getAltWatch(long int accountid) {
         return altWatchList[accountid];
     AltWatchRecord record;
     record.account_id = 0;
+    record.end = 0;
     return record;
 }
 

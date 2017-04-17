@@ -33,6 +33,7 @@
 #include "logging.hpp"
 #include "fthread.hpp"
 #include "login_evhttp.hpp"
+#include "http_request.hpp"
 #include "server.hpp"
 #include "startup_config.hpp"
 #include "lua_constants.hpp"
@@ -87,6 +88,12 @@ int main(int argc, char* argv[]) {
     pthread_attr_setdetachstate(&loginAttr, PTHREAD_CREATE_JOINABLE);
     pthread_create(&loginThread, &loginAttr, &LoginEvHTTPClient::runThread, 0);
 
+    pthread_t httpThread;
+    pthread_attr_t httpAttr;
+    pthread_attr_init(&httpAttr);
+    pthread_attr_setdetachstate(&httpAttr, PTHREAD_CREATE_JOINABLE);
+    pthread_create(&httpThread, &httpAttr, &HTTPClient::runThread, 0);
+
     pthread_t redisThread;
     if (StartupConfig::getBool("enableredis")) {
         pthread_attr_t redisAttr;
@@ -104,6 +111,9 @@ int main(int argc, char* argv[]) {
 
     usleep(SHUTDOWN_WAIT);
     DLOG(INFO) << "Starting shutdown.";
+
+    HTTPClient::stopThread();
+    pthread_join(httpThread, nullptr);
 
     //Shutdown
     LoginEvHTTPClient::stopThread();
