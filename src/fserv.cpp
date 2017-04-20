@@ -33,7 +33,7 @@
 #include "logging.hpp"
 #include "fthread.hpp"
 #include "login_evhttp.hpp"
-#include "http_request.hpp"
+#include "http_client.hpp"
 #include "server.hpp"
 #include "startup_config.hpp"
 #include "lua_constants.hpp"

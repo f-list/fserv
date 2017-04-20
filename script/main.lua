@@ -32,6 +32,7 @@
 
 event = {}
 rtb = {}
+httpcb = {}
 
 function broadcastChannelOps(event, message, channel)
 	local chanops = c.getModList(channel)
@@ -166,6 +167,20 @@ function bottle_spin (con, bottlers)
 		return {character=conname, type="bottle", target=picked, message=string.format("[user]%s[/user] spins the bottle: [user]%s[/user]", conname, picked)}
 	end
 	return nil
+end
+
+httpcb.report = function(con, status, body)
+	if con == nil then
+		-- Nobody to respond to?
+		return const.FERR_OK
+	end
+	if status ~= 200 then
+		u.send(con, "SYS", {message="There was an error submitting your report. Please try again."})
+		return const.FERR_OK
+	end
+
+	u.send(con, "SYS", {message="The moderators have been alerted."})
+	return const.FERR_OK
 end
 
 -- Bans a person by their account.
@@ -1399,6 +1414,7 @@ function (con, args)
 				return const.FERR_THROTTLE_STAFF_CALL
 			end
 		end
+		http.post("report", "http://192.168.10.11/json/report.php", args, con, nil)
 		local lname = u.getName(con)
 		local ltimestamp = s.getTime()
 		local lcallid = ltimestamp..":"..lname

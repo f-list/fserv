@@ -34,7 +34,7 @@
 #include "logging.hpp"
 #include "startup_config.hpp"
 #include "server.hpp"
-#include "http_request.hpp"
+#include "http_client.hpp"
 
 pthread_mutex_t LoginEvHTTPClient::requestMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t LoginEvHTTPClient::replyMutex = PTHREAD_MUTEX_INITIALIZER;

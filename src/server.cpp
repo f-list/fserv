@@ -32,12 +32,14 @@
 #include "server.hpp"
 #include "connection.hpp"
 #include "startup_config.hpp"
+#include "http_client.hpp"
 #include "native_command.hpp"
 #include "logger_thread.hpp"
 #include "lua_chat.hpp"
 #include "lua_channel.hpp"
 #include "lua_connection.hpp"
 #include "lua_constants.hpp"
+#include "lua_http.hpp"
 #include "server_state.hpp"
 #include "md5.hpp"
 
@@ -53,15 +55,16 @@
 
 #include <google/malloc_extension.h>
 
-struct ev_loop* Server::server_loop = 0;
-ev_async* Server::server_async = 0;
-ev_timer* Server::server_timer = 0;
-ev_io* Server::server_listen = 0;
-ev_io* Server::rtb_listen = 0;
-ev_prepare* Server::server_prepare = 0;
-ChatLogThread* Server::chatLogger = 0;
+struct ev_loop* Server::server_loop = nullptr;
+ev_async* Server::server_async = nullptr;
+ev_async* Server::http_async = nullptr;
+ev_timer* Server::server_timer = nullptr;
+ev_io* Server::server_listen = nullptr;
+ev_io* Server::rtb_listen = nullptr;
+ev_prepare* Server::server_prepare = nullptr;
+ChatLogThread* Server::chatLogger = nullptr;
 
-lua_State* Server::sL = 0;
+lua_State* Server::sL = nullptr;
 ev_tstamp Server::luaTimer = 0;
 double Server::luaTimeout = 0;
 double Server::luaRepeatTimeout = 0;
@@ -482,12 +485,69 @@ void Server::processWakeupCallback(struct ev_loop* loop, ev_async* w, int revent
     }
 }
 
+void Server::processHTTPWakeup(struct ev_loop* loop, ev_async* w, int revents) {
+    DLOG(INFO) << "Processing http async wakeup.";
+
+    HTTPReply* reply = HTTPClient::getReply();
+    while(reply) {
+        ConnectionPtr con = reply->connection();
+        FReturnCode code = processHTTPReply(reply);
+        if(con && !con->closed && code != FERR_OK) {
+            con->sendError(code);
+        }
+        delete reply;
+        reply = HTTPClient::getReply();
+    }
+}
+
+FReturnCode Server::processHTTPReply(HTTPReply* reply) {
+    FReturnCode ret = FERR_UNKNOWN;
+
+    luaTimer = luaGetTime();
+    json_t* n = json_loads(reply->body().c_str(), 0, 0);
+
+    int top = lua_gettop(sL);
+    lua_getglobal(sL, "on_error");
+    lua_getglobal(sL, "httpcb");
+    lua_getfield(sL, -1, reply->callback().c_str());
+    if(reply->connection()) {
+        lua_pushlightuserdata(sL, reply->connection().get());
+    } else {
+        lua_pushnil(sL);
+    }
+    lua_pushinteger(sL, reply->status());
+    if(n) {
+        LuaChat::jsonToLua(sL, n);
+    } else {
+        lua_pushstring(sL, reply->body().c_str());
+    }
+    json_decref(n);
+    if (lua_pcall(sL, 3, 1, LUA_ABSINDEX(sL, -6))) {
+        LOG(WARNING) << "Lua error while calling http_callback. Error returned was: " << lua_tostring(sL, -1);
+        lua_pop(sL, 3);
+        if (top != lua_gettop(sL)) {
+            DLOG(FATAL) << "Did not return stack to its previous condition. O: " << top << " N: " << lua_gettop(sL);
+        }
+        return FERR_LUA;
+    } else {
+        ret = lua_tonumber(sL, -1);
+        lua_pop(sL, 3);
+        if (top != lua_gettop(sL)) {
+            DLOG(FATAL) << "Did not return stack to its previous condition. O: " << top << " N: " << lua_gettop(sL);
+        }
+        return ret;
+    }
+
+    return ret;
+}
+
 void Server::prepareShutdownConnection(ConnectionInstance* instance) {
     if (instance->closed)
         return;
 
     if (instance->identified) {
         luaCanTimeout = false;
+        int top = lua_gettop(sL);
         lua_getglobal(sL, "on_error");
         lua_getglobal(sL, "event");
         lua_getfield(sL, -1, "pre_disconnect");
@@ -496,6 +556,9 @@ void Server::prepareShutdownConnection(ConnectionInstance* instance) {
             LOG(WARNING) << "Lua error while calling pre_disconnect. Error returned was: " << lua_tostring(sL, -1);
         }
         lua_pop(sL, 2);
+        if (top != lua_gettop(sL)) {
+            DLOG(FATAL) << "Did not return stack to its previous condition. O: " << top << " N: " << lua_gettop(sL);
+        }
         luaCanTimeout = true;
 
         RedisRequest* req = new RedisRequest;
@@ -594,6 +657,11 @@ void Server::sendWakeup() {
         ev_async_send(server_loop, server_async);
 }
 
+void Server::sendHTTPWakeup() {
+    if(server_loop && http_async)
+        ev_async_send(server_loop, http_async);
+}
+
 int Server::bindAndListen() {
     struct sockaddr_in server_addr;
     int re_use = 1;
@@ -678,6 +746,7 @@ FReturnCode Server::processLogin(ConnectionInstance* instance, string &message, 
         return ret;
     }
 
+    int top = lua_gettop(sL);
     lua_getglobal(sL, "on_error");
     lua_getglobal(sL, "event");
     lua_getfield(sL, -1, "ident_callback");
@@ -687,10 +756,16 @@ FReturnCode Server::processLogin(ConnectionInstance* instance, string &message, 
     if (lua_pcall(sL, 2, 1, LUA_ABSINDEX(sL, -5))) {
         LOG(WARNING) << "Lua error while calling ident_callback. Error returned was: " << lua_tostring(sL, -1);
         lua_pop(sL, 3);
+        if (top != lua_gettop(sL)) {
+            DLOG(FATAL) << "Did not return stack to its previous condition. O: " << top << " N: " << lua_gettop(sL);
+        }
         return FERR_LUA;
     } else {
         ret = lua_tonumber(sL, -1);
         lua_pop(sL, 3);
+        if (top != lua_gettop(sL)) {
+            DLOG(FATAL) << "Did not return stack to its previous condition. O: " << top << " N: " << lua_gettop(sL);
+        }
         ev_timer_start(server_loop, instance->pingEvent);
         return ret;
     }
@@ -950,6 +1025,10 @@ FReturnCode Server::loadLuaIntoState(lua_State* tL, string &output, bool testing
     lua_pushstring(tL, "const");
     lua_pcall(tL, 1, 0, 0);
 
+    lua_pushcfunction(tL, LuaHTTP::openHTTPLib);
+    lua_pushstring(tL, "http");
+    lua_pcall(tL, 1, 0, 0);
+
     lua_pushcfunction(tL, Server::luaPrint);
     lua_setglobal(tL, "print");
 
@@ -1045,6 +1124,10 @@ void Server::initLua() {
     lua_pushstring(sL, "const");
     lua_pcall(sL, 1, 0, 0);
 
+    lua_pushcfunction(sL, LuaHTTP::openHTTPLib);
+    lua_pushstring(sL, "http");
+    lua_pcall(sL, 1, 0, 0);
+
     lua_pushcfunction(sL, Server::luaPrint);
     lua_setglobal(sL, "print");
 
@@ -1121,18 +1204,25 @@ void Server::initAsyncLoop() {
     server_async = new ev_async;
     ev_async_init(server_async, Server::processWakeupCallback);
     ev_async_start(server_loop, server_async);
+    http_async = new ev_async;
+    ev_async_init(http_async, Server::processHTTPWakeup);
+    ev_async_start(server_loop, http_async);
 }
 
 void Server::shutdownAsyncLoop() {
     DLOG(INFO) << "Shutting down event loop and async wakeup.";
 
+    ev_async_stop(server_loop, http_async);
+    delete http_async;
+    http_async = nullptr;
+
     ev_async_stop(server_loop, server_async);
     delete server_async;
-    server_async = 0;
+    server_async = nullptr;
 
     ev_prepare_stop(server_loop, server_prepare);
     delete server_prepare;
-    server_prepare = 0;
+    server_prepare = nullptr;
 
     //ev_loop_destroy(server_loop);
     server_loop = 0;

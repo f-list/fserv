@@ -39,6 +39,7 @@
 #include <string>
 
 class ConnectionInstance;
+class HTTPReply;
 
 using std::string;
 
@@ -47,7 +48,7 @@ public:
     static void run();
 
     static void sendWakeup();
-    static void sendHTTPWakeup() {}
+    static void sendHTTPWakeup();
     static FReturnCode loadLuaIntoState(lua_State* tL, string& output, bool testing);
     static FReturnCode reloadLuaState(string& output);
     static void startShutdown();
@@ -75,6 +76,7 @@ private:
     ~Server() { }
 
     static void processWakeupCallback(struct ev_loop* loop, ev_async* w, int revents);
+    static void processHTTPWakeup(struct ev_loop* loop, ev_async* w, int revents);
     static void idleTasksCallback(struct ev_loop* loop, ev_timer* w, int revents);
     static void listenCallback(struct ev_loop* loop, ev_io* w, int revents);
     static void rtbCallback(struct ev_loop* loop, ev_io* w, int revents);
@@ -106,9 +108,11 @@ private:
     static double luaGetTime();
 
     static FReturnCode processLogin(ConnectionInstance* instance, string& message, bool success);
+    static FReturnCode processHTTPReply(HTTPReply* reply);
 
     static struct ev_loop* server_loop;
     static ev_async* server_async;
+    static ev_async* http_async;
     static ev_timer* server_timer;
     static ev_io* server_listen;
     static ev_io* rtb_listen;

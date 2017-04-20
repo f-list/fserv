@@ -25,7 +25,7 @@
 
 #include "precompiled_headers.hpp"
 
-#include "http_request.hpp"
+#include "http_client.hpp"
 #include "server.hpp"
 #include <sstream>
 
