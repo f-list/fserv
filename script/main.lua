@@ -375,8 +375,12 @@ function (con, args)
 	end
 
 	local title = s.escapeHTML(args.channel)
-	if #title > const.MAX_TITLE_LEN then
+	if #args.channel > const.MAX_TITLE_LEN then
 		u.sendError(con, 67, "Channel titles may not exceed "..const.MAX_TITLE_LEN.." characters in length.")
+		return const.FERR_OK
+	end
+	if #args.channel <= 0 then
+		u.sendError(con, 67, "Channel titles may not be empty.")
 		return const.FERR_OK
 	end
 	local name, chan = c.createPrivateChannel(con, title)
