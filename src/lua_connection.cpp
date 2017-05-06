@@ -45,6 +45,7 @@ static const luaL_Reg luaconnection_funcs[] = {
     {"getByAccountID", LuaConnection::getByAccountID},
     {"getName", LuaConnection::getName},
     {"getChannels", LuaConnection::getChannels},
+	{"getChannelCount",  LuaConnection::getChannelCount},
     {"send", LuaConnection::send},
     {"sendRaw", LuaConnection::sendRaw},
     {"sendError", LuaConnection::sendError},
@@ -181,6 +182,17 @@ int LuaConnection::getName(lua_State* L) {
     lua_pop(L, 1);
 
     lua_pushstring(L, con->characterName.c_str());
+    return 1;
+}
+
+int LuaConnection::getChannelCount(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
+
+    lua_pushinteger(L, con->channelList.size());
     return 1;
 }
 

@@ -40,6 +40,7 @@ public:
     static int getByAccountID(lua_State* L);
     static int getName(lua_State* L);
     static int getChannels(lua_State* L);
+	static int getChannelCount(lua_State* L);
 
     static int send(lua_State* L);
     static int sendRaw(lua_State* L);

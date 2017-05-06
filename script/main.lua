@@ -853,6 +853,10 @@ function (con, args)
 	if args.channel == nil then
 		return const.FERR_BAD_SYNTAX
 	end
+	
+	if u.getChannelCount(con) >= 50 and u.getMiscData(con, "no_channel_limit") ~= "yes" then
+		return const.FERR_TOO_MANY_CHANNELS
+	end
 
 	local found, chan = c.getChannel(string.lower(args.channel))
 	if found ~= true then
@@ -1597,6 +1601,10 @@ function (con, args)
 		return const.FERR_IDENT_FAILED
 	end
 	u.setAccountID(con, args.account.account_id)
+	
+	if lname == "adl" then
+		u.setMiscData(con, "no_channel_limit", "yes")
+	end
 
 	local isadmin = false
 	if args.account.admin == "1" or lname == "kira" then

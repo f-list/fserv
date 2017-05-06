@@ -91,6 +91,8 @@ void LuaConstants::initClass() {
     E(FERR_NO_LOGIN_SLOT, "There are currently no free login slots.");
 
     E(FERR_TOO_MANY_SEARCH_RESULTS, "There are too many search results, please narrow your search.");
+	
+	E(FERR_TOO_MANY_CHANNELS, "You have reached the maximum number of joined channels.");
 
     E(FERR_FATAL_INTERNAL, "Fatal internal error.");
     E(FERR_LUA, "An error occurred while processing your command.");
