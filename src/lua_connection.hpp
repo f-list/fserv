@@ -35,64 +35,88 @@ public:
     static int openConnectionLib(lua_State* L);
 
     static int getConnection(lua_State* L);
+
     static int getIPCount(lua_State* L);
+
     static int getByAccount(lua_State* L);
+
     static int getByAccountID(lua_State* L);
+
     static int getName(lua_State* L);
+
     static int getChannels(lua_State* L);
 
+    static int getChannelCount(lua_State* L);
+
     static int send(lua_State* L);
+
     static int sendRaw(lua_State* L);
+
     static int sendError(lua_State* L);
 
     static int close(lua_State* L);
+
     static int closef(lua_State* L);
 
     static int setIdent(lua_State* L);
 
     static int setAccountID(lua_State* L);
+
     static int setCharacterID(lua_State* L);
 
     static int setAdmin(lua_State* L);
+
     static int isAdmin(lua_State* L);
 
     static int setGlobalModerator(lua_State* L);
+
     static int isGlobalModerator(lua_State* L);
 
     static int setFriends(lua_State* L);
+
     static int removeFriend(lua_State* L);
+
     static int getFriends(lua_State* L);
 
     static int setIgnores(lua_State* L);
+
     static int addIgnore(lua_State* L);
+
     static int removeIgnore(lua_State* L);
+
     static int getIgnores(lua_State* L);
 
     static int setKinks(lua_State* L);
+
     static int getKinks(lua_State* L);
 
     static int setGender(lua_State* L);
+
     static int getGender(lua_State* L);
 
     static int setCustomKinks(lua_State* L);
+
     static int getCustomKinks(lua_State* L);
 
     static int setInfoTags(lua_State* L);
+
     static int getInfoTags(lua_State* L);
 
     static int setStatus(lua_State* L);
+
     static int getStatus(lua_State* L);
 
     static int setMiscData(lua_State* L);
+
     static int getMiscData(lua_State* L);
 
     static int checkUpdateTimer(lua_State* L);
 
 private:
 
-    LuaConnection() { }
+    LuaConnection() {}
 
-    ~LuaConnection() { }
+    ~LuaConnection() {}
 };
 
 #endif //LUA_CONNECTION_H

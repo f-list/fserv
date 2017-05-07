@@ -28,7 +28,7 @@
 
 typedef int FReturnCode;
 
-#define FE(x,y) static const FReturnCode FERR_##x = y
+#define FE(x, y) static const FReturnCode FERR_##x = y
 
 FE(OK, 0);
 FE(BAD_SYNTAX, 1);
@@ -89,6 +89,8 @@ FE(TOO_MANY_SEARCH_TERMS, 61);
 FE(NO_LOGIN_SLOT, 62);
 // ---
 FE(TOO_MANY_SEARCH_RESULTS, 72);
+// ---
+FE(TOO_MANY_CHANNELS, 73);
 // ---
 FE(FATAL_INTERNAL, -1);
 FE(LUA, -2);

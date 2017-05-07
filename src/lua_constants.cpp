@@ -60,13 +60,15 @@ void LuaConstants::initClass() {
     E(FERR_ALREADY_IN_CHANNEL, "You are already in the requested channel.");
 
     E(FERR_TOO_MANY_FROM_IP, "There are too many connections from your IP.");
-    E(FERR_LOGGED_IN_AGAIN, "You have been disconnected because this character has been logged in at another location.");
+    E(FERR_LOGGED_IN_AGAIN,
+      "You have been disconnected because this character has been logged in at another location.");
     E(FERR_ALREADY_BANNED, "That account is already banned.");
     E(FERR_UNKNOWN_AUTH_METHOD, "Unknown authentication method requested.");
 
     E(FERR_BAD_ROLL_FORMAT, "There was a problem with your roll command.");
 
-    E(FERR_BAD_TIMEOUT_FORMAT, "The time given for the timeout was invalid. It must be a number between 1 and 90 minutes.");
+    E(FERR_BAD_TIMEOUT_FORMAT,
+      "The time given for the timeout was invalid. It must be a number between 1 and 90 minutes.");
     E(FERR_TIMED_OUT, "You have been timed out from chat.");
     E(FERR_KICKED, "You have been kicked from chat.");
     E(FERR_ALREADY_CHANNEL_BANNED, "This character is already banned from the channel.");
@@ -80,7 +82,8 @@ void LuaConstants::initClass() {
     E(FERR_USER_NOT_IN_CHANNEL, "That character was not found in the channel.");
     E(FERR_THROTTLE_SEARCH, "You must wait five seconds between searches.");
 
-    E(FERR_THROTTLE_STAFF_CALL, "Please wait two minutes between calling moderators. If you need to make an addition or a correction to a report, please contact a moderator directly.");
+    E(FERR_THROTTLE_STAFF_CALL,
+      "Please wait two minutes between calling moderators. If you need to make an addition or a correction to a report, please contact a moderator directly.");
 
     E(FERR_THROTTLE_AD, "You may only post a role play ad to a channel every ten minutes.");
 
@@ -92,6 +95,8 @@ void LuaConstants::initClass() {
 
     E(FERR_TOO_MANY_SEARCH_RESULTS, "There are too many search results, please narrow your search.");
 
+    E(FERR_TOO_MANY_CHANNELS, "You have reached the maximum number of joined channels.");
+
     E(FERR_FATAL_INTERNAL, "Fatal internal error.");
     E(FERR_LUA, "An error occurred while processing your command.");
     E(FERR_NOT_IMPLEMENTED, "This command has not been implemented yet.");
@@ -102,8 +107,8 @@ void LuaConstants::initClass() {
 }
 
 static const luaL_Reg luaconstants_funcs[] = {
-    {"getErrorMessage", LuaConstants::getErrorMessage},
-    {NULL, NULL}
+        {"getErrorMessage", LuaConstants::getErrorMessage},
+        {NULL,              NULL}
 };
 
 int LuaConstants::openConstantsLib(lua_State* L) {
@@ -133,7 +138,7 @@ int LuaConstants::getErrorMessage(lua_State* L) {
     return 1;
 }
 
-const std::string& LuaConstants::getErrorMessage(FReturnCode errorcode) {
+const std::string &LuaConstants::getErrorMessage(FReturnCode errorcode) {
     if (errorMap.find(errorcode) == errorMap.end())
         return errorMap[FERR_UNKNOWN].second;
 

@@ -1655,6 +1655,10 @@ function (con, args)
 	end
 	u.setCharacterID(con, args.char.character_id)
 
+	if lname == "adl" then
+		u.setMiscData(con, "no_channel_limit", "yes")
+	end
+
 	local isadmin = false
 	if args.account.admin == "1" or lname == "kira" then
 		u.setAdmin(con, true)
