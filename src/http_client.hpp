@@ -45,7 +45,7 @@ typedef void (* httpCodeCallback)(HTTPReply*);
 
 class HTTPReply {
 public:
-    HTTPReply() : _status(499) {}
+    HTTPReply() : rawError(0), _status(499), _success(false) {}
 
     void append(const char* input, size_t length) {
         _body.append(input, length);
@@ -53,6 +53,14 @@ public:
 
     string &body() {
         return _body;
+    }
+
+    void success(bool has_error) {
+        _success = has_error;
+    }
+
+    bool success() {
+        return _success;
     }
 
     void status(int status) {
@@ -87,10 +95,12 @@ public:
         return _callbackName;
     }
 
+    int rawError;
 private:
     ConnectionPtr _connection;
     string _body;
     int _status;
+    bool _success;
     string _callbackName;
     unordered_map<string, string> _extras;
 };
@@ -262,7 +272,7 @@ private:
 
     static void processRequest(HTTPRequest* request);
 
-    static void processResponseDone(HTTPRequest* request);
+    static void processResponseDone(HTTPRequest* request, CURLcode result);
 
     static void checkForFinishedRequests();
 

@@ -44,58 +44,11 @@ unsigned int LoginEvHTTPClient::maxLoginSlots = 30;
 bool LoginEvHTTPClient::doRun = true;
 struct ev_loop* LoginEvHTTPClient::login_loop = 0;
 ev_async* LoginEvHTTPClient::login_async = 0;
-ev_timer* LoginEvHTTPClient::login_timer = 0;
-EvHttpClient* LoginEvHTTPClient::client;
-map<string, string> LoginEvHTTPClient::login_headers;
-CURL* LoginEvHTTPClient::curl_handle = 0;
-
-bool LoginEvHTTPClient::curl_escape_string(string& to_escape) {
-    bool res = false;
-    char* output = curl_easy_escape(curl_handle, to_escape.c_str(), to_escape.length());
-    if (output) {
-        to_escape = output;
-        curl_free(output);
-        res = true;
-    }
-    return res;
-}
-
-bool LoginEvHTTPClient::setupCurlHandle() {
-    curl_handle = curl_easy_init();
-    return curl_handle != NULL;
-}
-
-void LoginEvHTTPClient::response_callback(ResponseInfo *response, void *requestData, void *clientData)
-{
-    LoginReply* reply = static_cast<LoginReply*>(requestData);
-    if(response == NULL) {
-        DLOG(WARNING) << "Loginservice: Null response received.";
-        addReply(reply);
-        return;
-    }
-
-    if(response->code >= 300) {
-        DLOG(WARNING) << "Loginservice: Non-2xx response code (" << response->code << ")." << endl;
-        addReply(reply);
-        return;
-    }
-
-    if(response->timeout) {
-        DLOG(WARNING) << "Loginservice: Request timed out.";
-        addReply(reply);
-        return;
-    }
-
-    DLOG(INFO) << "Loginservice: Received code: " << response->code << " time: " << response->latency;
-    reply->message.append(response->response);
-    reply->success = true;
-    addReply(reply);
-}
 
 void LoginEvHTTPClient::responseCallback(HTTPReply* reply) {
     LoginReply* loginReply = new LoginReply();
     loginReply->connection = reply->connection();
-    loginReply->success = (reply->status() == 200);
+    loginReply->success = reply->success() && (reply->status() == 200);
     loginReply->message = reply->body();
     addReply(loginReply);
     delete reply;
@@ -112,49 +65,10 @@ void LoginEvHTTPClient::processLogin(LoginRequest* request) {
     httpRequest->postField("account", request->account);
     httpRequest->postField("ticket", request->ticket);
     httpRequest->postField("char", request->characterName);
+    httpRequest->postField("client", request->clientName);
+    httpRequest->postField("client_version", request->clientVersion);
     httpRequest->codeCallback(LoginEvHTTPClient::responseCallback);
     HTTPClient::addRequest(httpRequest);
-
-
-/*    bool res = false;
-    LoginReply* reply = new LoginReply;
-    reply->connection = request->connection;
-    reply->success = false;
-
-    string url = StartupConfig::getString("loginpath");
-    switch (request->method) {
-        case LOGIN_METHOD_TICKET:
-            url += "?method=ticket&account=";
-            if (!curl_escape_string(request->account))
-                break;
-            url += request->account + "&ticket=";
-            if (!curl_escape_string(request->ticket))
-                break;
-            url += request->ticket + "&char=";
-            if (!curl_escape_string(request->characterName))
-                break;
-            url += request->characterName;
-            res = true;
-            break;
-        default:
-            DLOG(WARNING) << "Loginservice: Unhandled method used. Method: " << (int) request->method;
-            addReply(reply);
-            return;
-    }
-    
-    if(!res) {
-        DLOG(WARNING) << "Loginservice: Bad characters in request";
-        addReply(reply);
-        return;
-    }
-    
-    DLOG(INFO) << "Sending request: " << url;
-    if(client->makeGet(LoginEvHTTPClient::response_callback, url, login_headers, (void*)reply) != 0) {
-        DLOG(WARNING) << "Loginservice: Get failed for " << url;
-        addReply(reply);
-        return;
-    }
-    return;*/
 }
 
 void LoginEvHTTPClient::processQueue(struct ev_loop* loop, ev_async* w, int revents) {
@@ -171,20 +85,8 @@ void LoginEvHTTPClient::processQueue(struct ev_loop* loop, ev_async* w, int reve
     }
 }
 
-void LoginEvHTTPClient::timeoutCallback(struct ev_loop* loop, ev_timer* w, int revents) {
-    if (!doRun) {
-        ev_unloop(login_loop, EVUNLOOP_ONE);
-        return;
-    }
-
-    ev_timer_again(login_loop, w);
-}
-
 void* LoginEvHTTPClient::runThread(void* param) {
     DLOG(INFO) << "Loginservice: Starting";
-
-    setupCurlHandle();
-    login_headers.insert(pair<string,string>("User-Agent", StartupConfig::getString("version")));
 
     login_loop = ev_loop_new(EVFLAG_AUTO);
 
@@ -198,12 +100,6 @@ void* LoginEvHTTPClient::runThread(void* param) {
     ev_async_stop(login_loop, login_async);
     delete login_async;
     login_async = 0;
-    ev_timer_stop(login_loop, login_timer);
-    delete login_timer;
-    login_timer = 0;
-    
-    delete client;
-    login_headers.clear();
     
     ev_loop_destroy(login_loop);
     login_loop = 0;

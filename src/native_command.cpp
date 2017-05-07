@@ -160,6 +160,7 @@ FReturnCode NativeCommand::IdentCommand(ConnectionPtr& con, string& payload) {
     if (ServerState::getConnectionCount() >= StartupConfig::getDouble("maxusers"))
         return FERR_SERVER_FULL;
 
+    json_t* tempnode = nullptr;
     json_t* topnode = json_loads(payload.c_str(), 0, 0);
     if (!topnode)
         return FERR_BAD_SYNTAX;
@@ -169,6 +170,7 @@ FReturnCode NativeCommand::IdentCommand(ConnectionPtr& con, string& payload) {
 
     json_t* methodnode = json_object_get(topnode, "method");
     if (!json_is_string(methodnode)) {
+        json_decref(methodnode);
         json_decref(topnode);
         delete request;
         return FERR_BAD_SYNTAX;
@@ -177,18 +179,32 @@ FReturnCode NativeCommand::IdentCommand(ConnectionPtr& con, string& payload) {
     string method = json_string_value(methodnode);
     if (method == "ticket") {
         request->method = LOGIN_METHOD_TICKET;
-        json_t* tempnode = json_object_get(topnode, "account");
+        tempnode = json_object_get(topnode, "account");
         if (!json_is_string(tempnode))
             goto fail;
         request->account = json_string_value(tempnode);
+        json_decref(tempnode);
         tempnode = json_object_get(topnode, "ticket");
         if (!json_is_string(tempnode))
             goto fail;
         request->ticket = json_string_value(tempnode);
+        json_decref(tempnode);
         tempnode = json_object_get(topnode, "character");
         if (!json_is_string(tempnode))
             goto fail;
         request->characterName = json_string_value(tempnode);
+        json_decref(tempnode);
+        tempnode = json_object_get(topnode, "cname");
+        if(!json_is_string(tempnode))
+            goto fail;
+        request->clientName = json_string_value(tempnode);
+        json_decref(tempnode);
+        tempnode = json_object_get(topnode, "cversion");
+        if(!json_is_string(tempnode))
+            goto fail;
+        request->clientVersion = json_string_value(tempnode);
+        json_decref(tempnode);
+        tempnode = nullptr;
     } else {
         json_decref(topnode);
         delete request;
@@ -202,11 +218,12 @@ FReturnCode NativeCommand::IdentCommand(ConnectionPtr& con, string& payload) {
     }
 
     LoginEvHTTPClient::sendWakeup();
-
     json_decref(topnode);
     return FERR_OK;
 
 fail:
+    if(tempnode)
+        json_decref(tempnode);
     json_decref(topnode);
     delete request;
     return FERR_BAD_SYNTAX;

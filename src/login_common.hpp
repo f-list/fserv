@@ -52,9 +52,9 @@ public:
     intrusive_ptr<ConnectionInstance> connection;
     string characterName;
     string account;
-    string password;
-    string hash;
     string ticket;
+    string clientName;
+    string clientVersion;
     LoginMethod method;
 };
 

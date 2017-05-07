@@ -119,22 +119,26 @@ void HTTPClient::checkForFinishedRequests() {
         if (message->msg == CURLMSG_DONE) {
             easy = message->easy_handle;
             curl_multi_remove_handle(multiHandle, easy);
+            CURLcode res = message->data.result;
             HTTPRequest* request = NULL;
             curl_easy_getinfo(easy, CURLINFO_PRIVATE, &request);
             if (request) {
-                processResponseDone(request);
+                processResponseDone(request, res);
             }
             curl_easy_cleanup(easy);
         }
     }
 }
 
-void HTTPClient::processResponseDone(HTTPRequest* request) {
+void HTTPClient::processResponseDone(HTTPRequest* request, CURLcode result) {
     DLOG(INFO) << "Request done.";
     int status = 499;
     curl_easy_getinfo(request->curlHandle(), CURLINFO_HTTP_CODE, &status);
     request->reply()->status(status);
-    DLOG(INFO) << "Request done with status: " << status << " body: " << request->reply()->body();
+    request->reply()->rawError = result;
+    if(result == CURLE_OK)
+        request->reply()->success(true);
+    DLOG(INFO) << "Request done with result: " << (long)result << " status: " << status << " body: " << request->reply()->body();
     if (request->codeCallback()) {
         DLOG(INFO) << "Calling code callback.";
         request->codeCallback()(request->reply());

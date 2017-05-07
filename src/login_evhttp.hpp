@@ -30,8 +30,6 @@
 #include "login_common.hpp"
 #include "fthread.hpp"
 #include <ev.h>
-#include <curl/curl.h>
-#include <evhttpclient.h>
 
 using std::queue;
 
@@ -62,17 +60,11 @@ public:
     static pthread_mutex_t replyMutex;
     
 private:
-    static bool curl_escape_string(string& to_escape);
     static bool addReply(LoginReply* newReply);
     static void processLogin(LoginRequest* request);
     static LoginRequest* getRequest();
-    static EvHttpClient* client;
 
     static void processQueue(struct ev_loop* loop, ev_async* w, int revents);
-    static void timeoutCallback(struct ev_loop* loop, ev_timer* w, int revents);
-    static void response_callback(ResponseInfo *response, void *requestData, void *clientData);
-
-    static bool setupCurlHandle();
 
     static queue<LoginReply*> replyQueue;
     static queue<LoginRequest*> requestQueue;
@@ -80,8 +72,5 @@ private:
     static bool doRun;
     static struct ev_loop* login_loop;
     static ev_async* login_async;
-    static ev_timer* login_timer;
-    static map<string, string> login_headers;
-    static CURL* curl_handle;
 };
 #endif //LOGIN_EV_HTTP_H
