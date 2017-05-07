@@ -877,6 +877,7 @@ function (con, args)
 		if u.checkUpdateTimer(con, "ign", const.IGN_FLOOD) ~= true then
 			local found, char = u.getConnection(string.lower(args.character))
 			if found == true then
+				s.logMessage("ignore_notify", con, nil, char, nil)
 				u.sendError(char, 20, u.getName(con).." does not wish to receive messages from you.")
 			end
 		end
@@ -1418,7 +1419,6 @@ function (con, args)
 				return const.FERR_THROTTLE_STAFF_CALL
 			end
 		end
-		http.post("report", "http://192.168.10.11/json/report.php", args, con, nil)
 		local lname = u.getName(con)
 		local ltimestamp = s.getTime()
 		local lcallid = ltimestamp..":"..lname
