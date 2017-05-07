@@ -9,7 +9,7 @@ before-install:
 install: 
   - sudo apt-get install libev-dev libgoogle-perftools-dev libhiredis-dev libicu-dev libcurl4-openssl-dev libboost-dev libluajit-5.1-dev libpth-dev uuid-dev
   
-  # Get libjansson version 2.5, the one in Ubuntu 12.04's repos is way outdated.
+  # Get libjansson version 2.9, the one in Ubuntu 12.04's repos is way outdated.
   - cd ~/build
   - wget http://www.digip.org/jansson/releases/jansson-2.9.tar.gz
   - tar xvzf jansson-2.9.tar.gz
@@ -22,14 +22,6 @@ install:
   - tar xvzf v0.3.4.tar.gz
   - cd glog-0.3.4
   - ./configure && make && sudo make install
-  
-  # Fetch and build evHTTPClient
-  - cd ~/build
-  - git clone https://github.com/zwagoth/evhttpclient
-  - cd evhttpclient
-  - make
-  - sudo cp *.h /usr/include
-  - sudo cp libevhttpclient.so /usr/lib
   
 script: 
   # Finally, build fserv.
