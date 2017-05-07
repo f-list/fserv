@@ -169,20 +169,6 @@ function bottle_spin (con, bottlers)
 	return nil
 end
 
-httpcb.report = function(con, status, body)
-	if con == nil then
-		-- Nobody to respond to?
-		return const.FERR_OK
-	end
-	if status ~= 200 then
-		u.send(con, "SYS", {message="There was an error submitting your report. Please try again."})
-		return const.FERR_OK
-	end
-
-	u.send(con, "SYS", {message="The moderators have been alerted."})
-	return const.FERR_OK
-end
-
 -- Bans a person by their account.
 -- Syntax: ACB <character>
 event.ACB =
