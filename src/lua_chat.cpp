@@ -97,7 +97,7 @@ int LuaChat::openChatLib(lua_State* L) {
  */
 int LuaChat::logMessage(lua_State* L) {
     luaL_checkany(L, 5);
-    if(Server::logger() == 0) {
+    if (Server::logger() == 0) {
         lua_pop(L, 5);
         return 0;
     }
@@ -129,7 +129,9 @@ int LuaChat::logMessage(lua_State* L) {
     lua_pop(L, 5);
 
     LogEntry* entry = new LogEntry();
-    entry->time = time(0);
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    entry->time = (unsigned long long) (tv.tv_sec) * 1000 + (unsigned long long) (tv.tv_usec) / 1000;
     entry->messageType = type;
     entry->fromAccountID = from_connection->accountID;
     entry->fromCharacterID = from_connection->characterID;

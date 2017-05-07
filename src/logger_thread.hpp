@@ -65,7 +65,7 @@ public:
     string toCharacter;
     string toChannel;
     string toChannelTitle;
-    time_t time;
+    unsigned long long time;
     long fromCharacterID;
     long toCharacterID;
     long fromAccountID;

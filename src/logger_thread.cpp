@@ -48,7 +48,7 @@ const char* LogEntry::asJSON() {
     if (jsonCopy.length())
         return jsonCopy.c_str();
     json_t* root = json_object();
-    json_object_set_new_nocheck(root, "type", json_string_nocheck(messageType.c_str()));
+    json_object_set_new_nocheck(root, "message_type", json_string_nocheck(messageType.c_str()));
     json_object_set_new_nocheck(root, "from_character", json_string_nocheck(fromCharacter.c_str()));
     json_object_set_new_nocheck(root, "to_character",
                                 toCharacter.length() ? json_string_nocheck(toCharacter.c_str()) : json_null());
@@ -64,9 +64,8 @@ const char* LogEntry::asJSON() {
     json_object_set_new_nocheck(root, "channel_title",
                                 toChannelTitle.length() ? json_string_nocheck(toChannelTitle.c_str()) : json_null());
 
-    struct tm* cal_time = gmtime(&time);
     char date_buffer[512];
-    size_t marker = strftime(date_buffer, sizeof(date_buffer), "%Y-%m-%d %H:%M:%S", cal_time);
+    int marker = snprintf(date_buffer, sizeof(date_buffer), "%llu", time);
     date_buffer[marker] = 0;
     json_object_set_new_nocheck(root, "date", json_string_nocheck(date_buffer));
 
