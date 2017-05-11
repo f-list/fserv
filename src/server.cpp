@@ -530,14 +530,14 @@ FReturnCode Server::processHTTPReply(HTTPReply* reply) {
     lua_pushnil(sL);
     if (lua_pcall(sL, 4, 1, LUA_ABSINDEX(sL, -7))) {
         LOG(WARNING) << "Lua error while calling http_callback. Error returned was: " << lua_tostring(sL, -1);
-        lua_pop(sL, 4);
+        lua_pop(sL, 3);
         if (top != lua_gettop(sL)) {
             DLOG(FATAL) << "Did not return stack to its previous condition. O: " << top << " N: " << lua_gettop(sL);
         }
         return FERR_LUA;
     } else {
         ret = lua_tonumber(sL, -1);
-        lua_pop(sL, 4);
+        lua_pop(sL, 3);
         if (top != lua_gettop(sL)) {
             DLOG(FATAL) << "Did not return stack to its previous condition. O: " << top << " N: " << lua_gettop(sL);
         }
