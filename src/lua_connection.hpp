@@ -42,6 +42,8 @@ public:
 
     static int getByAccountID(lua_State* L);
 
+    static int getConnectionIDs(lua_State* L);
+
     static int getName(lua_State* L);
 
     static int getChannels(lua_State* L);

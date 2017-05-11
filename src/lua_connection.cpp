@@ -39,46 +39,47 @@
 #define LUACONNECTION_MODULE_NAME "u"
 
 static const luaL_Reg luaconnection_funcs[] = {
-        {"getConnection",    LuaConnection::getConnection},
-        {"getIPCount",       LuaConnection::getIPCount},
-        {"getByAccount",     LuaConnection::getByAccount},
-        {"getByAccountID",   LuaConnection::getByAccountID},
-        {"getName",          LuaConnection::getName},
-        {"getChannels",      LuaConnection::getChannels},
-        {"getChannelCount",  LuaConnection::getChannelCount},
-        {"send",             LuaConnection::send},
-        {"sendRaw",          LuaConnection::sendRaw},
-        {"sendError",        LuaConnection::sendError},
-        {"close",            LuaConnection::close},
-        {"closef",           LuaConnection::closef},
-        {"setIdent",         LuaConnection::setIdent},
-        {"setAccountID",     LuaConnection::setAccountID},
-        {"setCharacterID",   LuaConnection::setCharacterID},
-        {"setAdmin",         LuaConnection::setAdmin},
-        {"isAdmin",          LuaConnection::isAdmin},
-        {"setGlobMod",       LuaConnection::setGlobalModerator},
-        {"isGlobMod",        LuaConnection::isGlobalModerator},
-        {"setFriends",       LuaConnection::setFriends},
-        {"removeFriend",     LuaConnection::removeFriend},
-        {"getFriendList",    LuaConnection::getFriends},
-        {"setIgnores",       LuaConnection::setIgnores},
-        {"addIgnore",        LuaConnection::addIgnore},
-        {"removeIgnore",     LuaConnection::removeIgnore},
-        {"getIgnoreList",    LuaConnection::getIgnores},
-        {"setKinks",         LuaConnection::setKinks},
-        {"getKinks",         LuaConnection::getKinks},
-        {"setCustomKinks",   LuaConnection::setCustomKinks},
-        {"getCustomKinks",   LuaConnection::getCustomKinks},
-        {"setInfoTags",      LuaConnection::setInfoTags},
-        {"getInfoTags",      LuaConnection::getInfoTags},
-        {"setGender",        LuaConnection::setGender},
-        {"getGender",        LuaConnection::getGender},
-        {"setStatus",        LuaConnection::setStatus},
-        {"getStatus",        LuaConnection::getStatus},
-        {"setMiscData",      LuaConnection::setMiscData},
-        {"getMiscData",      LuaConnection::getMiscData},
-        {"checkUpdateTimer", LuaConnection::checkUpdateTimer},
-        {NULL,               NULL}
+        {"getConnection",          LuaConnection::getConnection},
+        {"getIPCount",             LuaConnection::getIPCount},
+        {"getByAccount",           LuaConnection::getByAccount},
+        {"getByAccountID",         LuaConnection::getByAccountID},
+        {"getName",                LuaConnection::getName},
+        {"getChannels",            LuaConnection::getChannels},
+        {"getChannelCount",        LuaConnection::getChannelCount},
+        {"getAccountCharacterIDs", LuaConnection::getConnectionIDs},
+        {"send",                   LuaConnection::send},
+        {"sendRaw",                LuaConnection::sendRaw},
+        {"sendError",              LuaConnection::sendError},
+        {"close",                  LuaConnection::close},
+        {"closef",                 LuaConnection::closef},
+        {"setIdent",               LuaConnection::setIdent},
+        {"setAccountID",           LuaConnection::setAccountID},
+        {"setCharacterID",         LuaConnection::setCharacterID},
+        {"setAdmin",               LuaConnection::setAdmin},
+        {"isAdmin",                LuaConnection::isAdmin},
+        {"setGlobMod",             LuaConnection::setGlobalModerator},
+        {"isGlobMod",              LuaConnection::isGlobalModerator},
+        {"setFriends",             LuaConnection::setFriends},
+        {"removeFriend",           LuaConnection::removeFriend},
+        {"getFriendList",          LuaConnection::getFriends},
+        {"setIgnores",             LuaConnection::setIgnores},
+        {"addIgnore",              LuaConnection::addIgnore},
+        {"removeIgnore",           LuaConnection::removeIgnore},
+        {"getIgnoreList",          LuaConnection::getIgnores},
+        {"setKinks",               LuaConnection::setKinks},
+        {"getKinks",               LuaConnection::getKinks},
+        {"setCustomKinks",         LuaConnection::setCustomKinks},
+        {"getCustomKinks",         LuaConnection::getCustomKinks},
+        {"setInfoTags",            LuaConnection::setInfoTags},
+        {"getInfoTags",            LuaConnection::getInfoTags},
+        {"setGender",              LuaConnection::setGender},
+        {"getGender",              LuaConnection::getGender},
+        {"setStatus",              LuaConnection::setStatus},
+        {"getStatus",              LuaConnection::getStatus},
+        {"setMiscData",            LuaConnection::setMiscData},
+        {"getMiscData",            LuaConnection::getMiscData},
+        {"checkUpdateTimer",       LuaConnection::checkUpdateTimer},
+        {NULL,                     NULL}
 };
 
 int LuaConnection::openConnectionLib(lua_State* L) {
@@ -168,6 +169,19 @@ int LuaConnection::getByAccountID(lua_State* L) {
     }
 
     return 1;
+}
+
+int LuaConnection::getConnectionIDs(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    LBase* base = 0;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
+
+    lua_pushinteger(L, con->accountID);
+    lua_pushinteger(L, con->characterID);
+
+    return 2;
 }
 
 /**
