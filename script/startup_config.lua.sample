@@ -14,6 +14,10 @@ saveinterval=300
 websocketorigin="http://www.f-list.net"
 websockethost="www.f-list.net"
 
+-- Logging
+log_start=false
+log_socket_path="/tmp/fserv_log.sock"
+
 --- Enable Real-Time Bridge
 enablertb=true
 --- Address that RTB messages can come from.
@@ -30,10 +34,12 @@ log_socket_path="/home/kira/fserv/bin/log.sock"
 logintimeout=30
 ---Number of concurrent connections to the login server.
 login_connection_pool=15
----Protocol, host and port.
-loginhost="http://www.f-list.net"
----Login path
-loginpath="/json/verifyLogin.php"
+login_url="absolute url to login verification script"
+
+
+-- Chat Report Handling
+handle_report_url="absolute url to handling script"
+handle_report_secret="handle report secret"
 
 -- Lua
 --- Should lua time out event handlers.
