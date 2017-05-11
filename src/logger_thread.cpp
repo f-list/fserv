@@ -154,7 +154,12 @@ void* ChatLogThread::runThread(void* params) {
 
 void ChatLogThread::stopThread() {
     DLOG(INFO) << "Stopping logging thread.";
-    for(list<LoggerConnection*>::const_iterator it = connectionList.begin(); it != connectionList.end(); it++) {
+    list<LoggerConnection*> list_copy;
+
+    for(auto it = connectionList.begin(); it != connectionList.end(); it++) {
+        list_copy.push_back(*it);
+    }
+    for(auto it = list_copy.begin(); it != list_copy.end(); it++) {
         delete *it;
     }
     connectionList.clear();
@@ -193,6 +198,8 @@ void ChatLogThread::runner() {
     ev_async_stop(logger_loop, logger_async);
     delete logger_async;
     logger_async = 0;
+
+    close(listen_socket);
 
     ev_loop_destroy(logger_loop);
     logger_loop = 0;
