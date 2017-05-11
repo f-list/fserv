@@ -370,7 +370,7 @@ function (con, args)
 	end
 
 	local title = s.escapeHTML(args.channel)
-	if #args.channel > const.MAX_TITLE_LEN then
+	if #title > const.MAX_TITLE_LEN then
 		u.sendError(con, 67, "Channel titles may not exceed "..const.MAX_TITLE_LEN.." characters in length.")
 		return const.FERR_OK
 	end
@@ -889,6 +889,18 @@ function (con, args)
 	if args.channel == nil then
 		return const.FERR_BAD_SYNTAX
 	end
+
+	local cur_count = u.getChannelCount(con)
+	if cur_count >= 50 and u.getMiscData(con, "no_channel_limit") ~= "yes" then
+		local chancount = tonumber(u.getMiscData(con, "max_channel_count"))
+		if cur_count > chancount then
+			u.setMiscData(con, "max_channel_count", tostring(cur_count))
+		end
+	end
+	
+--	if u.getChannelCount(con) >= 50 and u.getMiscData(con, "no_channel_limit") ~= "yes" then
+--		return const.FERR_TOO_MANY_CHANNELS
+--	end
 
 	local found, chan = c.getChannel(string.lower(args.channel))
 	if found ~= true then
@@ -1794,6 +1806,8 @@ function (con, args)
 		end
 	end
 
+	u.setMiscData(con, "max_channel_count", "0")
+
 	return const.FERR_OK
 end
 
@@ -1809,6 +1823,9 @@ function (con)
 	local found, chan = c.getChannel("adh-uberawesomestaffroom")
 	if found == true then
 		c.removeInvite(chan, string.lower(name))
+	end
+	if u.getMiscData(con, "max_channel_count") ~= "0" then
+		print("[CHANCOUNT] "..name.." joined "..u.getMiscData(con, "max_channel_count").." channels this session.")
 	end
 end
 
