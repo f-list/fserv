@@ -500,6 +500,11 @@ void Server::processHTTPWakeup(struct ev_loop* loop, ev_async* w, int revents) {
     }
 }
 
+/**
+ * Callback format is (con, status, body, extras)
+ * @param reply
+ * @return
+ */
 FReturnCode Server::processHTTPReply(HTTPReply* reply) {
     FReturnCode ret = FERR_UNKNOWN;
 
@@ -522,16 +527,17 @@ FReturnCode Server::processHTTPReply(HTTPReply* reply) {
         lua_pushstring(sL, reply->body().c_str());
     }
     json_decref(n);
-    if (lua_pcall(sL, 3, 1, LUA_ABSINDEX(sL, -6))) {
+    lua_pushnil(sL);
+    if (lua_pcall(sL, 4, 1, LUA_ABSINDEX(sL, -7))) {
         LOG(WARNING) << "Lua error while calling http_callback. Error returned was: " << lua_tostring(sL, -1);
-        lua_pop(sL, 3);
+        lua_pop(sL, 4);
         if (top != lua_gettop(sL)) {
             DLOG(FATAL) << "Did not return stack to its previous condition. O: " << top << " N: " << lua_gettop(sL);
         }
         return FERR_LUA;
     } else {
         ret = lua_tonumber(sL, -1);
-        lua_pop(sL, 3);
+        lua_pop(sL, 4);
         if (top != lua_gettop(sL)) {
             DLOG(FATAL) << "Did not return stack to its previous condition. O: " << top << " N: " << lua_gettop(sL);
         }
