@@ -28,6 +28,7 @@
 
 #include <queue>
 #include <string>
+#include <atomic>
 #include <tr1/unordered_map>
 #include "fthread.hpp"
 #include "logging.hpp"
@@ -253,6 +254,8 @@ public:
 
     static void stopThread() {
         doRun = false;
+        ev_async_send(loop, async);
+        LOG(INFO) << "Stopping HTTP thread.";
     }
 
     static void sendWakeup();
@@ -303,7 +306,7 @@ private:
     static struct ev_loop* loop;
     static ev_timer* timer;
     static ev_async* async;
-    static bool doRun;
+    static std::atomic<bool> doRun;
 
 };
 

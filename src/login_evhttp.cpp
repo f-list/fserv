@@ -41,7 +41,7 @@ pthread_mutex_t LoginEvHTTPClient::replyMutex = PTHREAD_MUTEX_INITIALIZER;
 queue<LoginRequest*> LoginEvHTTPClient::requestQueue;
 queue<LoginReply*> LoginEvHTTPClient::replyQueue;
 unsigned int LoginEvHTTPClient::maxLoginSlots = 30;
-bool LoginEvHTTPClient::doRun = true;
+std::atomic<bool> LoginEvHTTPClient::doRun(true);
 struct ev_loop* LoginEvHTTPClient::login_loop = 0;
 ev_async* LoginEvHTTPClient::login_async = 0;
 
@@ -93,6 +93,7 @@ void* LoginEvHTTPClient::runThread(void* param) {
     login_async = new ev_async;
     ev_async_init(login_async, LoginEvHTTPClient::processQueue);
     ev_async_start(login_loop, login_async);
+    __sync_synchronize();
 
     ev_loop(login_loop, 0);
 

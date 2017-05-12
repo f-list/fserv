@@ -154,6 +154,7 @@ void* ChatLogThread::runThread(void* params) {
 
 void ChatLogThread::stopThread() {
     DLOG(INFO) << "Stopping logging thread.";
+    doRun = false;
     list<LoggerConnection*> list_copy;
 
     for(auto it = connectionList.begin(); it != connectionList.end(); it++) {
@@ -163,7 +164,6 @@ void ChatLogThread::stopThread() {
         delete *it;
     }
     connectionList.clear();
-    doRun = false;
     ev_async_send(logger_loop, logger_async);
     pthread_join(logThread, 0);
 }

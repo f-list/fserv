@@ -30,6 +30,7 @@
 #include "login_common.hpp"
 #include "fthread.hpp"
 #include <ev.h>
+#include <atomic>
 
 using std::queue;
 
@@ -53,6 +54,7 @@ public:
 
     static void stopThread() {
         doRun = false;
+        ev_async_send(login_loop, login_async);
     }
     static void sendWakeup();
 
@@ -69,7 +71,7 @@ private:
     static queue<LoginReply*> replyQueue;
     static queue<LoginRequest*> requestQueue;
     static unsigned int maxLoginSlots;
-    static bool doRun;
+    static std::atomic<bool> doRun;
     static struct ev_loop* login_loop;
     static ev_async* login_async;
 };

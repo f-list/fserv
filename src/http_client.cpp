@@ -42,7 +42,7 @@ ev_timer* HTTPClient::timer = nullptr;
 ev_async* HTTPClient::async = nullptr;
 CURLM* HTTPClient::multiHandle = nullptr;
 CURL* HTTPClient::escapeHandle = nullptr;
-bool HTTPClient::doRun = true;
+std::atomic<bool> HTTPClient::doRun(true);
 
 string &HTTPRequest::postString() {
     if (materializedPost.length())

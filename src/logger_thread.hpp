@@ -29,6 +29,7 @@
 #include <string>
 #include <queue>
 #include <list>
+#include <atomic>
 #include "fthread.hpp"
 #include <ev.h>
 #include <boost/intrusive_ptr.hpp>
@@ -142,7 +143,7 @@ private:
 
     queue<LogEntry*> requestQueue;
     list<LoggerConnection*> connectionList;
-    volatile bool doRun;
+    std::atomic<bool> doRun;
     struct ev_loop* logger_loop;
     ev_async* logger_async;
     ev_io* logger_accept_io;
