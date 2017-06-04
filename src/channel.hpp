@@ -95,9 +95,15 @@ public:
     bool isBanned(string& name);
     bool getBan(ConnectionPtr con, BanRecord& ban);
     bool getBan(string& name, BanRecord& ban);
+    void cleanExpiredTimeouts();
 
     const chbanmap_t& getBanRecords() const {
         return bans;
+    }
+
+    const size_t getBanCount() {
+        cleanExpiredTimeouts();
+        return bans.size();
     }
 
     void addMod(ConnectionPtr src, string& dest);

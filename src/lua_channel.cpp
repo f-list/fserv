@@ -67,6 +67,7 @@ static const luaL_Reg luachannel_funcs[] = {
     {"isBanned", LuaChannel::isBanned},
     {"getBan", LuaChannel::getBan},
     {"getBanList", LuaChannel::getBanList},
+    {"getBanCount", LuaChannel::getBanCount},
     {"invite", LuaChannel::invite},
     {"removeInvite", LuaChannel::removeInvite},
     {"isInvited", LuaChannel::isInvited},
@@ -674,12 +675,24 @@ int LuaChannel::getBanList(lua_State* L) {
     lua_pop(L, 1);
 
     lua_newtable(L);
+    chan->cleanExpiredTimeouts();
     const chbanmap_t bans = chan->getBanRecords();
     int i = 1;
     for (chbanmap_t::const_iterator itr = bans.begin(); itr != bans.end(); ++itr) {
         lua_pushstring(L, itr->first.c_str());
         lua_rawseti(L, -2, i++);
     }
+    return 1;
+}
+
+int LuaChannel::getBanCount(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    LBase* base = nullptr;
+    GETLCHAN(base, L, 1, chan);
+    lua_pop(L, 1);
+
+    lua_pushinteger(L, chan->getBanCount());
     return 1;
 }
 

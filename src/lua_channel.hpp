@@ -61,6 +61,7 @@ public:
     static int isBanned(lua_State* L);
     static int getBan(lua_State* L);
     static int getBanList(lua_State* L);
+    static int getBanCount(lua_State* L);
 
     static int invite(lua_State* L);
     static int removeInvite(lua_State* L);

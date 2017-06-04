@@ -205,6 +205,19 @@ bool Channel::getBan(string& name, BanRecord& ban) {
     return false;
 }
 
+void Channel::cleanExpiredTimeouts() {
+    const time_t now = time(nullptr);
+    std::deque<string> toRemove;
+    for(auto itr = bans.begin(); itr != bans.end(); ++itr) {
+        auto ban = itr->second;
+        if(ban.timeout != 0 && ban.timeout < now)
+            toRemove.push_back(itr->first);
+    }
+    for(auto itr = toRemove.begin(); itr != toRemove.end(); ++itr) {
+        bans.erase(*itr);
+    }
+}
+
 void Channel::addMod(ConnectionPtr src, string& dest) {
     ModRecord mod;
     mod.modder = src->characterName;
@@ -298,6 +311,7 @@ void Channel::setPublic(bool newstatus) {
 }
 
 json_t* Channel::saveChannel() {
+    const time_t now = time(nullptr);
     json_t* ret = json_object();
     json_object_set_new_nocheck(ret, "name",
             json_string_nocheck(name.c_str())
@@ -326,8 +340,10 @@ json_t* Channel::saveChannel() {
     {
         json_t* bansnode = json_array();
         for (chbanmap_t::const_iterator i = bans.begin(); i != bans.end(); ++i) {
-            json_t* ban = json_object();
             BanRecord br = (*i).second;
+            if(br.timeout != 0 && br.timeout < now)
+                continue;
+            json_t* ban = json_object();
             json_object_set_new_nocheck(ban, "name",
                     json_string_nocheck((*i).first.c_str())
                     );

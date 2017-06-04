@@ -46,6 +46,7 @@ void LuaConstants::initClass() {
     E(FERR_ALREADY_IDENT, "Already identified.");
 
     E(FERR_THROTTLE_KINKS, "You must wait ten seconds between requesting kinks.");
+    E(FERR_THROTTLE_STATUS, "You must wait five seconds between status changes.");
 
     E(FERR_MESSAGE_TOO_LONG, "Message exceeded the maximum length.");
     E(FERR_ALREADY_OP, "This character is already a global moderator.");
@@ -96,6 +97,7 @@ void LuaConstants::initClass() {
     E(FERR_TOO_MANY_SEARCH_RESULTS, "There are too many search results, please narrow your search.");
 
     E(FERR_TOO_MANY_CHANNELS, "You have reached the maximum number of joined channels.");
+    E(FERR_TOO_MANY_CHANNEL_BANS, "There are too many channel bans or timeouts.");
 
     E(FERR_FATAL_INTERNAL, "Fatal internal error.");
     E(FERR_LUA, "An error occurred while processing your command.");

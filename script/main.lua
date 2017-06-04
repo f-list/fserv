@@ -327,6 +327,10 @@ function (con, args)
 		return const.FERR_USER_NOT_IN_CHANNEL
 	end
 
+	if c.getBanCount(chan) >= const.MAX_CHANNEL_BANS then
+		return const.FERR_TOO_MANY_CHANNEL_BANS
+	end
+
 	local targetonline, char = u.getConnection(string.lower(args.character))
 	local chantype = c.getType(chan)
 	if chantype == "public" then
@@ -706,6 +710,10 @@ function (con, args)
 
 	if c.inChannel(chan, con) ~= true then
 		return const.FERR_USER_NOT_IN_CHANNEL
+	end
+
+	if c.getBanCount(chan) >= const.MAX_CHANNEL_BANS then
+		return const.FERR_TOO_MANY_CHANNEL_BANS
 	end
 
 	local targetonline, char = u.getConnection(string.lower(args.character))
@@ -1501,7 +1509,7 @@ end
 event.STA =
 function (con, args)
 	if u.checkUpdateTimer(con, "sta", const.STA_FLOOD) == true then
-		return const.FERR_THROTTLE_MESSAGE
+		return const.FERR_THROTTLE_STATUS
 	end
 
 	if args.status == nil then
@@ -1894,6 +1902,7 @@ function chat_init()
 	const.IP_MAX = s.getConfigDouble("max_per_ip")
 	const.MAX_TITLE_LEN = 64.4999
 	const.MAX_IGNORES = 300
+	const.MAX_CHANNEL_BANS = 300
 	const.NO_ICON_CHANNELS = {"frontpage", "sex driven lfrp", "story driven lfrp"}
 	if c.getChannel("adh-uberawesomestaffroom") ~= true then
 		local chanopchan = c.createSpecialPrivateChannel("ADH-UBERAWESOMESTAFFROOM", "Staff Room")
