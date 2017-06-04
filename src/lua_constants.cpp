@@ -98,6 +98,7 @@ void LuaConstants::initClass() {
 
     E(FERR_TOO_MANY_CHANNELS, "You have reached the maximum number of joined channels.");
     E(FERR_TOO_MANY_CHANNEL_BANS, "There are too many channel bans or timeouts.");
+    E(FERR_DESCRIPTION_TOO_LONG, "The channel description provided was too long.");
 
     E(FERR_FATAL_INTERNAL, "Fatal internal error.");
     E(FERR_LUA, "An error occurred while processing your command.");

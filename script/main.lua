@@ -401,6 +401,10 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
+	if #args.newdesc > const.CDS_MAX then
+		return const.FERR_DESCRIPTION_TOO_LONG
+	end
+
 	if c.isMod(chan, con) then
 		if c.getType(chan) == "public" then
 			s.logAction(con, "CDS", args)
@@ -1781,8 +1785,10 @@ function (con, args)
 	u.send(con, "VAR", {variable="chat_max", value=const.MSG_MAX})
 	u.send(con, "VAR", {variable="priv_max", value=const.PRI_MAX})
 	u.send(con, "VAR", {variable="lfrp_max", value=const.LRP_MAX})
+	u.send(con, "VAR", {variable="cds_max", value=const.CDS_MAX})
 	u.send(con, "VAR", {variable="lfrp_flood", value=const.LRP_FLOOD})
 	u.send(con, "VAR", {variable="msg_flood", value=const.MSG_FLOOD})
+	u.send(con, "VAR", {variable="sta_flood", value=const.STA_FLOOD})
 	u.send(con, "VAR", {variable="permissions", value=args.permissions})
 	u.send(con, "VAR", {variable="icon_blacklist", array_value=const.NO_ICON_CHANNELS})
 
@@ -1888,6 +1894,7 @@ function chat_init()
 	const.MSG_MAX = s.getConfigDouble("msg_max")
 	const.PRI_MAX = s.getConfigDouble("priv_max")
 	const.LRP_MAX = s.getConfigDouble("lfrp_max")
+	const.CDS_MAX = s.getConfigDouble("cds_max")
 	const.LRP_FLOOD = s.getConfigDouble("lfrp_flood")
 	const.MSG_FLOOD = s.getConfigDouble("msg_flood")
 	const.KIN_FLOOD = s.getConfigDouble("kinks_flood")
@@ -1895,7 +1902,7 @@ function chat_init()
 	const.FKS_FLOOD = s.getConfigDouble("find_flood")
 	const.SFC_FLOOD = s.getConfigDouble("staffcall_flood")
 	const.IGN_FLOOD = s.getConfigDouble("ignore_flood")
-	const.STA_FLOOD = 5
+	const.STA_FLOOD = s.getConfigDouble("sta_flood")
 	const.CHA_FLOOD = 5
 	const.ORS_FLOOD = 5
 	const.VERSION = s.getConfigString("version")

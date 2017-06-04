@@ -55,9 +55,11 @@ max_per_ip=3
 msg_max=4096
 priv_max=50000
 lfrp_max=50000
+cds_max=50000
 
 -- Chat throttles
 msg_flood=0.5
+sta_flood=5
 lfrp_flood=600
 kinks_flood=10
 profile_flood=10
