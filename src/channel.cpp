@@ -422,6 +422,7 @@ void Channel::loadChannel(const json_t* channode) {
         json_t* bansnode = json_object_get(channode, "banlist");
         if (json_is_array(bansnode)) {
             int bansize = json_array_size(bansnode);
+            bansize = (bansize > 300) ? 300 : bansize;
             for (int l = 0; l < bansize; ++l) {
                 json_t* ban = json_array_get(bansnode, l);
                 if (!ban) {
