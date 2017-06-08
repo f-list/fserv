@@ -1487,14 +1487,14 @@ function (con, args)
 		if channel_override == false and u.isGlobMod(con) ~= true and u.isAdmin(con) ~= true then
 			return const.FERR_NOT_OP
 		end
-		if call.logid ~= -1 then
-			local aid, cid = u.getAccountCharacterIDs(con)
-			http.post("handle_report", s.getConfigString("handle_report_url"), {
-				log_id=tostring(call.logid),
-				moderator=tostring(cid),
-				secret=s.getConfigString("handle_report_secret")
-			}, con, nil)
-		end
+--		if call.logid ~= -1 then
+--			local aid, cid = u.getAccountCharacterIDs(con)
+--			http.post("handle_report", s.getConfigString("handle_report_url"), {
+--				log_id=tostring(call.logid),
+--				moderator=tostring(cid),
+--				secret=s.getConfigString("handle_report_secret")
+--			}, con, nil)
+--		end
 		local lsfc = {action="confirm", moderator=u.getName(con), character=call.character, timestamp=call.timestamp, tab=s.escapeHTML(call.tab), logid=call.logid}
 		s.logAction(con, "SFC", lsfc)
 		s.removeStaffCall(args.callid)
