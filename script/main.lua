@@ -910,9 +910,9 @@ function (con, args)
 		end
 	end
 	
---	if u.getChannelCount(con) >= 50 and u.getMiscData(con, "no_channel_limit") ~= "yes" then
---		return const.FERR_TOO_MANY_CHANNELS
---	end
+	if u.getChannelCount(con) >= 75 and u.getMiscData(con, "no_channel_limit") ~= "yes" then
+		return const.FERR_TOO_MANY_CHANNELS
+	end
 
 	local found, chan = c.getChannel(string.lower(args.channel))
 	if found ~= true then
