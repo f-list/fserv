@@ -170,7 +170,6 @@ FReturnCode NativeCommand::IdentCommand(ConnectionPtr& con, string& payload) {
 
     json_t* methodnode = json_object_get(topnode, "method");
     if (!json_is_string(methodnode)) {
-        json_decref(methodnode);
         json_decref(topnode);
         delete request;
         return FERR_BAD_SYNTAX;
@@ -183,27 +182,22 @@ FReturnCode NativeCommand::IdentCommand(ConnectionPtr& con, string& payload) {
         if (!json_is_string(tempnode))
             goto fail;
         request->account = json_string_value(tempnode);
-        json_decref(tempnode);
         tempnode = json_object_get(topnode, "ticket");
         if (!json_is_string(tempnode))
             goto fail;
         request->ticket = json_string_value(tempnode);
-        json_decref(tempnode);
         tempnode = json_object_get(topnode, "character");
         if (!json_is_string(tempnode))
             goto fail;
         request->characterName = json_string_value(tempnode);
-        json_decref(tempnode);
         tempnode = json_object_get(topnode, "cname");
         if(!json_is_string(tempnode))
             goto fail;
         request->clientName = json_string_value(tempnode);
-        json_decref(tempnode);
         tempnode = json_object_get(topnode, "cversion");
         if(!json_is_string(tempnode))
             goto fail;
         request->clientVersion = json_string_value(tempnode);
-        json_decref(tempnode);
         tempnode = nullptr;
     } else {
         json_decref(topnode);
@@ -222,8 +216,6 @@ FReturnCode NativeCommand::IdentCommand(ConnectionPtr& con, string& payload) {
     return FERR_OK;
 
 fail:
-    if(tempnode)
-        json_decref(tempnode);
     json_decref(topnode);
     delete request;
     return FERR_BAD_SYNTAX;
