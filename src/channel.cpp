@@ -182,7 +182,7 @@ bool Channel::isBanned(string& name) {
 }
 
 bool Channel::getBan(ConnectionPtr con, BanRecord& ban) {
-    chbanmap_t::const_iterator itr = bans.find(con->characterNameLower);
+    chbanmap_t::const_iterator itr = idBans.find(con->accountID);
     if (itr != bans.end()) {
         BanRecord tmp = itr->second;
         ban.banner = tmp.banner;
@@ -190,12 +190,12 @@ bool Channel::getBan(ConnectionPtr con, BanRecord& ban) {
         ban.timeout = tmp.timeout;
         return true;
     }
-    return false;
+    return getBan(con->characterNameLower, ban);
 }
 
 bool Channel::getBan(string& name, BanRecord& ban) {
-    chbanmap_t::const_iterator itr = bans.find(name);
-    if (itr != bans.end()) {
+    auto itr = nameBans.find(name);
+    if (itr != nameBans.end()) {
         BanRecord tmp = itr->second;
         ban.banner = tmp.banner;
         ban.time = tmp.time;
@@ -216,6 +216,8 @@ void Channel::cleanExpiredTimeouts() {
     for(auto itr = toRemove.begin(); itr != toRemove.end(); ++itr) {
         bans.erase(*itr);
     }
+    if(toRemove.size() > 0)
+        generateBanLists();
 }
 
 void Channel::addMod(ConnectionPtr src, string& dest) {

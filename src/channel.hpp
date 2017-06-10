@@ -29,6 +29,7 @@
 #include <boost/intrusive_ptr.hpp>
 #include <boost/functional/hash.hpp>
 #include <string>
+#include <list>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 #include "connection.hpp"
@@ -68,7 +69,9 @@ typedef struct {
 
 typedef unordered_set<ConnectionPtr, boost::hash<ConnectionPtr> > chconlist_t;
 typedef unordered_set<string> chstringset_t;
-typedef unordered_map<string, BanRecord> chbanmap_t;
+typedef list<BanRecord> chbanlist_t;
+typedef unordered_map<uint32_t, list<BanRecord*> > chbanidmap_t;
+typedef unordered_map<string, list<BanRecord*> > chbannamemap_t;
 typedef unordered_map<string, ModRecord> chmodmap_t;
 typedef unordered_map<string, double> chtimermap_t;
 
@@ -201,6 +204,8 @@ public:
     void loadChannel(const json_t* channode);
 
 protected:
+    void generateBanLists();
+
     string modeToString();
     ChannelMessageMode stringToMode(string modestring);
     string typeToString();
@@ -212,7 +217,9 @@ protected:
     chconlist_t participants;
     chmodmap_t moderators;
     string owner;
-    chbanmap_t bans;
+    chbanlist_t bans;
+    chbanidmap_t idBans;
+    chbannamemap_t nameBans;
     int participantCount;
     chtimermap_t timerMap;
     time_t lastActivity;
