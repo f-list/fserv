@@ -221,9 +221,8 @@ fail:
     return FERR_BAD_SYNTAX;
 }
 
-void SearchFilterList(const json_t* node, list<ConnectionPtr>& conlist, string item) {
+void SearchFilterList(const json_t* node, unordered_set<ConnectionPtr>& conlist, string item) {
     unordered_set<string> items;
-    list<ConnectionPtr> toremove;
     size_t size = json_array_size(node);
     for (size_t i = 0; i < size; ++i) {
         json_t* jn = json_array_get(node, i);
@@ -231,19 +230,16 @@ void SearchFilterList(const json_t* node, list<ConnectionPtr>& conlist, string i
             items.insert(json_string_value(jn));
     }
 
-    for (list<ConnectionPtr>::iterator i = conlist.begin(); i != conlist.end(); ++i) {
+    for (auto i = conlist.begin(); i != conlist.end();) {
         if (items.find((*i)->infotagMap[item]) == items.end())
-            toremove.push_back((*i));
-    }
-
-    for (list<ConnectionPtr>::const_iterator i = toremove.begin(); i != toremove.end(); ++i) {
-        conlist.remove((*i));
+            i = conlist.erase(i);
+        else
+            ++i;
     }
 }
 
-void SearchFilterListF(const json_t* node, list<ConnectionPtr>& conlist) {
+void SearchFilterListF(const json_t* node, unordered_set<ConnectionPtr>& conlist) {
     list<int> items;
-    list<ConnectionPtr> tokeep;
     size_t size = json_array_size(node);
     for (size_t i = 0; i < size; ++i) {
         json_t* jn = json_array_get(node, i);
@@ -254,7 +250,7 @@ void SearchFilterListF(const json_t* node, list<ConnectionPtr>& conlist) {
         }
     }
 
-    for (list<ConnectionPtr>::const_iterator i = conlist.begin(); i != conlist.end(); ++i) {
+    for (auto i = conlist.begin(); i != conlist.end();) {
         bool found = true;
         for (list<int>::const_iterator n = items.begin(); n != items.end(); ++n) {
             if ((*i)->kinkList.find((*n)) == (*i)->kinkList.end()) {
@@ -264,10 +260,10 @@ void SearchFilterListF(const json_t* node, list<ConnectionPtr>& conlist) {
         }
 
         if (found)
-            tokeep.push_back((*i));
+            ++i;
+        else
+            i = conlist.erase(i);
     }
-
-    conlist = tokeep;
 }
 
 FReturnCode NativeCommand::SearchCommand(intrusive_ptr< ConnectionInstance >& con, string& payload) {
@@ -280,12 +276,12 @@ FReturnCode NativeCommand::SearchCommand(intrusive_ptr< ConnectionInstance >& co
     else
         con->timers[FKSstring] = time;
 
-    typedef list<ConnectionPtr> clst_t;
-    clst_t tosearch;
+    typedef unordered_set<ConnectionPtr> clist_t;
+    clist_t tosearch;
     const conptrmap_t cons = ServerState::getConnections();
     for (conptrmap_t::const_iterator i = cons.begin(); i != cons.end(); ++i) {
         if ((i->second != con) && (i->second->kinkList.size() != 0) && (i->second->status == "online" || i->second->status == "looking"))
-            tosearch.push_back(i->second);
+            tosearch.insert(i->second);
     }
 
     json_t* rootnode = json_loads(payload.c_str(), 0, 0);
@@ -333,7 +329,7 @@ FReturnCode NativeCommand::SearchCommand(intrusive_ptr< ConnectionInstance >& co
 
     json_t* newroot = json_object();
     json_t* chararray = json_array();
-    for (clst_t::const_iterator i = tosearch.begin(); i != tosearch.end(); ++i) {
+    for (clist_t::const_iterator i = tosearch.begin(); i != tosearch.end(); ++i) {
         json_array_append_new(chararray,
                 json_string_nocheck((*i)->characterName.c_str())
                 );
