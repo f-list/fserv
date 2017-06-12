@@ -158,4 +158,15 @@ protected:
 
 typedef intrusive_ptr<ConnectionInstance> ConnectionPtr;
 
+namespace std {
+    namespace tr1 {
+        template <>
+        struct hash<ConnectionPtr> : public unary_function<ConnectionPtr, size_t> {
+            size_t operator()(const ConnectionPtr& v) const {
+                return reinterpret_cast<size_t>(v.get());
+            }
+        };
+    }
+}
+
 #endif //CONNECTION_H
