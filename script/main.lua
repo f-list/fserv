@@ -401,7 +401,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	if #args.newdesc > const.CDS_MAX then
+	if #args.description > const.CDS_MAX then
 		return const.FERR_DESCRIPTION_TOO_LONG
 	end
 
