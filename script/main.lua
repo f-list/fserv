@@ -53,6 +53,16 @@ function broadcastChannelOps(event, message, channel)
 	end
 end
 
+function hasShortener(input)
+       local shorteners = {}
+       for _, v in ipairs(shorteners) do
+               if string.find(input, v, 1, true) then
+                       return true
+               end
+       end
+       return false
+end
+
 -- Parts a connection from a channel.
 function partChannel(chan, con, is_disconnect)
 	local cname = c.getName(chan)
@@ -1073,6 +1083,10 @@ function (con, args)
 	if c.inChannel(chan, con) ~= true then
 		return const.FERR_NOT_IN_CHANNEL
 	end
+	
+	if hasShortener(args.message) ~= false then
+                return const.FERR_OK
+        end
 
 	if u.getMiscData(con, "hellban") ~= nil then
 		return const.FERR_OK
@@ -1114,6 +1128,10 @@ function (con, args)
 	if c.inChannel(chan, con) ~= true then
 		return const.FERR_NOT_IN_CHANNEL
 	end
+	
+	if hasShortener(args.message) ~= false then
+                return const.FERR_OK
+        end
 
 	if u.getMiscData(con, "hellban") ~= nil then
 		return const.FERR_OK
