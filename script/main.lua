@@ -895,7 +895,7 @@ function (con, args)
 			local found, char = u.getConnection(string.lower(args.character))
 			if found == true then
 				s.logMessage("ignore_notify", con, nil, char, nil)
-				u.sendError(char, 20, u.getName(con).." does not wish to receive messages from you.")
+				u.sendError(char, 20, u.getName(con).." does not wish to receive messages from you. Please note that attempting to contact this user further through any means would be a [url=https://wiki.f-list.net/Code_of_Conduct#Defamation_and_Harassment/]severe rule violation.[/url]")
 			end
 		end
 	else
