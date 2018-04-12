@@ -38,6 +38,7 @@
 #include <string>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 using std::string;
 
@@ -109,6 +110,14 @@ int LuaChannel::sendCHA(lua_State* L) {
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
+    static time_t cache_time = 0;
+    static MessagePtr cached_message;
+
+    if(cache_time > time(nullptr)) {
+        con->send(cached_message);
+        return 0;
+    }
+
     string message = "CHA ";
     json_t* root = json_object();
     json_t* array = json_array();
@@ -131,8 +140,10 @@ int LuaChannel::sendCHA(lua_State* L) {
     json_object_set_new_nocheck(root, "channels", array);
     const char* chanstring = json_dumps(root, JSON_COMPACT);
     message += chanstring;
-    MessagePtr outMessage(MessageBuffer::fromString(message));
-    con->send(outMessage);
+
+    cache_time = time(nullptr) + 30;
+    cached_message = MessageBuffer::fromString(message);
+    con->send(cached_message);
     free((void*) chanstring);
     json_decref(root);
     return 0;
@@ -149,6 +160,14 @@ int LuaChannel::sendORS(lua_State* L) {
     LBase* base = 0;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
+
+    static time_t cache_time = 0;
+    static MessagePtr cached_message;
+
+    if(cache_time > time(nullptr)) {
+        con->send(cached_message);
+        return 0;
+    }
 
     string message = "ORS ";
     json_t* root = json_object();
@@ -173,8 +192,9 @@ int LuaChannel::sendORS(lua_State* L) {
     json_object_set_new_nocheck(root, "channels", array);
     const char* chanstring = json_dumps(root, JSON_COMPACT);
     message += chanstring;
-    MessagePtr outMessage(MessageBuffer::fromString(message));
-    con->send(outMessage);
+    cache_time = time(nullptr) + 30;
+    cached_message = MessageBuffer::fromString(message);
+    con->send(cached_message);
     free((void*) chanstring);
     json_decref(root);
     return 0;
