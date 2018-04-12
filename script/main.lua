@@ -72,7 +72,7 @@ function partChannel(chan, con, is_disconnect)
 		c.sendAll(chan, "LCH", {channel=cname, character=conname})
 	end
 	c.part(chan, con)
-	s.logMessage("channel_leave", con, chan, nil, nil)
+	-- s.logMessage("channel_leave", con, chan, nil, nil)
 	local chantype = c.getType(chan)
 
 	if (chantype == "private") and (c.canDestroy(chan) == true) and (c.getUserCount(chan) <= 0) then
@@ -86,7 +86,7 @@ function joinChannel(chan, con)
 	local channame = c.getName(chan)
 	local chantype = c.getType(chan)
 	c.join(chan, con)
-	s.logMessage("channel_join", con, chan, nil, nil)
+	-- s.logMessage("channel_join", con, chan, nil, nil)
 	if chantype == "public" then
 		c.sendAll(chan, "JCH", {channel=channame, character={identity=u.getName(con)}, title=channame})
 	else
@@ -210,7 +210,7 @@ function (con, args)
 	end
 
 	s.logAction(con, "ACB", args)
-	s.logMessage("global_ban", con, nil, char, nil)
+	-- s.logMessage("global_ban", con, nil, char, nil)
 	s.addBan(char)
 	u.send(con, "SYS", {message=u.getName(char).." is now account banned."})
 	local account_cons = u.getByAccount(char)
@@ -245,7 +245,7 @@ function (con, args)
 	end
 
 	s.logAction(con, "AOP", args)
-	s.logMessage("global_op_add", con, nil, char, nil)
+	-- s.logMessage("global_op_add", con, nil, char, nil)
 	s.addOp(name)
 	local found, char = u.getConnection(string.lower(args.character))
 	if found == true then
@@ -276,7 +276,7 @@ function (con, args)
 	end
 
 	s.logAction(con, "BRO", args)
-	s.logMessage("broadcast", con, nil, nil, args.message)
+	-- s.logMessage("broadcast", con, nil, nil, args.message)
 	local mesg = s.escapeHTML(args.message)
 	local lname = u.getName(con)
 	s.broadcast("BRO", {character=lname, message="[b]Broadcast from "..lname..":[/b] "..mesg})
@@ -357,14 +357,14 @@ function (con, args)
 		if c.isBanned(chan, string.lower(char)) == true then
 			return const.FERR_ALREADY_CHANNEL_BANNED
 		end
-		s.logMessage("channel_ban", con, chan, char, nil)
+		-- s.logMessage("channel_ban", con, chan, char, nil)
 		c.sendAll(chan, "CBU", {channel=args.channel, operator=u.getName(con), character=char})
 		c.ban(chan, con, string.lower(char))
 	else
 		if c.isBanned(chan, char) == true then
 			return const.FERR_ALREADY_CHANNEL_BANNED
 		end
-		s.logMessage("channel_ban", con, chan, char, nil)
+		-- s.logMessage("channel_ban", con, chan, char, nil)
 		c.sendAll(chan, "CBU", {channel=args.channel, operator=u.getName(con), character=u.getName(char)})
 		c.ban(chan, con, char)
 		if c.inChannel(chan, char) == true then
@@ -420,7 +420,7 @@ function (con, args)
 			s.logAction(con, "CDS", args)
 		end
 		local newdesc = s.escapeHTML(args.description)
-		s.logMessage("channel_description", con, chan, nil, args.description)
+		-- s.logMessage("channel_description", con, chan, nil, args.description)
 		c.setDescription(chan, newdesc)
 		c.sendAll(chan, "CDS", {channel=args.channel, description=newdesc})
 	else
@@ -513,7 +513,7 @@ function (con, args)
 		c.removeInvite(chan, string.lower(args.character))
 	end
 
-	s.logMessage("channel_kick", con, chan, char, nil)
+	-- s.logMessage("channel_kick", con, chan, char, nil)
 	c.sendAll(chan, "CKU", {channel=args.channel, operator=u.getName(con), character=u.getName(char)})
 	partChannel(chan, char)
 	return const.FERR_OK
@@ -547,7 +547,7 @@ function (con, args)
 			modmessage = modmessage..c.getTitle(chan)
 		end
 
-		s.logMessage("channel_op_add", con, chan, args.character, nil)
+		-- s.logMessage("channel_op_add", con, chan, args.character, nil)
 		if args.silent == nil then
 			c.sendAll(chan, "SYS", {channel=args.channel, message=modmessage})
 		end
@@ -626,7 +626,7 @@ function (con, args)
 			modmessage = modmessage..c.getTitle(chan)
 		end
 
-		s.logMessage("channel_op_remove", con, chan, args.character, nil)
+		-- s.logMessage("channel_op_remove", con, chan, args.character, nil)
 		if args.silent == nil then
 			c.sendAll(chan, "SYS", {channel=args.channel, message=modmessage})
 		end
@@ -690,7 +690,7 @@ function (con, args)
 		modmessage = modmessage..c.getTitle(chan)
 	end
 
-	s.logMessage("channel_owner_set", con, chan, char, nil)
+	-- s.logMessage("channel_owner_set", con, chan, char, nil)
 	c.sendAll(chan, "SYS", {channel=args.channel, message=modmessage})
 	c.sendAll(chan, "COL", {channel=args.channel, array_oplist=c.getModList(chan)})
 	c.sendAll(chan, "CSO", {channel=args.channel, character=u.getName(char)})
@@ -748,14 +748,14 @@ function (con, args)
 		if c.isBanned(chan, string.lower(char)) == true then
 			return const.FERR_ALREADY_CHANNEL_BANNED
 		end
-		s.logMessage("channel_timeout", con, chan, char, args.length)
+		-- s.logMessage("channel_timeout", con, chan, char, args.length)
 		c.sendAll(chan, "CTU", {channel=args.channel, operator=u.getName(con), character=char, length=tonumber(args.length)})
 		c.timeout(chan, con, string.lower(char), length)
 	else
 		if c.isBanned(chan, char) == true then
 			return const.FERR_ALREADY_CHANNEL_BANNED
 		end
-		s.logMessage("channel_timeout", con, chan, char, args.length)
+		-- s.logMessage("channel_timeout", con, chan, char, args.length)
 		c.sendAll(chan, "CTU", {channel=args.channel, operator=u.getName(con), character=u.getName(char), length=tonumber(args.length)})
 		c.timeout(chan, con, char, length)
 		if c.inChannel(chan, char) == true then
@@ -791,7 +791,7 @@ function (con, args)
 		s.logAction(con, "CUB", args)
 	end
 
-	s.logMessage("channel_ban_remove", con, chan, args.character, nil)
+	-- s.logMessage("channel_ban_remove", con, chan, args.character, nil)
 	c.unban(chan, string.lower(args.character))
 	u.send(con, "SYS", {channel=args.channel, message=args.character.." has been removed from the channel ban list."})
 	return const.FERR_OK
@@ -823,7 +823,7 @@ function (con, args)
 	if found == true then
 		u.setGlobMod(char, false)
 	end
-	s.logMessage("global_op_remove", con, nil, args.character, nil)
+	-- s.logMessage("global_op_remove", con, nil, args.character, nil)
 	s.broadcast("DOP", {character=args.character})
 	u.send(con, "SYS", {message=args.character.." has been removed as a global moderator."})
 	return const.FERR_OK
@@ -868,7 +868,7 @@ function (con, args)
 		local ignorecount = #u.getIgnoreList(con)
 		local maxignores = const.MAX_IGNORES
 		if ignorecount < maxignores then
-			s.logMessage("ignore_add", con, nil, args.character, nil)
+			-- s.logMessage("ignore_add", con, nil, args.character, nil)
 			u.addIgnore(con, string.lower(args.character))
 			propagateIgnoreList(con, "add", args.character)
 		else
@@ -876,7 +876,7 @@ function (con, args)
 			return const.FERR_OK
 		end
 	elseif args.action == "delete" and args.character == "*" then
-		s.logMessage("ignore_remove", con, nil, args.character, nil)
+		-- s.logMessage("ignore_remove", con, nil, args.character, nil)
 		local ignores = u.getIgnoreList(con)
 		for i, v in ipairs(ignores) do
 			u.removeIgnore(con, string.lower(v))
@@ -887,14 +887,14 @@ function (con, args)
 			u.send(con, "IGN", {action="init", array_characters=u.getIgnoreList(con)})
 		end
 	elseif args.action == "delete" and args.character ~= nil then
-		s.logMessage("ignore_remove", con, nil, args.character, nil)
+		-- s.logMessage("ignore_remove", con, nil, args.character, nil)
 		u.removeIgnore(con, string.lower(args.character))
 		propagateIgnoreList(con, "delete", args.character)
 	elseif args.action == "notify" and args.character ~= nil then
 		if u.checkUpdateTimer(con, "ign", const.IGN_FLOOD) ~= true then
 			local found, char = u.getConnection(string.lower(args.character))
 			if found == true then
-				s.logMessage("ignore_notify", con, nil, char, nil)
+				-- s.logMessage("ignore_notify", con, nil, char, nil)
 				u.sendError(char, 20, u.getName(con).." does not wish to receive messages from you.")
 			end
 		end
@@ -988,7 +988,7 @@ function (con, args)
 	end
 
 	s.logAction(con, "KIK", args)
-	s.logMessagE("global_kick", con, nil, char, nil)
+	-- s.logMessage("global_kick", con, nil, char, nil)
 	u.sendError(char, const.FERR_KICKED)
 	u.send(con, "SYS", {message=u.getName(char).." has been kicked from chat."})
 	u.close(char)
@@ -1092,7 +1092,7 @@ function (con, args)
 		return const.FERR_OK
 	end
 
-	s.logMessage("message_ad", con, chan, nil, args.message)
+	-- s.logMessage("message_ad", con, chan, nil, args.message)
 	c.sendChannel(chan, con, "LRP", {channel=c.getName(chan), character=u.getName(con), message=s.escapeHTML(args.message)})
 	return const.FERR_OK
 end
@@ -1137,7 +1137,7 @@ function (con, args)
 		return const.FERR_OK
 	end
 
-	s.logMessage("message", con, chan, nil, args.message)
+	-- s.logMessage("message", con, chan, nil, args.message)
 	c.sendChannel(chan, con, "MSG", {channel=c.getName(chan), character=u.getName(con), message=s.escapeHTML(args.message)})
 	return const.FERR_OK
 end
@@ -1190,7 +1190,7 @@ function (con, args)
 		return const.FERR_OK
 	end
 
-	s.logMessage("message_private", con, nil, target, args.message)
+	-- s.logMessage("message_private", con, nil, target, args.message)
 	u.send(target, "PRI", {character=u.getName(con), message=s.escapeHTML(args.message), recipient=args.recipient})
 	return const.FERR_OK
 end
@@ -1308,11 +1308,11 @@ function (con, args)
 			return FERR_BAD_SYNTAX
 		else
 			if haschannel then
-				s.logMessage("message_bottle", con, chan, nil, bottle.target)
+				-- s.logMessage("message_bottle", con, chan, nil, bottle.target)
 				bottle.channel = args.channel
 				c.sendAll(chan, "RLL", bottle)
 			else
-				s.logMessage("message_bottle", con, nil, target, bottle.target)
+				-- s.logMessage("message_bottle", con, nil, target, bottle.target)
 				bottle.recipient = args.recipient
 				u.send(target, "RLL", bottle)
 				u.send(con, "RLL", bottle)
@@ -1327,11 +1327,11 @@ function (con, args)
 		return const.FERR_BAD_ROLL_FORMAT
 	end
 	if haschannel then
-		s.logMessage("message_roll", con, chan, nil, roll.message)
+		-- s.logMessage("message_roll", con, chan, nil, roll.message)
 		roll.channel = c.getName(chan)
 		c.sendAll(chan, "RLL", roll)
 	else
-		s.logMessage("message_roll", con, nil, target, roll.message)
+		-- s.logMessage("message_roll", con, nil, target, roll.message)
 		roll.recipient = u.getName(target)
 		u.send(target, "RLL", roll)
 		u.send(con, "RLL", roll)
@@ -1546,7 +1546,7 @@ function (con, args)
 	statusmessage = s.escapeHTML(statusmessage)
 
 	u.setStatus(con, newstatus, statusmessage)
-	s.logMessage("status", con, nil, nil, "Status: "..newstatus.." Message: "..statusmessage)
+	-- s.logMessage("status", con, nil, nil, "Status: "..newstatus.." Message: "..statusmessage)
 	s.broadcast("STA", {character=u.getName(con), status=newstatus, statusmsg=statusmessage})
 	return const.FERR_OK
 end
@@ -1580,7 +1580,7 @@ function (con, args)
 	local reason = s.escapeHTML(args.reason)
 
 	s.logAction(con, "TMO", args)
-	s.logMessage("global_timeout", con, nil, char, "Length: "..length.." Reason: "..reason)
+	-- s.logMessage("global_timeout", con, nil, char, "Length: "..length.." Reason: "..reason)
 	s.addTimeout(char, length*60)
 	u.send(con, "SYS", {message=u.getName(char).." has been given a "..length.." minute time out for: "..reason})
 	local account_cons = u.getByAccount(char)
@@ -1624,7 +1624,7 @@ function (con, args)
 	end
 
 	s.logAction(con, "UNB", args)
-	s.logMessage("global_unban", con, nil, args.character, nil)
+	-- s.logMessage("global_unban", con, nil, args.character, nil)
 	s.removeTimeout(string.lower(args.character))
 	if s.removeBan(string.lower(args.character)) == true then
 		u.send(con, "SYS", {message="Removed ban successfully."})
@@ -1815,7 +1815,7 @@ function (con, args)
 
 	s.sendUserList(con, "LIS", 100)
 
-	s.logMessage("connect", con, nil, nil, nil)
+	-- s.logMessage("connect", con, nil, nil, nil)
 	s.broadcast("NLN", {identity=name, status="online", gender=u.getGender(con)})
 
 	if isop then
@@ -1841,7 +1841,7 @@ function (con)
 		partChannel(v, con, true)
 	end
 	s.broadcast("FLN", {character=name})
-	s.logMessage("disconnect", con, nil, nil, nil)
+	-- s.logMessage("disconnect", con, nil, nil, nil)
 	local found, chan = c.getChannel("adh-uberawesomestaffroom")
 	if found == true then
 		c.removeInvite(chan, string.lower(name))
