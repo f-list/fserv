@@ -665,6 +665,7 @@ int LuaChat::sendStaffCalls(lua_State* L) {
         json_object_set_new_nocheck(rootnode, "character",
                                     json_string_nocheck(r.character.c_str())
         );
+        json_object_set_new_nocheck(rootnode, "old", json_true());
         json_object_set_new_nocheck(rootnode, "timestamp",
                                     json_integer(r.timestamp)
         );
