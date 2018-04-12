@@ -70,6 +70,7 @@ typedef unordered_set<ConnectionPtr, boost::hash<ConnectionPtr> > chconlist_t;
 typedef unordered_set<string> chstringset_t;
 typedef unordered_map<string, BanRecord> chbanmap_t;
 typedef unordered_map<string, ModRecord> chmodmap_t;
+typedef unordered_map<string, string> chmodnamemap_t;
 typedef unordered_map<string, double> chtimermap_t;
 
 class Channel : public LBase {
@@ -211,6 +212,7 @@ protected:
     ChannelMessageMode chatMode;
     chconlist_t participants;
     chmodmap_t moderators;
+    chmodnamemap_t moderatorsMap; // lower -> regular
     string owner;
     chbanmap_t bans;
     int participantCount;

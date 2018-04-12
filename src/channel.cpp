@@ -71,6 +71,49 @@ Channel::~Channel() {
     assert(participants.size() == 0);
 }
 
+// Minor utils defined here until we have a utility function file.
+
+/**
+* Change a string's pointer value to a lowercased version.
+* @param string& str string pointer reference
+* @returns void
+*/
+void setLower(string& str) {
+  int intLength;
+  const size_t length = str.length();
+
+  if (length > INT_MAX) {
+    LOG(WARNING) << "String size_t const exceeds maximum signed integer size. Overflow immenent."; // For the rare, rare case that this may occur.
+  }
+
+  intLength = static_cast<int>(length);
+
+  for (int i = 0; i < intLength; ++i) {
+    str[i] = (char)tolower(str[i]);
+  }
+}
+
+/**
+* Returns a copy of the string in lowercase.
+* @param string str string
+* @returns string
+*/
+string getLower(string str) {
+  int intLength;
+  const size_t length = str.length();
+
+  if (length > INT_MAX) {
+    LOG(WARNING) << "String size_t const exceeds maximum signed integer size. Overflow immenent.";
+  }
+
+  intLength = static_cast<int>(length);
+
+  for (int i = 0; i < intLength; ++i) {
+    str[i] = (char)tolower(str[i]);
+  }
+  return str;
+}
+
 void Channel::sendToAll(string& message) {
     MessagePtr outMessage(MessageBuffer::fromString(message));
     for (chconlist_t::iterator i = participants.begin(); i != participants.end(); ++i) {
@@ -223,6 +266,7 @@ void Channel::addMod(ConnectionPtr src, string& dest) {
     mod.modder = src->characterName;
     mod.time = time(0);
     moderators[dest] = mod;
+    moderatorsMap[getLower(dest)] = dest;
 }
 
 void Channel::addMod(string& dest) {
@@ -230,21 +274,23 @@ void Channel::addMod(string& dest) {
     mod.modder = "[System]";
     mod.time = time(0);
     moderators[dest] = mod;
+    moderatorsMap[getLower(dest)] = dest;
 }
 
 void Channel::remMod(string& dest) {
     moderators.erase(dest);
+    moderatorsMap.erase(getLower(dest));
 }
 
 bool Channel::isMod(ConnectionPtr con) {
-    if (con->globalModerator || con->admin || (owner == con->characterName) || moderators.find(con->characterName) != moderators.end())
+    if (con->globalModerator || con->admin || (owner == con->characterName) || moderatorsMap.find(con->characterNameLower) != moderatorsMap.end())
         return true;
 
     return false;
 }
 
 bool Channel::isMod(string& name) {
-    if ((owner == name) || moderators.find(name) != moderators.end())
+    if ((owner == name) || moderatorsMap.find(getLower(name)) != moderatorsMap.end())
         return true;
 
     return false;
@@ -526,10 +572,11 @@ void Channel::loadChannel(const json_t* channode) {
                 {
                     json_t* namenode = json_object_get(mod, "name");
                     if (namenode) {
-                        const char* namestring = json_string_value(namenode);
-                        if (namestring) {
-                            moderators[namestring] = m;
-                        }
+                      const char* namestring = json_string_value(namenode);
+                      if (namestring) {
+                        moderatorsMap[getLower(namestring)] = namestring; 
+                        moderators[namestring] = m;
+                      }
                     } else {
                         LOG(WARNING) << "Mod json for channel " << name << " contains no name item.";
                         continue;
