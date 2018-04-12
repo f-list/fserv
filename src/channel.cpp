@@ -578,39 +578,39 @@ void Channel::loadChannel(const json_t* channode) {
 
 string Channel::modeToString() {
     switch (chatMode) {
-        default:
         case CMM_BOTH:
             return "both";
         case CMM_ADS_ONLY:
             return "ads";
         case CMM_CHAT_ONLY:
             return "chat";
+        // For now, explicitly defining the default as both.
+        default:
+            return "both";
     }
-    return "both";
 }
 
 ChannelMessageMode Channel::stringToMode(string modestring) {
-    if (modestring == "both")
-        return CMM_BOTH;
-    else if (modestring == "ads")
+    if (modestring == "ads")
         return CMM_ADS_ONLY;
     else if (modestring == "chat")
         return CMM_CHAT_ONLY;
-
-    return CMM_BOTH;
+    else
+        return CMM_BOTH;
 }
 
 string Channel::typeToString() {
     switch (type) {
-        default:
         case CT_PRIVATE:
             return "private";
         case CT_PUBPRIVATE:
             return "pubprivate";
         case CT_PUBLIC:
             return "public";
+        default:
+            // Default to private, for now.
+            return "private";
     }
-    return "private";
 }
 
 ChannelType Channel::stringToType(string typestring) {
