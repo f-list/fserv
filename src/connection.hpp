@@ -98,8 +98,8 @@ public:
     }
 
 public:
-    long accountID;
-    long characterID;
+    uint32_t accountID;
+    uint32_t characterID;
     string characterName;
     string characterNameLower;
     bool authStarted;
