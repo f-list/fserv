@@ -37,6 +37,7 @@
 #include <fstream>
 
 conptrmap_t ServerState::connectionMap;
+conidmap_t ServerState::connectionIdMap;
 concountmap_t ServerState::connectionCountMap;
 chanptrmap_t ServerState::channelMap;
 conptrlist_t ServerState::unidentifiedList;
@@ -372,6 +373,7 @@ void ServerState::addConnection(string& name, ConnectionPtr con) {
     connectionCountMap[(int) con->clientAddress.sin_addr.s_addr] += 1;
     //DLOG(INFO) << "IP " << (int)con->clientAddress.sin_addr.s_addr << " now has " << connectionCountMap[(int)con->clientAddress.sin_addr.s_addr] << " connections.";
     connectionMap[name] = con;
+    connectionIdMap[con->characterID] = con;
     ++userCount;
     if (userCount > maxUserCount)
         maxUserCount = userCount;
@@ -379,7 +381,9 @@ void ServerState::addConnection(string& name, ConnectionPtr con) {
 
 void ServerState::removeConnection(string& name) {
     if (connectionMap.find(name) != connectionMap.end()) {
-        int addr = (int) connectionMap[name]->clientAddress.sin_addr.s_addr;
+        auto con = connectionMap[name];
+        connectionIdMap.erase(con->characterID);
+        int addr = (int) con->clientAddress.sin_addr.s_addr;
         connectionCountMap[addr] -= 1;
         //DLOG(INFO) << "IP " << addr << " now has " << connectionCountMap[addr] << " connections.";
         if (connectionCountMap[addr] <= 0) {
@@ -397,7 +401,14 @@ ConnectionPtr ServerState::getConnection(string& name) {
     if (connectionMap.find(name) != connectionMap.end())
         return connectionMap[name];
 
-    return 0;
+    return nullptr;
+}
+
+ConnectionPtr ServerState::getConnectionById(uint32_t id) {
+    if (connectionIdMap.find(id) != connectionIdMap.end())
+        return connectionIdMap[id];
+
+    return nullptr;
 }
 
 const int ServerState::getConnectionIPCount(ConnectionPtr con) {
@@ -429,7 +440,7 @@ string ServerState::generatePrivateChannelID(ConnectionPtr con, string& title) {
             lname[i] = (char) tolower(lname[i]);
         }
         Channel* chan = ServerState::getChannel(lname).get();
-        if (chan == 0) {
+        if (chan == nullptr) {
             return namehash;
         }
     }

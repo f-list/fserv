@@ -62,6 +62,7 @@ typedef struct {
 
 
 typedef unordered_map<string, ConnectionPtr> conptrmap_t; //character name lower, connection
+typedef unordered_map<uint32_t, ConnectionPtr> conidmap_t; // character id, connection
 typedef unordered_map<int, int> concountmap_t; //IP, count
 typedef unordered_map<string, ChannelPtr> chanptrmap_t; //channel name lower, channel
 typedef list<ConnectionPtr> conptrlist_t;
@@ -109,6 +110,7 @@ public:
     static void addConnection(string& name, ConnectionPtr con);
     static void removeConnection(string& name);
     static ConnectionPtr getConnection(string& name);
+    static ConnectionPtr getConnectionById(uint32_t id);
 
     static const conptrmap_t& getConnections() {
         return connectionMap;
@@ -203,6 +205,7 @@ private:
     static long maxUserCount;
     static long channelSeed;
     static conptrmap_t connectionMap;
+    static conidmap_t connectionIdMap;
     static concountmap_t connectionCountMap;
     static chanptrmap_t channelMap;
     static conptrlist_t unidentifiedList;
