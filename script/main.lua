@@ -1625,7 +1625,7 @@ function(con, args)
 
     u.setStatus(con, cookie, newstatus, statusmessage)
     s.logMessage("status", con, nil, nil, "Status: " .. newstatus .. " Message: " .. statusmessage)
-    s.broadcast("STA", { character = u.getName(con), status = newstatus, statusmsg = statusmessage })
+    s.send("STA", { character = u.getName(con), status = newstatus, statusmsg = statusmessage })
     return const.FERR_OK
 end
 
@@ -1912,10 +1912,10 @@ function(con, args)
 
     s.timeUpdate(con, false)
 
-    s.sendUserList(con, "LIS", 100)
+    -- s.sendUserList(con, "LIS", 100)
 
     s.logMessage("connect", con, nil, nil, nil)
-    s.broadcast("NLN", { identity = name, status = "online", gender = u.getGender(con) })
+    -- s.broadcast("NLN", { identity = name, status = "online", gender = u.getGender(con) })
 
     if isop or issupercop then
         s.addToStaffCallTargets(con)
@@ -1941,7 +1941,7 @@ function(con)
     for i, v in ipairs(channels) do
         partChannel(v, con, true)
     end
-    s.broadcast("FLN", { character = name })
+    -- s.broadcast("FLN", { character = name })
     s.logMessage("disconnect", con, nil, nil, nil)
     local found, chan = c.getChannel("adh-uberawesomestaffroom")
     if found == true then
