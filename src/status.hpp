@@ -95,7 +95,7 @@ public:
 
     void handleReply();
 
-    void sendStatusTimeUpdate(ConnectionPtr con, bool disconnect = false);
+    void sendStatusTimeUpdate(ConnectionPtr con, bool disconnect = false, bool needInitial = false);
 
     void sendStatusUpdate(ConnectionPtr con, uint64_t cookie = 0);
 

@@ -136,13 +136,14 @@ void StatusClient::handleReply() {
     }
 }
 
-void StatusClient::sendStatusTimeUpdate(ConnectionPtr con, bool disconnect) {
+void StatusClient::sendStatusTimeUpdate(ConnectionPtr con, bool disconnect, bool needInitial) {
     auto updateMessage = new MessageIn();
     auto request = new StatusRequest(updateMessage);
     auto timeMessage = updateMessage->mutable_timeupdate();
     timeMessage->set_name(con->characterName);
     timeMessage->set_characterid(con->characterID);
     timeMessage->set_killsession(disconnect);
+    timeMessage->set_needinitial(needInitial);
     timeMessage->set_sessionid(1ULL);
     timeMessage->set_timestamp(time(nullptr));
     addRequest(request);

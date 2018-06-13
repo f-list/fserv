@@ -93,13 +93,14 @@ int LuaChat::openChatLib(lua_State* L) {
 }
 
 int LuaChat::timeUpdate(lua_State* L) {
-    luaL_checkany(L, 2);
+    luaL_checkany(L, 3);
 
     LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     bool disconnect = lua_toboolean(L, 2);
-    lua_pop(L, 2);
-    StatusClient::instance()->sendStatusTimeUpdate(con, disconnect);
+    bool needInitial = lua_toboolean(L, 3);
+    lua_pop(L, 3);
+    StatusClient::instance()->sendStatusTimeUpdate(con, disconnect, needInitial);
     return 0;
 }
 

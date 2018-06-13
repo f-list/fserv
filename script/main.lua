@@ -1909,7 +1909,7 @@ function(con, args)
     end
     u.send(con, "ADL", { array_ops = s.getOpList() })
 
-    s.timeUpdate(con, false)
+    s.timeUpdate(con, false, true)
 
     -- s.sendUserList(con, "LIS", 100)
 
@@ -1934,7 +1934,7 @@ end
 
 event.pre_disconnect =
 function(con)
-    s.timeUpdate(con, true)
+    s.timeUpdate(con, true, false)
     local name = u.getName(con)
     local channels = u.getChannels(con)
     for i, v in ipairs(channels) do

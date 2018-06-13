@@ -33,6 +33,7 @@ message TimeUpdateIn {
     uint64 SessionID = 3;
     int64 Timestamp = 4;
     bool KillSession = 5;
+    bool NeedInitial = 6;
 }
 
 message StatusUpdateIn {
