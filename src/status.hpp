@@ -129,7 +129,7 @@ private:
     pthread_mutex_t requestMutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_t replyMutex = PTHREAD_MUTEX_INITIALIZER;
     atomic<bool> doRun;
-    atomic<bool> inResync;
+    atomic<bool> connected;
 private:
     StatusClient() {
         startThread();

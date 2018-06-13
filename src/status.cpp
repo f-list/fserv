@@ -55,15 +55,37 @@ void sendToTargets(MessagePtr message, const ::google::protobuf::RepeatedField<:
 }
 
 void handleReplyResync(StatusResponse* reply) {
+    DLOG(INFO) << "Processing resync request from status thread.";
     auto connections = ServerState::getConnections();
-    auto request = new StatusRequest();
-    request->type = TYPE_RESYNC;
-    request->resync = new std::vector<ConnectionPtr>();
-    for (const auto &itr : connections) {
-        DLOG(INFO) << "Adding connection: " << itr.second;
-        request->resync->push_back(itr.second);
+    auto resyncStartMessage = new MessageIn();
+    resyncStartMessage->set_allocated_resync(new Resync());
+    auto resyncRequest = new StatusRequest(resyncStartMessage);
+    resyncRequest->type = TYPE_RESYNC;
+    StatusClient::instance()->addRequest(resyncRequest);
+    while (true) {
+        auto itr = connections.begin();
+        auto message = new MessageIn();
+        auto fillMessage = message->mutable_fill();
+        auto request = new StatusRequest(message);
+        int remaining = 500;
+        while (itr != connections.end() && remaining-- >= 0) {
+            auto character = itr->second;
+            DLOG(INFO) << "Adding fill character with id: " << character->characterID;
+            auto fillCharacter = fillMessage->add_characters();
+            fillCharacter->set_characterid(character->characterID);
+            fillCharacter->set_status(character->status);
+            fillCharacter->set_name(character->characterName);
+            fillCharacter->set_statustext(character->statusMessage);
+            fillCharacter->set_session(1UL);
+            ++itr;
+        }
+        fillMessage->set_final(itr == connections.end());
+        DLOG(INFO) << "Submitting fill message with final set to: " << fillMessage->final();
+        request->type = TYPE_RESYNC;
+        StatusClient::instance()->addRequest(request);
+        if (itr == connections.end())
+            break;
     }
-    StatusClient::instance()->addRequest(request);
 }
 
 void handleReplyMessageRaw(const RawOut &message) {
@@ -98,6 +120,8 @@ void StatusClient::handleReply() {
             case TYPE_MESSAGE:
                 handleReplyMessage(reply);
                 break;
+            default:
+                DLOG(INFO) << "Unknown status reply type: " << reply->type;
         }
         delete reply;
         reply = getReply();
@@ -142,25 +166,18 @@ StatusClient::sendSubChange(ConnectionPtr con, uint32_t target, SubscriptionChan
 }
 
 void StatusClient::startResync() {
-    inResync = true;
-    MUT_LOCK(requestMutex);
-    while (auto request = requestQueue.front()) {
-        delete request;
-        requestQueue.pop();
-    }
-    MUT_UNLOCK(requestMutex);
+    // Clearing request queue here races with replies.
     auto reply = new StatusResponse();
     reply->type = TYPE_RESYNC;
     addReply(reply);
-    inResync = false;
 }
 
 // Status Thread
 bool StatusClient::addRequest(StatusRequest* request) {
     if (!doRun)
         return false;
-    if (inResync && request->type != TYPE_RESYNC) {
-        DLOG(INFO) << "Not adding request because in resync and not the right request type.";
+    if (!(connected || request->type == TYPE_RESYNC)) {
+        DLOG(INFO) << "Dropping request because no connection exists and it is not a resync message type.";
         return false;
     }
     struct timespec abs_time;
@@ -235,47 +252,6 @@ void* StatusClient::runThread(void* param) {
     pthread_exit(nullptr);
 }
 
-MessageIn* generateFill(StatusRequest* request) {
-    if (request->resync->empty())
-        return nullptr;
-    auto message = new MessageIn();
-    auto fillMessage = message->mutable_fill();
-    int remainingFill = 100;
-    while (remainingFill-- && request->resync->back()) {
-        auto character = request->resync->back();
-        auto fillCharacter = fillMessage->add_characters();
-        fillCharacter->set_characterid(character->characterID);
-        fillCharacter->set_status(character->status);
-        fillCharacter->set_name(character->characterName);
-        fillCharacter->set_statustext(character->statusMessage);
-        request->resync->pop_back();
-    }
-    fillMessage->set_final(request->resync->empty());
-    return message;
-}
-
-void runResync(StatusRequest* request, std::shared_ptr<grpc::ClientReaderWriter<MessageIn, MessageOut> > stream,
-               atomic<bool> &restart) {
-    DLOG(INFO) << "Starting the resync process";
-    if (request->resync->empty())
-        return;
-    MessageIn resyncMessage;
-    resyncMessage.mutable_resync();
-    if (!stream->Write(resyncMessage)) {
-        restart = true;
-    }
-    while (auto fillMessage = generateFill(request)) {
-        if (!stream->Write(*fillMessage)) {
-            delete fillMessage;
-            DLOG(INFO) << "Failed to write message to status server in resync.";
-            restart = true;
-            break;
-        }
-        delete fillMessage;
-    }
-    DLOG(INFO) << "Finished sending the resync messages.";
-}
-
 void StatusClient::runner() {
     atomic<bool> needs_restart;
     while (doRun) {
@@ -286,12 +262,12 @@ void StatusClient::runner() {
 
         std::shared_ptr<grpc::ClientReaderWriter<MessageIn, MessageOut> > stream(stub->StatusSystem(&context));
 
-        if(!channel->WaitForConnected(std::chrono::system_clock::now() + std::chrono::seconds(5))) {
-            DLOG(INFO) << "Couldn't ensure that channel connected successfully.";
+        if (!channel->WaitForConnected(std::chrono::system_clock::now() + std::chrono::seconds(5))) {
+            LOG(WARNING) << "Couldn't ensure that channel connected successfully.";
             continue;
         }
 
-        startResync();
+        connected = true;
 
         std::thread writer([&]() {
             MUT_LOCK(requestConditionMutex);
@@ -299,15 +275,11 @@ void StatusClient::runner() {
                 pthread_cond_wait(&requestCondition, &requestConditionMutex);
                 auto request = getRequest();
                 while (doRun && request) {
-                    if (request->type == TYPE_MESSAGE) {
-                        if (stream->Write(*request->message)) {
-                            DLOG(INFO) << "Wrote status client message to server successfully.";
-                        } else {
-                            DLOG(INFO) << "Failed to write message to status server.";
-                            needs_restart = true;
-                        }
-                    } else if (request->type == TYPE_RESYNC) {
-                        runResync(request, stream, needs_restart);
+                    if (stream->Write(*request->message)) {
+                        DLOG(INFO) << "Wrote status client message to server successfully.";
+                    } else {
+                        DLOG(INFO) << "Failed to write message to status server.";
+                        needs_restart = true;
                     }
                     delete request;
                     if (needs_restart || !doRun)
@@ -318,6 +290,8 @@ void StatusClient::runner() {
             MUT_UNLOCK(requestConditionMutex);
             stream->WritesDone();
         });
+
+        startResync();
 
         {
             auto outMessage = new MessageOut();
@@ -333,11 +307,12 @@ void StatusClient::runner() {
             if (!status.ok()) {
                 LOG(WARNING) << "gRPC stream failed with " << status.error_message();
             }
-            needs_restart = true;
-            pthread_cond_signal(&requestCondition);
-            writer.join();
-            needs_restart = false;
         }
+        connected = false;
+        needs_restart = true;
+        pthread_cond_signal(&requestCondition);
+        writer.join();
+        needs_restart = false;
     }
 }
 
