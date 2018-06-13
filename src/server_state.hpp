@@ -40,18 +40,14 @@ using std::tr1::unordered_map;
 using std::tr1::unordered_set;
 
 typedef struct {
+    uint32_t characterId;
     string character;
     time_t end;
 } TimeoutRecord;
 
 typedef struct {
-    long account_id;
-    string character;
-    time_t end;
-} AltWatchRecord;
-
-typedef struct {
     string action;
+    uint32_t characterId;
     string character;
     string report;
     time_t timestamp;
@@ -69,7 +65,6 @@ typedef list<ConnectionPtr> conptrlist_t;
 typedef unordered_set<string, case_insensitive_hash, case_insensitive_compare> oplist_t; //op name
 typedef unordered_map<long, string> banlist_t; //account id, character name lower
 typedef unordered_map<long, TimeoutRecord> timeoutmap_t; //account id, timeout record
-typedef unordered_map<long, AltWatchRecord> altwatchmap_t; //account id, alt watch record
 typedef unordered_map<string, StaffCallRecord> staffcallmap_t; //call id, staff call record
 typedef unordered_set<string> chanoplist_t;
 typedef unordered_set<ConnectionPtr> conptrset_t;
@@ -145,11 +140,6 @@ public:
         return opList;
     }
 
-    static void addAltWatch(long accountid, AltWatchRecord& record);
-    static void removeAltWatch(long accountid);
-    static AltWatchRecord getAltWatch(long accountid);
-    static void cleanAltWatchList();
-
     static void addStaffCall(string& callid, StaffCallRecord& record);
     static void removeStaffCall(string& callid);
     static StaffCallRecord getStaffCall(string& callid);
@@ -212,7 +202,6 @@ private:
     static oplist_t opList;
     static banlist_t banList;
     static timeoutmap_t timeoutList;
-    static altwatchmap_t altWatchList;
     static staffcallmap_t staffCallList;
     static chanoplist_t channelOpList;
     static conptrset_t staffCallTargets;

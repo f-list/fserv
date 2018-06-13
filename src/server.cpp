@@ -44,18 +44,16 @@
 #include "server_state.hpp"
 #include "md5.hpp"
 
-#include "grpc.hpp"
-#include "messages.pb.h"
 #include "status.hpp"
 
-#include <time.h>
+#include <ctime>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <fcntl.h>
-#include <errno.h>
+#include <cerrno>
 #include <unistd.h>
 
 #include <gperftools/malloc_extension.h>
@@ -178,7 +176,7 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
                     //DLOG(INFO) << "Command '" << command << "' payload'" << payload << "'";
                     FReturnCode errorcode = FERR_FATAL_INTERNAL;
                     if (command == "PIN") {
-                        StatusSystem::instance()->sendStatusTimeUpdate(con);
+                        StatusClient::instance()->sendStatusTimeUpdate(con);
                         errorcode = FERR_OK;
                     } else if (command == "IDN") {
                         errorcode = NativeCommand::IdentCommand(con, payload);
@@ -452,7 +450,6 @@ void Server::idleTasksCallback(struct ev_loop* loop, ev_timer* w, int revents) {
     ServerState::saveOps();
     ServerState::removeUnusedChannels();
     ServerState::saveChannels();
-    ServerState::cleanAltWatchList();
     ServerState::sendUserListToRedis();
     int inuse = lua_gc(sL, LUA_GCCOUNT, 0) * 1024 + lua_gc(sL, LUA_GCCOUNTB, 0);
     lua_gc(sL, LUA_GCCOLLECT, 0);
@@ -514,8 +511,9 @@ void Server::processHTTPWakeup(struct ev_loop* loop, ev_async* w, int revents) {
 
 
 void Server::processStatusWakeup(struct ev_loop* loop, ev_async* w, int revents) {
-    StatusSystem::instance()->handleReply();
     DLOG(INFO) << "Processing status async wakeup.";
+    StatusClient::instance()->handleReply();
+    DLOG(INFO) << "Done processing status async wakeup.";
 }
 
 /**
@@ -668,7 +666,7 @@ void Server::run() {
     if (StartupConfig::getBool("log_start"))
         loggerStart();
     // Ensure that the status client is running.
-    StatusSystem::instance();
+    StatusClient::instance();
 
     int listensock = bindAndListen();
     server_listen = new ev_io;

@@ -70,10 +70,6 @@ public:
     static int removeTimeout(lua_State* L);
     static int isTimedOut(lua_State* L);
 
-    static int addAltWatch(lua_State* L);
-    static int removeAltWatch(lua_State* L);
-    static int getAltWatch(lua_State* L);
-
     static int addStaffCall(lua_State* L);
     static int removeStaffCall(lua_State* L);
     static int getStaffCall(lua_State* L);

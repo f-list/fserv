@@ -99,7 +99,7 @@ int LuaChat::timeUpdate(lua_State* L) {
     GETLCON(base, L, 1, con);
     bool disconnect = lua_toboolean(L, 2);
     lua_pop(L, 2);
-    StatusSystem::instance()->sendStatusTimeUpdate(con, disconnect);
+    StatusClient::instance()->sendStatusTimeUpdate(con, disconnect);
     return 0;
 }
 
@@ -598,46 +598,6 @@ int LuaChat::isTimedOut(lua_State* L) {
     }
     lua_pushboolean(L, ret);
     lua_pushinteger(L, (end - time(0)));
-    return 2;
-}
-
-/**
- * Adds an alt watch for the specified connections account
- * @param LUD operator connection
- * @param LUD target connection
- * @returns Nothing.
- */
-int LuaChat::addAltWatch(lua_State* L) {
-    luaL_checkany(L, 2);
-
-    LBase* base = 0;
-    GETLCON(base, L, 1, con);
-    GETLCON(base, L, 2, target);
-    lua_pop(L, 2);
-
-    AltWatchRecord record;
-    record.account_id = target->accountID;
-    record.character = target->characterName;
-    record.end = time(NULL) + (20 * 60);
-    ServerState::addAltWatch(target->accountID, record);
-    return 0;
-}
-
-int LuaChat::getAltWatch(lua_State* L) {
-    luaL_checkany(L, 1);
-
-    long account_id = luaL_checkinteger(L, 1);
-    lua_pop(L, 1);
-
-    AltWatchRecord awr = ServerState::getAltWatch(account_id);
-    if (awr.account_id != account_id || awr.end < time(NULL)) {
-        lua_pushboolean(L, false);
-        return 1;
-    }
-    lua_pushboolean(L, true);
-    lua_newtable(L);
-    lua_pushstring(L, awr.character.c_str());
-    lua_setfield(L, -2, "character");
     return 2;
 }
 

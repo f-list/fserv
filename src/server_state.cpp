@@ -44,7 +44,6 @@ conptrlist_t ServerState::unidentifiedList;
 oplist_t ServerState::opList;
 banlist_t ServerState::banList;
 timeoutmap_t ServerState::timeoutList;
-altwatchmap_t ServerState::altWatchList;
 staffcallmap_t ServerState::staffCallList;
 chanoplist_t ServerState::channelOpList;
 conptrset_t ServerState::staffCallTargets;
@@ -522,35 +521,6 @@ bool ServerState::isTimedOut(long accountid, int& end) {
     }
 
     return false;
-}
-
-void ServerState::addAltWatch(long accountid, AltWatchRecord& record) {
-    altWatchList[accountid] = record;
-}
-
-void ServerState::removeAltWatch(long accountid) {
-    altWatchList.erase(accountid);
-}
-
-AltWatchRecord ServerState::getAltWatch(long int accountid) {
-    if (altWatchList.find(accountid) != altWatchList.end())
-        return altWatchList[accountid];
-    AltWatchRecord record;
-    record.account_id = 0;
-    record.end = 0;
-    return record;
-}
-
-void ServerState::cleanAltWatchList() {
-    time_t now = time(NULL);
-    list<long> to_erase;
-    for (altwatchmap_t::const_iterator i = altWatchList.begin(); i != altWatchList.end(); ++i) {
-        if (i->second.end < now)
-            to_erase.push_back(i->first);
-    }
-    for (list<long>::const_iterator i = to_erase.begin(); i != to_erase.end(); ++i) {
-        altWatchList.erase(*i);
-    }
 }
 
 void ServerState::addStaffCall(string& callid, StaffCallRecord& record) {
