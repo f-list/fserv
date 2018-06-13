@@ -141,7 +141,7 @@ private:
 
     void startResync();
 
-    void handleRaw(const RawOut &message);
+    void handleReplyResync(StatusResponse*);
 
     static StatusClient* _instance;
 };

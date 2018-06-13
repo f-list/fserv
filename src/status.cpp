@@ -39,6 +39,7 @@
 #include <grpcpp/security/credentials.h>
 
 #include "messages.grpc.pb.h"
+#include "startup_config.hpp"
 
 #include <thread>
 
@@ -54,23 +55,29 @@ void sendToTargets(MessagePtr message, const ::google::protobuf::RepeatedField<:
     }
 }
 
-void handleReplyResync(StatusResponse* reply) {
+void StatusClient::handleReplyResync(StatusResponse* reply) {
     DLOG(INFO) << "Processing resync request from status thread.";
+    MUT_LOCK(requestMutex);
+    while(!requestQueue.empty()) {
+        auto entry = requestQueue.front();
+        delete entry;
+        requestQueue.pop();
+    }
+    MUT_UNLOCK(requestMutex);
     auto connections = ServerState::getConnections();
     auto resyncStartMessage = new MessageIn();
     resyncStartMessage->set_allocated_resync(new Resync());
     auto resyncRequest = new StatusRequest(resyncStartMessage);
     resyncRequest->type = TYPE_RESYNC;
-    StatusClient::instance()->addRequest(resyncRequest);
+    addRequest(resyncRequest);
+    auto itr = connections.begin();
     while (true) {
-        auto itr = connections.begin();
         auto message = new MessageIn();
         auto fillMessage = message->mutable_fill();
         auto request = new StatusRequest(message);
         int remaining = 500;
         while (itr != connections.end() && remaining-- >= 0) {
             auto character = itr->second;
-            DLOG(INFO) << "Adding fill character with id: " << character->characterID;
             auto fillCharacter = fillMessage->add_characters();
             fillCharacter->set_characterid(character->characterID);
             fillCharacter->set_status(character->status);
@@ -82,7 +89,7 @@ void handleReplyResync(StatusResponse* reply) {
         fillMessage->set_final(itr == connections.end());
         DLOG(INFO) << "Submitting fill message with final set to: " << fillMessage->final();
         request->type = TYPE_RESYNC;
-        StatusClient::instance()->addRequest(request);
+        addRequest(request);
         if (itr == connections.end())
             break;
     }
@@ -256,7 +263,7 @@ void StatusClient::runner() {
     atomic<bool> needs_restart;
     while (doRun) {
         DLOG(INFO) << "Starting status context with server.";
-        auto channel = grpc::CreateChannel("statusd:5555", grpc::InsecureChannelCredentials());
+        auto channel = grpc::CreateChannel(StartupConfig::getString("status_host"), grpc::InsecureChannelCredentials());
         auto stub = StatusSystem::NewStub(channel);
         grpc::ClientContext context;
 
