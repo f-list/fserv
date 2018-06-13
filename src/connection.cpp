@@ -81,7 +81,7 @@ bool ConnectionInstance::send(MessagePtr message) {
     return true;
 }
 
-bool ConnectionInstance::sendRaw(string& message) {
+bool ConnectionInstance::sendRaw(const string& message) {
     if (closed)
         return false;
 

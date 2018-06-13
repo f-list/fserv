@@ -58,7 +58,7 @@ public:
         length_ = inLength;
     }
 
-    static MessageBuffer* fromString(string& message);
+    static MessageBuffer* fromString(const string& message);
     
     const size_t length() const {
         return length_;

@@ -76,10 +76,10 @@ namespace Websocket {
                                       std::string& output);
         static WebSocketResult receive(ConnectionInstance* con, std::string& input,
                                        std::string& output);
-        static void sendMessage(unsigned int opcode, std::string& input,
+        static void sendMessage(unsigned int opcode, const std::string& input,
                                 std::string& output);
-        static void sendText(std::string& input, std::string& output);
-        static void sendPong(std::string& input, std::string& output);
+        static void sendText(const std::string& input, std::string& output);
+        static void sendPong(const std::string& input, std::string& output);
     private:
 
         Hybi() { }

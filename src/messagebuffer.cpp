@@ -29,7 +29,7 @@
 #include "websocket.hpp"
 
 
-MessageBuffer* MessageBuffer::fromString(string& message) {
+MessageBuffer* MessageBuffer::fromString(const string& message) {
     string buffer;
     Websocket::Hybi::sendText(message, buffer);
     MessageBuffer* messageBuffer = new MessageBuffer();

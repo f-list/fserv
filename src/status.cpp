@@ -52,6 +52,8 @@ void sendToTargets(MessagePtr message, const ::google::protobuf::RepeatedField<:
         auto con = ServerState::getConnectionById(id);
         if (con)
             con->send(message);
+        else
+            DLOG(INFO) << "Unable to find character with id: " << id;
     }
 }
 
@@ -97,9 +99,8 @@ void StatusClient::handleReplyResync(StatusResponse* reply) {
 
 void handleReplyMessageRaw(const RawOut &message) {
     DLOG(INFO) << "Dispatching message: " << message.body();
-    auto messageOut = new MessageBuffer();
+    auto messageOut = MessageBuffer::fromString(message.body());
     MessagePtr messagePtr(messageOut);
-    messageOut->set(message.body().data(), message.body().length());
     sendToTargets(messagePtr, message.targets());
 }
 

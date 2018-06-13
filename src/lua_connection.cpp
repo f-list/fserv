@@ -381,22 +381,25 @@ int LuaConnection::closef(lua_State* L) {
  * @param LUD connection
  * @param string name
  * @param string name lowercase
+ * @param number character id
  * @returns [boolean] If the identification could be set.
  */
 int LuaConnection::setIdent(lua_State* L) {
     bool ret = false;
-    luaL_checkany(L, 3);
+    luaL_checkany(L, 4);
 
     LBase* base = 0;
     GETLCON(base, L, 1, con);
     string name = luaL_checkstring(L, 2);
     string lowername = luaL_checkstring(L, 3);
-    lua_pop(L, 3);
+    uint32_t cid = luaL_checkinteger(L, 4);
+    lua_pop(L, 4);
 
     if (con->identified) {
         ret = false;
     } else {
         con->identified = true;
+        con->characterID = cid;
         con->characterName = name;
         con->characterNameLower = lowername;
         ServerState::addConnection(lowername, con);

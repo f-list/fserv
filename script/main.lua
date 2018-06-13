@@ -1625,7 +1625,6 @@ function(con, args)
 
     u.setStatus(con, cookie, newstatus, statusmessage)
     s.logMessage("status", con, nil, nil, "Status: " .. newstatus .. " Message: " .. statusmessage)
-    s.send("STA", { character = u.getName(con), status = newstatus, statusmsg = statusmessage })
     return const.FERR_OK
 end
 
@@ -1915,7 +1914,7 @@ function(con, args)
     -- s.sendUserList(con, "LIS", 100)
 
     s.logMessage("connect", con, nil, nil, nil)
-    -- s.broadcast("NLN", { identity = name, status = "online", gender = u.getGender(con) })
+    u.send("NLN", { identity = name, status = "online", gender = u.getGender(con) })
 
     if isop or issupercop then
         s.addToStaffCallTargets(con)

@@ -63,7 +63,7 @@ public:
     ~ConnectionInstance();
 
     bool send(MessagePtr message);
-    bool sendRaw(string& message);
+    bool sendRaw(const string& message);
     void sendError(int error);
     void sendError(int error, string message);
     void sendDebugReply(string message);

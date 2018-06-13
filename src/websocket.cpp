@@ -240,7 +240,7 @@ namespace Websocket {
         return WS_RESULT_OK;
     }
 
-    void Hybi::sendMessage(unsigned int opcode, string& input, string& output) {
+    void Hybi::sendMessage(unsigned int opcode, const string& input, string& output) {
         std::vector<unsigned char> frame;
         unsigned int length = input.length();
 
@@ -264,11 +264,11 @@ namespace Websocket {
         output.swap(tmp);
     }
 
-    void Hybi::sendText(string& input, string& output) {
+    void Hybi::sendText(const string& input, string& output) {
         Hybi::sendMessage(wsOpcodeText, input, output);
     }
 
-    void Hybi::sendPong(string& input, string& output) {
+    void Hybi::sendPong(const string& input, string& output) {
         Hybi::sendMessage(wsOpcodePong, input, output);
     }
 }
