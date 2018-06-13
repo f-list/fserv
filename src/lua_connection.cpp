@@ -56,7 +56,6 @@ static const luaL_Reg luaconnection_funcs[] = {
         {"closef",                 LuaConnection::closef},
         {"setIdent",               LuaConnection::setIdent},
         {"setAccountID",           LuaConnection::setAccountID},
-        {"setCharacterID",         LuaConnection::setCharacterID},
         {"setAdmin",               LuaConnection::setAdmin},
         {"isAdmin",                LuaConnection::isAdmin},
         {"setGlobMod",             LuaConnection::setGlobalModerator},
@@ -433,23 +432,6 @@ int LuaConnection::setAccountID(lua_State* L) {
     lua_pop(L, 2);
 
     con->accountID = accountid;
-    return 0;
-}
-
-/**
- * Sets the character id for a connection.
- * @param LUD connection
- * @param int character id
- * @returns Nothing.
- */
-int LuaConnection::setCharacterID(lua_State* L) {
-    luaL_checkany(L, 2);
-    LBase* base = 0;
-    GETLCON(base, L, 1, con);
-    long character_id = luaL_checkinteger(L, 2);
-    lua_pop(L, 2);
-
-    con->characterID = character_id;
     return 0;
 }
 
