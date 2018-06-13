@@ -35,6 +35,7 @@
 #include "startup_config.hpp"
 #include "server.hpp"
 #include "logger_thread.hpp"
+#include "status.hpp"
 #include <time.h>
 #include <stdio.h>
 #include <string>
@@ -78,15 +79,27 @@ static const luaL_Reg luachat_funcs[] = {
         {"reload",                LuaChat::reload},
         {"logMessage",            LuaChat::logMessage},
         //{"shutdown", LuaChat::shutdown},
-        {"getStats",              LuaChat::getStats},
-        {"logAction",             LuaChat::logAction},
-        {"toJSON",                LuaChat::toJsonString},
-        {"fromJSON",              LuaChat::fromJsonString},
+        {"getStats",        LuaChat::getStats},
+        {"logAction",       LuaChat::logAction},
+        {"timeUpdate",      LuaChat::timeUpdate},
+        {"toJSON",          LuaChat::toJsonString},
+        {"fromJSON",        LuaChat::fromJsonString},
         {NULL, NULL}
 };
 
 int LuaChat::openChatLib(lua_State* L) {
     luaL_register(L, LUACHAT_MODULE_NAME, luachat_funcs);
+    return 0;
+}
+
+int LuaChat::timeUpdate(lua_State* L) {
+    luaL_checkany(L, 2);
+
+    LBase* base = nullptr;
+    GETLCON(base, L, 1, con);
+    bool disconnect = lua_toboolean(L, 2);
+    lua_pop(L, 2);
+    StatusSystem::instance()->sendStatusTimeUpdate(con, disconnect);
     return 0;
 }
 
@@ -101,7 +114,7 @@ int LuaChat::openChatLib(lua_State* L) {
  */
 int LuaChat::logMessage(lua_State* L) {
     luaL_checkany(L, 5);
-    if (Server::logger() == 0) {
+    if (Server::logger() == nullptr) {
         lua_pop(L, 5);
         return 0;
     }
@@ -221,8 +234,8 @@ int LuaChat::broadcastOps(lua_State* L) {
     const oplist_t ops = ServerState::getOpList();
     for (oplist_t::const_iterator i = ops.begin(); i != ops.end(); ++i) {
         string name(*i);
-        int length = name.length();
-        for (int x = 0; x < length; ++x) {
+        size_t length = name.length();
+        for (size_t x = 0; x < length; ++x) {
             name[x] = tolower(name[x]);
         }
         ConnectionPtr con = ServerState::getConnection(name);

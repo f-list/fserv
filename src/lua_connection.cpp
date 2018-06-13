@@ -35,11 +35,13 @@
 #include "lua_constants.hpp"
 #include "server_state.hpp"
 #include "server.hpp"
+#include "status.hpp"
 
 #define LUACONNECTION_MODULE_NAME "u"
 
 static const luaL_Reg luaconnection_funcs[] = {
         {"getConnection",          LuaConnection::getConnection},
+        {"getByCharacterID",       LuaConnection::getByCharacterID},
         {"getIPCount",             LuaConnection::getIPCount},
         {"getByAccount",           LuaConnection::getByAccount},
         {"getByAccountID",         LuaConnection::getByAccountID},
@@ -124,6 +126,27 @@ int LuaConnection::getIPCount(lua_State* L) {
 
     lua_pushinteger(L, ServerState::getConnectionIPCount(con));
     return 1;
+}
+
+/**
+ * Returns a connection object for a given character id.
+ * @param integer id
+ * @returns [LUD] connection object
+ */
+int LuaConnection::getByCharacterID(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    uint32_t character_id = (uint32_t)luaL_checkinteger(L, 1);
+    lua_pop(L, 1);
+
+    ConnectionPtr con = ServerState::getConnectionById(character_id);
+    if(con == nullptr) {
+        lua_pushboolean(L, false);
+        return 1;
+    }
+    lua_pushboolean(L, true);
+    lua_pushlightuserdata(L, con.get());
+    return 2;
 }
 
 /**
@@ -885,27 +908,32 @@ int LuaConnection::getInfoTags(lua_State* L) {
 /**
  * Sets the status for a connection.
  * @param LUD connection
+ * @param integer cookie
  * @param string status
  * @param string/nil statusmessage
  * @returns Nothing.
  */
 int LuaConnection::setStatus(lua_State* L) {
-    luaL_checkany(L, 3);
+    luaL_checkany(L, 4);
 
     LBase* base = 0;
     GETLCON(base, L, 1, con);
-    string status = luaL_checkstring(L, 2);
+    uint64_t cookie = (uint64_t)luaL_checkinteger(L, 2);
+    string status = luaL_checkstring(L, 3);
     string statusmessage;
     bool setmessage = false;
-    if (lua_type(L, 3) == LUA_TSTRING) {
-        statusmessage = luaL_checkstring(L, 3);
+    if (lua_type(L, 4) == LUA_TSTRING) {
+        statusmessage = luaL_checkstring(L, 4);
         setmessage = true;
     }
-    lua_pop(L, 3);
+    lua_pop(L, 4);
 
     con->status = status;
     if (setmessage)
         con->statusMessage = statusmessage;
+
+
+    StatusSystem::instance()->sendStatusUpdate(con, cookie);
 
     return 0;
 }

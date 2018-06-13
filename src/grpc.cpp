@@ -25,7 +25,7 @@
 
 #include "precompiled_headers.hpp"
 
-#include "grpc.h"
+#include "grpc.hpp"
 
 #include "logging.hpp"
 #include "server.hpp"
@@ -104,6 +104,7 @@ MessageOut* StatusClient::getReply() {
 }
 
 void StatusClient::runner() {
+    atomic<bool> needs_restart = false;
     while (doRun) {
         // TODO: This logic and flow is really messy.
         // Right now it requires that a new message to send comes in before the main loop will time out and try to
@@ -118,14 +119,11 @@ void StatusClient::runner() {
         auto stream(_stub->StatusSystem(&_context));
 
         std::thread writer([&]() {
-            bool needs_restart = false;
             MUT_LOCK(requestConditionMutex);
             while (doRun && !needs_restart) {
                 pthread_cond_wait(&requestCondition, &requestConditionMutex);
                 auto request = getRequest();
                 while (doRun && request) {
-                    gpr_timespec timeout = gpr_time_from_micros(STATUS_MUTEX_TIMEOUT, GPR_TIMESPAN);
-                    _client->WaitForConnected(timeout);
                     if (stream->Write(*request)) {
                         DLOG(INFO) << "Wrote message to server";
                     } else {
@@ -144,18 +142,24 @@ void StatusClient::runner() {
         while (doRun && stream->Read(outMessage)) {
             DLOG(INFO) << "Received message from server";
             addReply(outMessage);
+            outMessage = new MessageOut();
         }
+        delete outMessage;
         auto status = stream->Finish();
         if (!status.ok()) {
             LOG(WARNING) << "gRPC stream failed with " << status.error_message();
         }
+        needs_restart = true;
+        pthread_cond_signal(&requestCondition);
         writer.join();
+        needs_restart = false;
     }
 }
 
 void StatusClient::stopThread() {
     DLOG(INFO) << "Stopping status thread.";
     doRun = false;
+    pthread_cond_signal(&requestCondition);
     pthread_join(_thread, nullptr);
 }
 

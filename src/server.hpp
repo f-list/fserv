@@ -111,8 +111,6 @@ private:
     static void luaTimeHook(lua_State* L1, lua_Debug* db);
     static double luaGetTime();
 
-    static void handlePing(ConnectionInstance* instance);
-
     static FReturnCode processLogin(ConnectionInstance* instance, string& message, bool success);
     static FReturnCode processHTTPReply(HTTPReply* reply);
 
@@ -133,8 +131,6 @@ private:
     static bool luaCanTimeout;
 
     static ChatLogThread* chatLogger;
-
-    static StatusClient* statusClient;
 
     // Stats
     static unsigned long long statAcceptedConnections;

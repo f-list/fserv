@@ -38,6 +38,8 @@ public:
 
     static int getIPCount(lua_State* L);
 
+    static int getByCharacterID(lua_State* L);
+
     static int getByAccount(lua_State* L);
 
     static int getByAccountID(lua_State* L);

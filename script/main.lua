@@ -1474,7 +1474,7 @@ function(con, args)
 
     s.logAction(con, "RWD", args)
     local oldstatus, statusmesg = u.getStatus(target)
-    u.setStatus(target, "crown", statusmesg)
+    u.setStatus(target, 0, "crown", statusmesg)
 
     s.broadcast("STA", { character = u.getName(target), status = "crown", statusmsg = statusmesg })
     return const.FERR_OK
@@ -1603,6 +1603,11 @@ function(con, args)
         return const.FERR_BAD_SYNTAX
     end
 
+    local cookie = tonumber(args.cookie)
+    if cookie == nil then
+        cookie = 0
+    end
+
     local newstatus = string.lower(args.status)
     if const.status[newstatus] == nil then
         newstatus = "online"
@@ -1618,7 +1623,7 @@ function(con, args)
     end
     statusmessage = s.escapeHTML(statusmessage)
 
-    u.setStatus(con, newstatus, statusmessage)
+    u.setStatus(con, cookie, newstatus, statusmessage)
     s.logMessage("status", con, nil, nil, "Status: " .. newstatus .. " Message: " .. statusmessage)
     s.broadcast("STA", { character = u.getName(con), status = newstatus, statusmsg = statusmessage })
     return const.FERR_OK
@@ -1905,6 +1910,8 @@ function(con, args)
     end
     u.send(con, "ADL", { array_ops = s.getOpList() })
 
+    s.timeUpdate(con, false)
+
     s.sendUserList(con, "LIS", 100)
 
     s.logMessage("connect", con, nil, nil, nil)
@@ -1928,6 +1935,7 @@ end
 
 event.pre_disconnect =
 function(con)
+    s.timeUpdate(con, true)
     local name = u.getName(con)
     local channels = u.getChannels(con)
     for i, v in ipairs(channels) do

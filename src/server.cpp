@@ -44,8 +44,9 @@
 #include "server_state.hpp"
 #include "md5.hpp"
 
-#include "grpc.h"
+#include "grpc.hpp"
 #include "messages.pb.h"
+#include "status.hpp"
 
 #include <time.h>
 #include <sys/types.h>
@@ -68,7 +69,6 @@ ev_io* Server::server_listen = nullptr;
 ev_io* Server::rtb_listen = nullptr;
 ev_prepare* Server::server_prepare = nullptr;
 ChatLogThread* Server::chatLogger = nullptr;
-StatusClient* Server::statusClient = nullptr;
 
 lua_State* Server::sL = nullptr;
 ev_tstamp Server::luaTimer = 0;
@@ -110,17 +110,6 @@ void Server::sendStatusWakeup() {
     ev_async_send(server_loop, status_async);
 }
 
-void Server::handlePing(ConnectionInstance* con) {
-    auto updateMessage = new MessageIn();
-    auto timeMessage = updateMessage->mutable_timeupdate();
-    timeMessage->set_name(con->characterName);
-    timeMessage->set_characterid(con->characterID);
-    timeMessage->set_killsession(false);
-    timeMessage->set_sessionid(1ULL);
-    timeMessage->set_timestamp(time(nullptr));
-    statusClient->addRequest(updateMessage);
-}
-
 void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents) {
     ConnectionPtr con(static_cast<ConnectionInstance*> (w->data));
 
@@ -145,7 +134,7 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
         if (received < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
             return;
         } else if (received <= 0) {
-            //DLOG(INFO) << "Closing connection because of socket error, or closed on other side.";
+            DLOG(INFO) << "Closing connection because of socket error, or closed on other side.";
             prepareShutdownConnection(con.get());
             close(w->fd);
         } else {
@@ -167,7 +156,7 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
                 if (ret == WS_RESULT_INCOMPLETE || ret == WS_RESULT_PING_PONG)
                     return;
                 else if (ret == WS_RESULT_ERROR || ret == WS_RESULT_CLOSE) {
-                    //DLOG(INFO) << "Closing connection because it requested a WS close or caused a WS error.";
+                    DLOG(INFO) << "Closing connection because it requested a WS close or caused a WS error.";
                     prepareShutdownConnection(con.get());
                     close(w->fd);
                     return;
@@ -175,7 +164,7 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
                     // Smallest valid message size is 3 characters long.
                     size_t message_size = message.size();
                     if (message_size < 3) {
-                        //DLOG(INFO) << "Closing connection because it sent a message that was too short.";
+                        DLOG(INFO) << "Closing connection because it sent a message that was too short.";
                         prepareShutdownConnection(con.get());
                         close(w->fd);
                         return;
@@ -189,7 +178,7 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
                     //DLOG(INFO) << "Command '" << command << "' payload'" << payload << "'";
                     FReturnCode errorcode = FERR_FATAL_INTERNAL;
                     if (command == "PIN") {
-                        handlePing(con.get());
+                        StatusSystem::instance()->sendStatusTimeUpdate(con);
                         errorcode = FERR_OK;
                     } else if (command == "IDN") {
                         errorcode = NativeCommand::IdentCommand(con, payload);
@@ -210,7 +199,7 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
                     }
 
                     if (errorcode == FERR_REQUIRES_IDENT || errorcode == FERR_FATAL_INTERNAL) {
-                        //DLOG(INFO) << "Delay closing connection because it sent a command that requires ident or caused a fatal internal error.";
+                        DLOG(INFO) << "Delay closing connection because it sent a command that requires ident or caused a fatal internal error.";
                         con->setDelayClose();
                         con->sendError(errorcode);
                     } else if (errorcode != FERR_OK) {
@@ -522,15 +511,11 @@ void Server::processHTTPWakeup(struct ev_loop* loop, ev_async* w, int revents) {
     }
 }
 
-void Server::processStatusWakeup(struct ev_loop* loop, ev_async* w, int revents) {
-    DLOG(INFO) << "Processing status async wakeup.";
 
-    MessageOut* reply = statusClient->getReply();
-    while(reply) {
-        DLOG(INFO) << "Processing reply of type: " << reply->OutMessage_case();
-        delete reply;
-        reply = statusClient->getReply();
-    }
+
+void Server::processStatusWakeup(struct ev_loop* loop, ev_async* w, int revents) {
+    StatusSystem::instance()->handleReply();
+    DLOG(INFO) << "Processing status async wakeup.";
 }
 
 /**
@@ -682,9 +667,8 @@ void Server::run() {
     initTimer();
     if (StartupConfig::getBool("log_start"))
         loggerStart();
-
-    statusClient = new StatusClient();
-    statusClient->startThread();
+    // Ensure that the status client is running.
+    StatusSystem::instance();
 
     int listensock = bindAndListen();
     server_listen = new ev_io;
