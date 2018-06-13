@@ -48,6 +48,7 @@ outdir_folders:
 	@mkdir -p $(TARGETDIR)
 	@echo "Creating $(TARGETDIR)script ..."
 	@mkdir -p $(TARGETDIR)script
+	@mkdir -p $(TARGETDIR)data/script
 	@echo "Creating $(TARGETDIR)logs ..."
 	@mkdir -p $(TARGETDIR)logs
 
@@ -56,6 +57,7 @@ install_folders:
 	@mkdir -p $(INSTALLDIR)
 	@echo "Creating $(INSTALLDIR)script ..."
 	@mkdir -p $(INSTALLDIR)script
+	@mkdir -p $(INSTALLDIR)data/script
 	@echo "Creating $(INSTALLDIR)logs ..."
 	@mkdir -p $(INSTALLDIR)logs
 
@@ -66,10 +68,11 @@ install: fserv facceptor install_folders deploy
 	@cp $(TARGETDIR)facceptor $(INSTALLDIR)facceptor
 	@echo "Installing '$(FSERV_SCRIPTS)' from $(TARGETDIR)script to $(INSTALLDIR)script ..."
 	@cp -r $(TARGETDIR)script/ $(INSTALLDIR)
+	@cp -r $(TARGETDIR)script/ $(INSTALLDIR)data
 
 deploy: $(FSERV_SCRIPTS)
 
 clean:
 	@echo "Cleaning fserv, facceptor ..."
 	rm -f *~ $(TARGETDIR)*.o $(TARGETDIR)*.gch $(TARGETDIR)fserv $(TARGETDIR)facceptor
-	rm -fr $(TARGETDIR)script $(TARGETDIR)logs
+	rm -fr $(TARGETDIR)script $(TARGETDIR)logs $(TARGETDIR)data/script

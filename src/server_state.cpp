@@ -52,6 +52,10 @@ long ServerState::userCount = 0;
 long ServerState::maxUserCount = 0;
 long ServerState::channelSeed = 0;
 
+static const char* BAN_PATH = "./data/bans.json";
+static const char* CHANNEL_PATH = "./data/channels.json";
+static const char* OP_PATH = "./data/ops.json";
+
 bool ServerState::fsaveFile(const char* name, string& contents) {
     std::ofstream file;
     file.open(name, std::ios::trunc);
@@ -80,11 +84,11 @@ string ServerState::floadFile(const char* name) {
 
 void ServerState::loadChannels() {
     DLOG(INFO) << "Loading channels.";
-    string contents = floadFile("./channels.json");
+    string contents = floadFile(CHANNEL_PATH);
     json_error_t jserror;
     json_t* root = json_loads(contents.c_str(), 0, &jserror);
     if (!root) {
-        LOG(ERROR) << "Failed to parse channel json. Error: " << &jserror.text;
+        LOG(WARNING) << "Failed to parse channel json. Error: " << &jserror.text;
         return;
     }
 
@@ -138,7 +142,7 @@ void ServerState::saveChannels() {
     string contents = chanstr;
     free((void*) chanstr);
     json_decref(root);
-    fsaveFile("./channels.json", contents);
+    fsaveFile(CHANNEL_PATH, contents);
 }
 
 void ServerState::cleanupChannels() {
@@ -218,13 +222,13 @@ void ServerState::saveOps() {
     string contents = opstr;
     free((void*) opstr);
     json_decref(root);
-    fsaveFile("./ops.json", contents);
+    fsaveFile(OP_PATH, contents);
     saveSCops();
 }
 
 void ServerState::loadBans() {
     DLOG(INFO) << "Loading bans.";
-    string contents = floadFile("./bans.json");
+    string contents = floadFile(BAN_PATH);
     json_t* root = json_loads(contents.c_str(), 0, 0);
     if (!json_is_object(root)) {
         LOG(WARNING) << "Could not load the ban list from disk.";
@@ -332,7 +336,7 @@ void ServerState::saveBans() {
     string contents = banstr;
     free((void*) banstr);
     json_decref(root);
-    fsaveFile("./bans.json", contents);
+    fsaveFile(BAN_PATH, contents);
 }
 
 void ServerState::sendUserListToRedis() {

@@ -27,9 +27,9 @@
 #define FLUA_H
 
 extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
+#include <luajit-2.1/lua.h>
+#include <luajit-2.1/lauxlib.h>
+#include <luajit-2.1/lualib.h>
 }
 
 #define LUA_ABSINDEX(L, i) ((i) > 0 || (i) <= LUA_REGISTRYINDEX ? (i) : \

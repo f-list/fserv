@@ -46,11 +46,18 @@ void setup_signals() {
 }
 
 int main(int argc, char* argv[]) {
+    bool in_docker = getenv("DOCKER") != nullptr;
     //Logging
-    FLAGS_logbuflevel = 0;
-    FLAGS_logbufsecs = 0;
-    FLAGS_logtostderr = false;
-    FLAGS_log_dir = "./logs/";
+    if(in_docker) {
+        FLAGS_logbuflevel = 0;
+        FLAGS_logbufsecs = 1;
+        FLAGS_logtostderr = true;
+    } else {
+        FLAGS_logbuflevel = 0;
+        FLAGS_logbufsecs = 0;
+        FLAGS_logtostderr = false;
+        FLAGS_log_dir = "./logs/";
+    }
     FLAGS_log_prefix = argv[0];
     google::InitGoogleLogging(argv[0]);
     LOG(INFO) << "F-Chat Server starting";

@@ -34,7 +34,7 @@
 #include "startup_config.hpp"
 #include "server_state.hpp"
 
-#include <google/profiler.h>
+#include <gperftools/profiler.h>
 
 FReturnCode NativeCommand::DebugCommand(ConnectionPtr& con, string& payload) {
     if (con->admin != true)

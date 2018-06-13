@@ -38,7 +38,7 @@ unordered_map<string, double> StartupConfig::doubleMap;
 void StartupConfig::init() {
     DLOG(INFO) << "Loading startup config.";
     lua_State* L = luaL_newstate();
-    int ret = luaL_dofile(L, "./script/startup_config.lua");
+    int ret = luaL_dofile(L, "./data/script/startup_config.lua");
     if (ret) {
         LOG(WARNING) << "Failed to load the startup config file. Reason: " << lua_tostring(L, -1);
         return;
