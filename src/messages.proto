@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+
+message FillMessageIn {
+    message CharacterStatus {
+        uint32 CharacterID = 1;
+        string Name = 2;
+        string Status = 3;
+        string StatusText = 4;
+        uint64 Session = 5;
+    }
+    repeated CharacterStatus Characters = 1;
+    bool Final = 2;
+}
+
+message SubscriptionChangeIn {
+    enum ChangeType {
+        ADD = 0;
+        REMOVE = 1;
+        SERVER_ADD = 2;
+        SERVER_REMOVE = 3;
+    }
+    uint64 Cookie = 1;
+    reserved 2, 3, 4;
+    ChangeType Action = 5;
+    uint32 SourceID = 6;
+    uint32 TargetID = 7;
+}
+
+message TimeUpdateIn {
+    uint32 CharacterID = 1;
+    string Name = 2;
+    uint64 SessionID = 3;
+    int64 Timestamp = 4;
+    bool KillSession = 5;
+}
+
+message StatusUpdateIn {
+    uint32 CharacterID = 1;
+    uint64 Cookie = 2;
+    uint64 SessionID = 3;
+    int64 Timestamp = 4;
+    string Status = 5;
+    string StatusText = 6;
+}
+
+message Resync {
+}
+
+enum MessageType {
+    TIME = 0;
+    STATUS = 1;
+    SUB = 2;
+    INITIAL = 3;
+
+    FILL = 20;
+    RESYNC = 21;
+}
+
+message RawOut {
+    repeated uint32 Targets = 1;
+    bytes Body = 2;
+}
+
+message ErrorOut {
+    MessageType OriginalType = 1;
+    uint32 Target = 2;
+    uint64 Cookie = 3;
+    int32 ErrorCode = 4;
+    string ErrorMessage = 5;
+}
+
+message MessageOut {
+    oneof OutMessage {
+        RawOut Raw = 1;
+        ErrorOut Error = 2;
+    }
+}
+
+message MessageIn {
+    oneof InMessage {
+        TimeUpdateIn TimeUpdate = 1;
+        StatusUpdateIn StatusUpdate = 2;
+        SubscriptionChangeIn Subscription = 3;
+        FillMessageIn Fill = 4;
+        Resync Resync = 10;
+    }
+}
+
+service StatusSystem {
+    rpc StatusSystem (stream MessageIn) returns (stream MessageOut) {
+    }
+}
