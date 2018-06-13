@@ -33,8 +33,6 @@
 using std::string;
 using boost::intrusive_ptr;
 
-class StreamedList;
-
 class MessageBuffer {
 public:
 
@@ -71,18 +69,17 @@ public:
 private:
     size_t length_;
     uint8_t* buffer_;
-    //StreamedList* list;
 
-    volatile size_t refCount;
+    int refCount;
 
     friend inline void intrusive_ptr_release(MessageBuffer* p) {
-        if ((--p->refCount) <= 0) {
+        if (__sync_sub_and_fetch(&p->refCount, 1) <= 0) {
             delete p;
         }
     }
 
     friend inline void intrusive_ptr_add_ref(MessageBuffer* p) {
-        ++p->refCount;
+        __sync_fetch_and_add(&p->refCount, 1);
     }
 };
 
