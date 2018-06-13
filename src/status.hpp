@@ -26,37 +26,124 @@
 #ifndef CHATD_STATUS_H
 #define CHATD_STATUS_H
 
+#include <queue>
+#include <atomic>
+#include <vector>
+#include "fthread.hpp"
+
 #include "messages.pb.h"
-#include "grpc.hpp"
 #include "connection.hpp"
 
-class ConnectionInstance;
+class MessageOut;
 
-class StatusSystem {
+class MessageIn;
+
+using std::queue;
+using std::atomic;
+
+enum kStatusReplyType {
+    TYPE_RESYNC,
+    TYPE_MESSAGE,
+};
+
+class StatusRequest {
 public:
-    static inline StatusSystem* instance() {
-        if(_instance != nullptr)
+
+    ~StatusRequest() {
+        delete message;
+    }
+
+    StatusRequest(): type(TYPE_MESSAGE), resync(nullptr), message(nullptr) {}
+
+    StatusRequest(MessageIn* request): type(TYPE_MESSAGE), resync(nullptr) {
+        message = request;
+    }
+
+    kStatusReplyType type = TYPE_MESSAGE;
+    std::vector<ConnectionPtr>* resync = nullptr;
+    MessageIn* message = nullptr;
+};
+
+class StatusResponse {
+public:
+
+    ~StatusResponse() {
+        delete message;
+    }
+
+    StatusResponse(): type(TYPE_MESSAGE), message(nullptr) {}
+
+    StatusResponse(MessageOut* reply): type(TYPE_MESSAGE) {
+        message = reply;
+    }
+
+    kStatusReplyType type = TYPE_MESSAGE;
+    MessageOut* message = nullptr;
+};
+
+#define STATUS_MUTEX_TIMEOUT 250000000
+
+class StatusClient {
+public:
+    static inline StatusClient* instance() {
+        if (_instance != nullptr)
             return _instance;
-        _instance = new StatusSystem();
+        _instance = new StatusClient();
         return _instance;
     }
-    void handleReply();
-    void sendStatusTimeUpdate(ConnectionPtr con, bool disconnect = false);
-    void sendStatusUpdate(ConnectionPtr con, uint64_t cookie = 0);
-private:
-    StatusSystem() {
-        _client = new StatusClient();
-        _client->startThread();
-    }
-    ~StatusSystem() {
-        _client->stopThread();
-        delete _client;
-    }
-    void handleGeneric(const GenericOut& message);
-    void handleAck(const AckOut& message);
 
-    StatusClient* _client = nullptr;
-    static StatusSystem* _instance;
+
+    void handleReply();
+
+    void sendStatusTimeUpdate(ConnectionPtr con, bool disconnect = false);
+
+    void sendStatusUpdate(ConnectionPtr con, uint64_t cookie = 0);
+
+    void sendSubChange(ConnectionPtr con, uint32_t target, SubscriptionChangeIn_ChangeType type, uint64_t cookie);
+
+
+    static void* runThread(void* param);
+
+    bool addRequest(StatusRequest*);
+
+    StatusRequest* getRequest();
+
+    void addReply(StatusResponse*);
+
+    StatusResponse* getReply();
+
+
+    void startThread();
+
+    void stopThread();
+
+    void runner();
+
+private:
+    pthread_t _thread;
+
+    queue<StatusRequest*> requestQueue;
+    queue<StatusResponse*> replyQueue;
+    pthread_cond_t requestCondition = PTHREAD_COND_INITIALIZER;
+    pthread_mutex_t requestConditionMutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t requestMutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t replyMutex = PTHREAD_MUTEX_INITIALIZER;
+    atomic<bool> doRun;
+    atomic<bool> inResync;
+private:
+    StatusClient() {
+        startThread();
+    }
+
+    ~StatusClient() {
+        stopThread();
+    }
+
+    void startResync();
+
+    void handleRaw(const RawOut &message);
+
+    static StatusClient* _instance;
 };
 
 #endif

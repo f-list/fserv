@@ -45,66 +45,8 @@ using grpc::ClientContext;
 using grpc::ClientReaderWriter;
 using grpc::Status;
 
-void* StatusClient::runThread(void* param) {
-    auto client = (StatusClient*) param;
-    client->runner();
-    pthread_exit(nullptr);
-}
-
-bool StatusClient::addRequest(MessageIn* message) {
-    if (!doRun)
-        return false;
-    struct timespec abs_time;
-    clock_gettime(CLOCK_MONOTONIC, &abs_time);
-    abs_time.tv_nsec += STATUS_MUTEX_TIMEOUT;
-    if (MUT_LOCK(requestMutex)) {
-        DLOG(INFO) << "Failed to get lock to add to queue entry.";
-        return false;
-    }
-    requestQueue.push(message);
-    MUT_UNLOCK(requestMutex);
-    pthread_cond_signal(&requestCondition);
-    return true;
-}
-
-MessageIn* StatusClient::getRequest() {
-    MessageIn* message = nullptr;
-    MUT_LOCK(requestMutex);
-    if (requestQueue.size() > 0) {
-        message = requestQueue.front();
-        requestQueue.pop();
-    }
-    MUT_UNLOCK(requestMutex);
-    return message;
-}
-
-void StatusClient::addReply(MessageOut* message) {
-    if (!doRun)
-        return;
-    MUT_LOCK(replyMutex);
-    replyQueue.push(message);
-    MUT_UNLOCK(replyMutex);
-    Server::sendStatusWakeup();
-}
-
-MessageOut* StatusClient::getReply() {
-    MessageOut* reply = nullptr;
-    struct timespec abs_time;
-    clock_gettime(CLOCK_MONOTONIC, &abs_time);
-    abs_time.tv_nsec += STATUS_MUTEX_TIMEOUT;
-    if (MUT_TIMEDLOCK(replyMutex, abs_time)) {
-        return nullptr;
-    }
-    if (replyQueue.size() > 0) {
-        reply = replyQueue.front();
-        replyQueue.pop();
-    }
-    MUT_UNLOCK(replyMutex);
-    return reply;
-}
-
 void StatusClient::runner() {
-    atomic<bool> needs_restart = false;
+    atomic<bool> needs_restart;
     while (doRun) {
         // TODO: This logic and flow is really messy.
         // Right now it requires that a new message to send comes in before the main loop will time out and try to
@@ -124,13 +66,14 @@ void StatusClient::runner() {
                 pthread_cond_wait(&requestCondition, &requestConditionMutex);
                 auto request = getRequest();
                 while (doRun && request) {
-                    if (stream->Write(*request)) {
+                    if (stream->Write(*request->message)) {
                         DLOG(INFO) << "Wrote message to server";
                     } else {
                         DLOG(INFO) << "Failed to write message to server.";
                         needs_restart = true;
                         break;
                     }
+                    delete request;
                     request = getRequest();
                 }
             }
@@ -139,9 +82,12 @@ void StatusClient::runner() {
         });
 
         auto outMessage = new MessageOut();
+        auto reply = new StatusResponse();
         while (doRun && stream->Read(outMessage)) {
             DLOG(INFO) << "Received message from server";
-            addReply(outMessage);
+            reply->message = outMessage;
+            addReply(reply);
+            reply = new StatusResponse();
             outMessage = new MessageOut();
         }
         delete outMessage;
@@ -153,22 +99,7 @@ void StatusClient::runner() {
         pthread_cond_signal(&requestCondition);
         writer.join();
         needs_restart = false;
+        sleep(5);
     }
 }
 
-void StatusClient::stopThread() {
-    DLOG(INFO) << "Stopping status thread.";
-    doRun = false;
-    pthread_cond_signal(&requestCondition);
-    pthread_join(_thread, nullptr);
-}
-
-void StatusClient::startThread() {
-    if (_thread)
-        return;
-    doRun = true;
-    pthread_attr_t threadAttrs;
-    pthread_attr_init(&threadAttrs);
-    pthread_attr_setdetachstate(&threadAttrs, PTHREAD_CREATE_JOINABLE);
-    pthread_create(&_thread, &threadAttrs, &StatusClient::runThread, this);
-}

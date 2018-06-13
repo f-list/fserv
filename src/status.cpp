@@ -27,91 +27,98 @@
 #include "status.hpp"
 
 #include "messagebuffer.hpp"
+#include "logging.hpp"
+#include "server.hpp"
 #include "server_state.hpp"
 
-#include "logging.hpp"
+#include <grpc/grpc.h>
+#include <grpc/support/time.h>
+#include <grpcpp/channel.h>
+#include <grpcpp/client_context.h>
+#include <grpcpp/create_channel.h>
+#include <grpcpp/security/credentials.h>
 
-void sendToTargets(MessagePtr message, const ::google::protobuf::RepeatedField< ::google::protobuf::uint32 >& targets) {
-    for(auto itr = targets.begin(); itr != targets.end(); ++itr) {
-        auto id = (uint32_t)*itr;
+#include "messages.grpc.pb.h"
+
+#include <thread>
+
+StatusClient* StatusClient::_instance = nullptr;
+
+void sendToTargets(MessagePtr message, const ::google::protobuf::RepeatedField<::google::protobuf::uint32> &targets) {
+    for (auto itr = targets.begin(); itr != targets.end(); ++itr) {
+        auto id = (uint32_t) *itr;
         DLOG(INFO) << "Trying to send last message to id: " << id;
         auto con = ServerState::getConnectionById(id);
-        if(con)
+        if (con)
             con->send(message);
     }
 }
 
-StatusSystem* StatusSystem::_instance = nullptr;
+void handleReplyResync(StatusResponse* reply) {
+    auto connections = ServerState::getConnections();
+    auto request = new StatusRequest();
+    request->type = TYPE_RESYNC;
+    request->resync = new std::vector<ConnectionPtr>();
+    for (const auto &itr : connections) {
+        DLOG(INFO) << "Adding connection: " << itr.second;
+        request->resync->push_back(itr.second);
+    }
+    StatusClient::instance()->addRequest(request);
+}
 
-void StatusSystem::handleReply() {
-    MessageOut* reply = _client->getReply();
-    while(reply) {
-        DLOG(INFO) << "Processing reply of type: " << reply->OutMessage_case();
-        switch(reply->OutMessage_case()) {
-            case MessageOut::kGeneric:
-                handleGeneric(reply->generic());
+void handleReplyMessageRaw(const RawOut &message) {
+    DLOG(INFO) << "Dispatching message: " << message.body();
+    auto messageOut = new MessageBuffer();
+    MessagePtr messagePtr(messageOut);
+    messageOut->set(message.body().data(), message.body().length());
+    sendToTargets(messagePtr, message.targets());
+}
+
+void handleReplyMessage(StatusResponse* reply) {
+    auto message = reply->message;
+    DLOG(INFO) << "Processing reply of type: " << message->OutMessage_case();
+    switch (message->OutMessage_case()) {
+        case MessageOut::kRaw:
+            handleReplyMessageRaw(message->raw());
+            break;
+        case MessageOut::kError:
+            break;
+        default:
+            DLOG(INFO) << "Unknown reply type: " << message->OutMessage_case();
+    }
+}
+
+void StatusClient::handleReply() {
+    auto reply = getReply();
+    while (reply) {
+        switch (reply->type) {
+            case TYPE_RESYNC:
+                handleReplyResync(reply);
                 break;
-            case MessageOut::kAck:
-                handleAck(reply->ack());
+            case TYPE_MESSAGE:
+                handleReplyMessage(reply);
                 break;
-            case MessageOut::kError:
-                break;
-            default:
-                DLOG(INFO) << "Unknown reply type: " << reply->OutMessage_case();
         }
         delete reply;
-        reply = _client->getReply();
+        reply = getReply();
     }
 }
 
-void StatusSystem::handleGeneric(const GenericOut& message) {
-    auto messageOut = new MessageBuffer();
-    MessagePtr messagePtr(messageOut);
-    switch (message.type()) {
-        case MessageType::STATUS:
-        case MessageType::INITIAL:
-        {
-            string outMessage = "STA ";
-            outMessage += message.body();
-            DLOG(INFO) << "Sending message: " << outMessage;
-            messageOut->set(outMessage.data(), outMessage.length());
-            break;
-        }
-        default:
-            DLOG(INFO) << "Unknown inner reply type: " << message.type();
-            return;
-    }
-    sendToTargets(messagePtr, message.targets());
-}
-
-void StatusSystem::handleAck(const AckOut& message) {
-    auto messageOut = new MessageBuffer();
-    MessagePtr messagePtr(messageOut);
-    string outMessage = "ACK ";
-    json_t* root_node = json_object();
-    json_object_set_new_nocheck(root_node, "cookie", json_integer(message.cookie()));
-    const char* json = json_dumps(root_node, JSON_COMPACT);
-    outMessage += json;
-    DLOG(INFO) << "Sending message: " << outMessage;
-    messageOut->set(outMessage.data(), outMessage.length());
-    sendToTargets(messagePtr, message.targets());
-    free((void*)json);
-    json_decref(root_node);
-}
-
-void StatusSystem::sendStatusTimeUpdate(ConnectionPtr con, bool disconnect) {
+void StatusClient::sendStatusTimeUpdate(ConnectionPtr con, bool disconnect) {
     auto updateMessage = new MessageIn();
+    auto request = new StatusRequest(updateMessage);
     auto timeMessage = updateMessage->mutable_timeupdate();
     timeMessage->set_name(con->characterName);
     timeMessage->set_characterid(con->characterID);
     timeMessage->set_killsession(disconnect);
     timeMessage->set_sessionid(1ULL);
     timeMessage->set_timestamp(time(nullptr));
-    _client->addRequest(updateMessage);
+    addRequest(request);
 }
 
-void StatusSystem::sendStatusUpdate(ConnectionPtr con, uint64_t cookie) {
+void StatusClient::sendStatusUpdate(ConnectionPtr con, uint64_t cookie) {
     auto statusMessage = new MessageIn();
+    auto request = new StatusRequest(statusMessage);
     auto innerMessage = statusMessage->mutable_statusupdate();
     innerMessage->set_characterid(con->characterID);
     innerMessage->set_status(con->status);
@@ -119,16 +126,218 @@ void StatusSystem::sendStatusUpdate(ConnectionPtr con, uint64_t cookie) {
     innerMessage->set_cookie(cookie);
     innerMessage->set_sessionid(1ULL);
     innerMessage->set_timestamp(time(nullptr));
-    _client->addRequest(statusMessage);
+    addRequest(request);
 }
 
-void StatusSystem::sendSubChange(ConnectionPtr con, uint32_t target, SubscriptionChangeIn_ChangeType type, uint64_t cookie) {
+void
+StatusClient::sendSubChange(ConnectionPtr con, uint32_t target, SubscriptionChangeIn_ChangeType type, uint64_t cookie) {
     auto subMessage = new MessageIn();
+    auto request = new StatusRequest(subMessage);
     auto innerMessage = subMessage->mutable_subscription();
     innerMessage->set_action(type);
     innerMessage->set_sourceid(con->characterID);
     innerMessage->set_targetid(target);
     innerMessage->set_cookie(cookie);
-    _client->addRequest(subMessage);
+    addRequest(request);
+}
+
+void StatusClient::startResync() {
+    inResync = true;
+    MUT_LOCK(requestMutex);
+    while (auto request = requestQueue.front()) {
+        delete request;
+        requestQueue.pop();
+    }
+    MUT_UNLOCK(requestMutex);
+    auto reply = new StatusResponse();
+    reply->type = TYPE_RESYNC;
+    addReply(reply);
+    inResync = false;
+}
+
+// Status Thread
+bool StatusClient::addRequest(StatusRequest* request) {
+    if (!doRun)
+        return false;
+    if (inResync && request->type != TYPE_RESYNC) {
+        DLOG(INFO) << "Not adding request because in resync and not the right request type.";
+        return false;
+    }
+    struct timespec abs_time;
+    clock_gettime(CLOCK_MONOTONIC, &abs_time);
+    abs_time.tv_nsec += STATUS_MUTEX_TIMEOUT;
+    if (MUT_LOCK(requestMutex)) {
+        DLOG(INFO) << "Failed to get lock to add to queue entry.";
+        return false;
+    }
+    requestQueue.push(request);
+    MUT_UNLOCK(requestMutex);
+    pthread_cond_signal(&requestCondition);
+    return true;
+}
+
+StatusRequest* StatusClient::getRequest() {
+    StatusRequest* message = nullptr;
+    MUT_LOCK(requestMutex);
+    if (requestQueue.size() > 0) {
+        message = requestQueue.front();
+        requestQueue.pop();
+    }
+    MUT_UNLOCK(requestMutex);
+    return message;
+}
+
+void StatusClient::addReply(StatusResponse* response) {
+    if (!doRun)
+        return;
+    MUT_LOCK(replyMutex);
+    replyQueue.push(response);
+    MUT_UNLOCK(replyMutex);
+    Server::sendStatusWakeup();
+}
+
+StatusResponse* StatusClient::getReply() {
+    StatusResponse* reply = nullptr;
+    struct timespec abs_time;
+    clock_gettime(CLOCK_MONOTONIC, &abs_time);
+    abs_time.tv_nsec += STATUS_MUTEX_TIMEOUT;
+    if (MUT_TIMEDLOCK(replyMutex, abs_time)) {
+        return nullptr;
+    }
+    if (replyQueue.size() > 0) {
+        reply = replyQueue.front();
+        replyQueue.pop();
+    }
+    MUT_UNLOCK(replyMutex);
+    return reply;
+}
+
+void StatusClient::stopThread() {
+    DLOG(INFO) << "Stopping status thread.";
+    doRun = false;
+    pthread_cond_signal(&requestCondition);
+    pthread_join(_thread, nullptr);
+}
+
+void StatusClient::startThread() {
+    if (_thread)
+        return;
+    doRun = true;
+    pthread_attr_t threadAttrs;
+    pthread_attr_init(&threadAttrs);
+    pthread_attr_setdetachstate(&threadAttrs, PTHREAD_CREATE_JOINABLE);
+    pthread_create(&_thread, &threadAttrs, &StatusClient::runThread, this);
+}
+
+void* StatusClient::runThread(void* param) {
+    auto client = (StatusClient*) param;
+    client->runner();
+    pthread_exit(nullptr);
+}
+
+MessageIn* generateFill(StatusRequest* request) {
+    if (request->resync->empty())
+        return nullptr;
+    auto message = new MessageIn();
+    auto fillMessage = message->mutable_fill();
+    int remainingFill = 100;
+    while (remainingFill-- && request->resync->back()) {
+        auto character = request->resync->back();
+        auto fillCharacter = fillMessage->add_characters();
+        fillCharacter->set_characterid(character->characterID);
+        fillCharacter->set_status(character->status);
+        fillCharacter->set_name(character->characterName);
+        fillCharacter->set_statustext(character->statusMessage);
+        request->resync->pop_back();
+    }
+    fillMessage->set_final(request->resync->empty());
+    return message;
+}
+
+void runResync(StatusRequest* request, std::shared_ptr<grpc::ClientReaderWriter<MessageIn, MessageOut> > stream,
+               atomic<bool> &restart) {
+    DLOG(INFO) << "Starting the resync process";
+    if (request->resync->empty())
+        return;
+    MessageIn resyncMessage;
+    resyncMessage.mutable_resync();
+    if (!stream->Write(resyncMessage)) {
+        restart = true;
+    }
+    while (auto fillMessage = generateFill(request)) {
+        if (!stream->Write(*fillMessage)) {
+            delete fillMessage;
+            DLOG(INFO) << "Failed to write message to status server in resync.";
+            restart = true;
+            break;
+        }
+        delete fillMessage;
+    }
+    DLOG(INFO) << "Finished sending the resync messages.";
+}
+
+void StatusClient::runner() {
+    atomic<bool> needs_restart;
+    while (doRun) {
+        DLOG(INFO) << "Starting status context with server.";
+        auto channel = grpc::CreateChannel("statusd:5555", grpc::InsecureChannelCredentials());
+        auto stub = StatusSystem::NewStub(channel);
+        grpc::ClientContext context;
+
+        std::shared_ptr<grpc::ClientReaderWriter<MessageIn, MessageOut> > stream(stub->StatusSystem(&context));
+
+        if(!channel->WaitForConnected(std::chrono::system_clock::now() + std::chrono::seconds(5))) {
+            DLOG(INFO) << "Couldn't ensure that channel connected successfully.";
+            continue;
+        }
+
+        startResync();
+
+        std::thread writer([&]() {
+            MUT_LOCK(requestConditionMutex);
+            while (doRun && !needs_restart) {
+                pthread_cond_wait(&requestCondition, &requestConditionMutex);
+                auto request = getRequest();
+                while (doRun && request) {
+                    if (request->type == TYPE_MESSAGE) {
+                        if (stream->Write(*request->message)) {
+                            DLOG(INFO) << "Wrote status client message to server successfully.";
+                        } else {
+                            DLOG(INFO) << "Failed to write message to status server.";
+                            needs_restart = true;
+                        }
+                    } else if (request->type == TYPE_RESYNC) {
+                        runResync(request, stream, needs_restart);
+                    }
+                    delete request;
+                    if (needs_restart || !doRun)
+                        break;
+                    request = getRequest();
+                }
+            }
+            MUT_UNLOCK(requestConditionMutex);
+            stream->WritesDone();
+        });
+
+        {
+            auto outMessage = new MessageOut();
+            auto reply = new StatusResponse(outMessage);
+            while (doRun && stream->Read(outMessage)) {
+                DLOG(INFO) << "Received message from status system.";
+                addReply(reply);
+                outMessage = new MessageOut();
+                reply = new StatusResponse(outMessage);
+            }
+            delete outMessage;
+            auto status = stream->Finish();
+            if (!status.ok()) {
+                LOG(WARNING) << "gRPC stream failed with " << status.error_message();
+            }
+            needs_restart = true;
+            pthread_cond_signal(&requestCondition);
+            writer.join();
+            needs_restart = false;
+        }
+    }
 }
 

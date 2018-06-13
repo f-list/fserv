@@ -15,12 +15,12 @@ LDFLAGS+=	-L/usr/local/lib -L../lib/lua/src -L../lib/glog_install/lib -lpthread 
             -lglog -ljansson -lcurl -lhiredis -licuuc -licudata -ltcmalloc -lprofiler \
             `pkg-config --libs protobuf grpc++ grpc` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -ldl
 
-FSERV_O=	status.o grpc.o server.o channel.o connection.o fserv.o http_client.o logger_thread.o login_evhttp.o lua_channel.o lua_chat.o \
+FSERV_O=	status.o server.o channel.o connection.o fserv.o http_client.o logger_thread.o login_evhttp.o lua_channel.o lua_chat.o \
             lua_connection.o lua_constants.o lua_http.o messagebuffer.o native_command.o redis.o \
             server_state.o startup_config.o unicode_tools.o websocket.o base64.o md5.o modp_b64.o sha1.o \
             messages.grpc.pb.o messages.pb.o
 
-PROTOC_FILES= $(TARGETDIR)messages.pb.cc $(TARGETDIR)messages.grpc.pb.cc
+PROTOC_FILES= messages.pb.cc messages.grpc.pb.cc
 PRECOMP_GCH=	$(TARGETDIR)precompiled_headers.hpp.gch
 FACCEPTOR_O=	facceptor.o
 FACCEPTOR_LDFLAGS=	-lev
@@ -36,12 +36,10 @@ GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 
 vpath %.proto $(PROTOS_PATH)
 
-.PRECIOUS: %.grpc.pb.cc
-$(TARGETDIR)%.grpc.pb.cc: %.proto
+%.grpc.pb.cc: %.proto
 	$(PROTOC) -I $(PROTOS_PATH) --grpc_out=. --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) $<
 
-.PRECIOUS: %.pb.cc
-$(TARGETDIR)%.pb.cc: %.proto
+%.pb.cc: %.proto
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 $(TARGETDIR)%.pb.o: %.pb.cc

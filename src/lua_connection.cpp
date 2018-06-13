@@ -933,7 +933,7 @@ int LuaConnection::setStatus(lua_State* L) {
         con->statusMessage = statusmessage;
 
 
-    StatusSystem::instance()->sendStatusUpdate(con, cookie);
+    StatusClient::instance()->sendStatusUpdate(con, cookie);
 
     return 0;
 }
