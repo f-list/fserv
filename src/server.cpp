@@ -44,6 +44,9 @@
 #include "server_state.hpp"
 #include "md5.hpp"
 
+#include "grpc.h"
+#include "messages.pb.h"
+
 #include <time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -59,11 +62,13 @@
 struct ev_loop* Server::server_loop = nullptr;
 ev_async* Server::server_async = nullptr;
 ev_async* Server::http_async = nullptr;
+ev_async* Server::status_async = nullptr;
 ev_timer* Server::server_timer = nullptr;
 ev_io* Server::server_listen = nullptr;
 ev_io* Server::rtb_listen = nullptr;
 ev_prepare* Server::server_prepare = nullptr;
 ChatLogThread* Server::chatLogger = nullptr;
+StatusClient* Server::statusClient = nullptr;
 
 lua_State* Server::sL = nullptr;
 ev_tstamp Server::luaTimer = 0;
@@ -99,6 +104,21 @@ static void sock_nonblock(int socket) {
         fcntl(socket, F_SETFL, flags | O_NONBLOCK);
     static const int dokeepalive = 1;
     setsockopt(socket, SOL_SOCKET, SO_KEEPALIVE, &dokeepalive, sizeof(dokeepalive));
+}
+
+void Server::sendStatusWakeup() {
+    ev_async_send(server_loop, status_async);
+}
+
+void Server::handlePing(ConnectionInstance* con) {
+    auto updateMessage = new MessageIn();
+    auto timeMessage = updateMessage->mutable_timeupdate();
+    timeMessage->set_name(con->characterName);
+    timeMessage->set_characterid(con->characterID);
+    timeMessage->set_killsession(false);
+    timeMessage->set_sessionid(1ULL);
+    timeMessage->set_timestamp(time(nullptr));
+    statusClient->addRequest(updateMessage);
 }
 
 void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents) {
@@ -169,6 +189,7 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
                     //DLOG(INFO) << "Command '" << command << "' payload'" << payload << "'";
                     FReturnCode errorcode = FERR_FATAL_INTERNAL;
                     if (command == "PIN") {
+                        handlePing(con.get());
                         errorcode = FERR_OK;
                     } else if (command == "IDN") {
                         errorcode = NativeCommand::IdentCommand(con, payload);
@@ -501,6 +522,17 @@ void Server::processHTTPWakeup(struct ev_loop* loop, ev_async* w, int revents) {
     }
 }
 
+void Server::processStatusWakeup(struct ev_loop* loop, ev_async* w, int revents) {
+    DLOG(INFO) << "Processing status async wakeup.";
+
+    MessageOut* reply = statusClient->getReply();
+    while(reply) {
+        DLOG(INFO) << "Processing reply of type: " << reply->OutMessage_case();
+        delete reply;
+        reply = statusClient->getReply();
+    }
+}
+
 /**
  * Callback format is (con, status, body, extras)
  * @param reply
@@ -650,6 +682,9 @@ void Server::run() {
     initTimer();
     if (StartupConfig::getBool("log_start"))
         loggerStart();
+
+    statusClient = new StatusClient();
+    statusClient->startThread();
 
     int listensock = bindAndListen();
     server_listen = new ev_io;
@@ -1256,10 +1291,17 @@ void Server::initAsyncLoop() {
     http_async = new ev_async;
     ev_async_init(http_async, Server::processHTTPWakeup);
     ev_async_start(server_loop, http_async);
+    status_async = new ev_async;
+    ev_async_init(status_async, Server::processStatusWakeup);
+    ev_async_start(server_loop, status_async);
 }
 
 void Server::shutdownAsyncLoop() {
     DLOG(INFO) << "Shutting down event loop and async wakeup.";
+
+    ev_async_stop(server_loop, status_async);
+    delete status_async;
+    status_async = nullptr;
 
     ev_async_stop(server_loop, http_async);
     delete http_async;
@@ -1274,7 +1316,7 @@ void Server::shutdownAsyncLoop() {
     server_prepare = nullptr;
 
     //ev_loop_destroy(server_loop);
-    server_loop = 0;
+    server_loop = nullptr;
 }
 
 // TODO: Make this some kind of countdown + graceful disconnect.

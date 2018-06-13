@@ -149,7 +149,7 @@ void ChatLogThread::startThread() {
 void* ChatLogThread::runThread(void* params) {
     ChatLogThread* instance = (ChatLogThread*) params;
     instance->runner();
-    pthread_exit(NULL);
+    pthread_exit(nullptr);
 }
 
 void ChatLogThread::stopThread() {
@@ -165,7 +165,7 @@ void ChatLogThread::stopThread() {
     }
     connectionList.clear();
     ev_async_send(logger_loop, logger_async);
-    pthread_join(logThread, 0);
+    pthread_join(logThread, nullptr);
 }
 
 void ChatLogThread::runner() {
@@ -175,7 +175,7 @@ void ChatLogThread::runner() {
     if (!listen_socket) {
         LOG(ERROR) << "Failed to create logging socket.";
         doRun = false;
-        pthread_exit(NULL);
+        pthread_exit(nullptr);
     }
 
     logger_loop = ev_loop_new(EVFLAG_AUTO);
@@ -202,7 +202,7 @@ void ChatLogThread::runner() {
     close(listen_socket);
 
     ev_loop_destroy(logger_loop);
-    logger_loop = 0;
+    logger_loop = nullptr;
     DLOG(INFO) << "Exiting chat log thread.";
 }
 

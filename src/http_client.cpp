@@ -132,8 +132,8 @@ void HTTPClient::checkForFinishedRequests() {
 
 void HTTPClient::processResponseDone(HTTPRequest* request, CURLcode result) {
     DLOG(INFO) << "Request done.";
-    int status = 499;
-    curl_easy_getinfo(request->curlHandle(), CURLINFO_HTTP_CODE, &status);
+    long status = 499;
+    curl_easy_getinfo(request->curlHandle(), CURLINFO_RESPONSE_CODE, &status);
     request->reply()->status(status);
     request->reply()->rawError = result;
     if(result == CURLE_OK)

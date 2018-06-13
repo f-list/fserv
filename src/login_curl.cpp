@@ -26,9 +26,9 @@
 #include "precompiled_headers.hpp"
 
 #include "login_curl.hpp"
-#include <time.h>
-#include <string.h>
-#include <stdio.h>
+#include <ctime>
+#include <cstring>
+#include <cstdio>
 #include <unistd.h>
 
 #include "logging.hpp"
