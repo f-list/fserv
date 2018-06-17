@@ -88,9 +88,9 @@ function joinChannel(chan, con)
     c.join(chan, con)
     s.logMessage("channel_join", con, chan, nil, nil)
     if chantype == "public" then
-        c.sendAll(chan, "JCH", { channel = channame, character = { identity = u.getName(con) }, title = channame })
+        c.sendAll(chan, "JCH", { channel = channame, character = { identity = u.getName(con), gender=u.getGender(con) } }, title = channame })
     else
-        c.sendAll(chan, "JCH", { channel = channame, character = { identity = u.getName(con) }, title = c.getTitle(chan) })
+        c.sendAll(chan, "JCH", { channel = channame, character = { identity = u.getName(con), gender=u.getGender(con) } }, title = c.getTitle(chan) })
     end
     u.send(con, "COL", { channel = channame, array_oplist = c.getModList(chan) })
     c.sendICH(chan, con)
@@ -1812,7 +1812,7 @@ function(con, args)
 
     if args.select ~= nil then
         if args.select.Gender ~= nil and const.gender[string.lower(args.select.Gender)] ~= nil then
-            u.setGender(con, args.select.Gender)
+            u.setGender(con, string.lower(args.select.Gender))
         else
             args.select.Gender = "None"
             u.setGender(con, "None")

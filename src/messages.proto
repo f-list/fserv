@@ -5,9 +5,10 @@ message FillMessageIn {
     message CharacterStatus {
         uint32 CharacterID = 1;
         string Name = 2;
-        string Status = 3;
-        string StatusText = 4;
-        uint64 Session = 5;
+        string Sex = 3;
+        string Status = 4;
+        string StatusText = 5;
+        uint64 Session = 6;
     }
     repeated CharacterStatus Characters = 1;
     bool Final = 2;
@@ -30,10 +31,11 @@ message SubscriptionChangeIn {
 message TimeUpdateIn {
     uint32 CharacterID = 1;
     string Name = 2;
-    uint64 SessionID = 3;
-    int64 Timestamp = 4;
-    bool KillSession = 5;
-    bool NeedInitial = 6;
+    string Sex = 3;
+    uint64 SessionID = 4;
+    int64 Timestamp = 5;
+    bool KillSession = 6;
+    bool NeedInitial = 7;
 }
 
 message StatusUpdateIn {

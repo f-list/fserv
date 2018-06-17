@@ -111,8 +111,8 @@ public:
     bool closed;
     bool delayClose;
 
-    string statusMessage;
     string status;
+    string statusMessage;
     string gender;
     stringset_t friends;
     stringset_t ignores;
