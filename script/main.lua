@@ -1628,6 +1628,39 @@ function(con, args)
     return const.FERR_OK
 end
 
+-- Adds/Removes a temporary status subscription.
+-- Syntax: SUB <action> <id>/<name>
+event.SUB =
+function (con, args)
+	if args.action == nil or args.cookie == nil or (args.character == nil and args.id == nil) then
+		return const.FERR_BAD_SYNTAX
+	end
+
+	if not (args.action == "add" or args.action == "remove") then
+		return const.FERR_BAD_SYTAX
+	end
+
+	local cookie = tonumber(args.cookie)
+	if cookie == nil then
+		cookie = 0
+	end
+
+	local target
+	local found, char = u.getConnection(string.lower(args.character))
+	if found then
+		target = u.getCharacterID(char)
+	else
+		target = tonumber(args.id)
+	end
+
+	if target == nil or target == 0 then
+		return const.FERR_USER_NOT_FOUND
+	end
+
+	s.subUpdate(args.action, con, target, cookie)
+	return const.FERR_OK
+end
+
 -- Sets a timeout on an account.
 -- Syntax: TMO <character> <time> <reason>
 event.TMO =

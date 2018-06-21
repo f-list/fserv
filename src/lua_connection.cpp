@@ -83,6 +83,7 @@ static const luaL_Reg luaconnection_funcs[] = {
         {"getStatus",              LuaConnection::getStatus},
         {"setMiscData",            LuaConnection::setMiscData},
         {"getMiscData",            LuaConnection::getMiscData},
+        {"getCharacterID",         LuaConnection::getCharacterID},
         {"checkUpdateTimer",       LuaConnection::checkUpdateTimer},
         {NULL, NULL}
 };
@@ -135,11 +136,11 @@ int LuaConnection::getIPCount(lua_State* L) {
 int LuaConnection::getByCharacterID(lua_State* L) {
     luaL_checkany(L, 1);
 
-    uint32_t character_id = (uint32_t)luaL_checkinteger(L, 1);
+    uint32_t character_id = (uint32_t) luaL_checkinteger(L, 1);
     lua_pop(L, 1);
 
     ConnectionPtr con = ServerState::getConnectionById(character_id);
-    if(con == nullptr) {
+    if (con == nullptr) {
         lua_pushboolean(L, false);
         return 1;
     }
@@ -903,7 +904,7 @@ int LuaConnection::setStatus(lua_State* L) {
 
     LBase* base = 0;
     GETLCON(base, L, 1, con);
-    uint64_t cookie = (uint64_t)luaL_checkinteger(L, 2);
+    uint64_t cookie = (uint64_t) luaL_checkinteger(L, 2);
     string status = luaL_checkstring(L, 3);
     string statusmessage;
     bool setmessage = false;
@@ -980,6 +981,22 @@ int LuaConnection::getMiscData(lua_State* L) {
         lua_pushnil(L);
     }
     return 1;
+}
+
+/**
+ * Gets the character ID for a given connection.
+ * @param LUD connection
+ * @returns int character ID
+ */
+int LuaConnection::getCharacterID(lua_State* L) {
+     luaL_checkany(L, 1);
+
+     LBase* base = nullptr;
+     GETLCON(base, L, 1, con);
+     lua_pop(L, 1);
+
+     lua_pushinteger(L, con->characterID);
+     return 1;
 }
 
 /**

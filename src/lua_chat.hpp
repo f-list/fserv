@@ -95,6 +95,7 @@ public:
     static int logMessage(lua_State* L);
 
     static int timeUpdate(lua_State* L);
+    static int subUpdate(lua_State* L);
 
     static json_t* luaToJson(lua_State* L);
     static void jsonToLua(lua_State* L, json_t* json);

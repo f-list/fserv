@@ -99,7 +99,7 @@ public:
 
     void sendStatusUpdate(ConnectionPtr con, uint64_t cookie = 0);
 
-    void sendSubChange(ConnectionPtr con, uint32_t target, SubscriptionChangeIn_ChangeType type, uint64_t cookie);
+    void sendSubUpdate(ConnectionPtr con, uint32_t target, SubscriptionChangeIn_ChangeType type, uint64_t cookie);
 
 
     static void* runThread(void* param);

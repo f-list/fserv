@@ -82,6 +82,7 @@ static const luaL_Reg luachat_funcs[] = {
         {"getStats",        LuaChat::getStats},
         {"logAction",       LuaChat::logAction},
         {"timeUpdate",      LuaChat::timeUpdate},
+        {"subUpdate",       LuaChat::subUpdate},
         {"toJSON",          LuaChat::toJsonString},
         {"fromJSON",        LuaChat::fromJsonString},
         {NULL, NULL}
@@ -92,6 +93,31 @@ int LuaChat::openChatLib(lua_State* L) {
     return 0;
 }
 
+int LuaChat::subUpdate(lua_State* L) {
+    luaL_checkany(L, 4);
+
+    LBase* base = nullptr;
+    GETLCON(base, L, 2, con);
+    string action = luaL_checkstring(L, 1);
+    uint32_t target = luaL_checkint(L, 3);
+    uint64_t cookie = luaL_checkint(L, 4);
+    lua_pop(L, 4);
+
+    SubscriptionChangeIn_ChangeType statusAction = SubscriptionChangeIn_ChangeType_ADD;
+    if(action == "remove")
+        statusAction = SubscriptionChangeIn_ChangeType_REMOVE;
+
+    StatusClient::instance()->sendSubUpdate(con, target, statusAction, cookie);
+    return 0;
+}
+
+/**
+ * Sends a session time update to the status system.
+ * @param LUD connection
+ * @param boolean disconnect if the connection is going away
+ * @param boolean needInitial during initial status response for this update
+ * @return
+ */
 int LuaChat::timeUpdate(lua_State* L) {
     luaL_checkany(L, 3);
 

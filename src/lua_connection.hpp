@@ -120,6 +120,8 @@ public:
 
     static int getMiscData(lua_State* L);
 
+    static int getCharacterID(lua_State* L);
+
     static int checkUpdateTimer(lua_State* L);
 
 private:
