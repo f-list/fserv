@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+package messages;
 
 message FillMessageIn {
     message CharacterStatus {
@@ -65,18 +66,9 @@ message RawOut {
     bytes Body = 2;
 }
 
-message ErrorOut {
-    MessageType OriginalType = 1;
-    uint32 Target = 2;
-    uint64 Cookie = 3;
-    int32 ErrorCode = 4;
-    string ErrorMessage = 5;
-}
-
 message MessageOut {
     oneof OutMessage {
         RawOut Raw = 1;
-        ErrorOut Error = 2;
     }
 }
 

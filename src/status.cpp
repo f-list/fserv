@@ -105,35 +105,12 @@ void handleReplyMessageRaw(const RawOut &message) {
     sendToTargets(messagePtr, message.targets());
 }
 
-void handleReplyError(const ErrorOut &message) {
-    DLOG(INFO) << "Dispatching error message: " << message.errormessage();
-    auto con = ServerState::getConnectionById(message.target());
-    if(!con) {
-        DLOG(INFO) << "Unable to find connection " << message.target() << " to send error to.";
-        return;
-    }
-    string outstr("ERR ");
-    json_t* root = json_object();
-    json_object_set_new_nocheck(root, "number", json_integer(message.errorcode()));
-    json_object_set_new_nocheck(root, "message", json_string_nocheck(message.errormessage().c_str()));
-    json_object_set_new_nocheck(root, "cookie", json_integer(message.cookie()));
-    const char* errstr = json_dumps(root, JSON_COMPACT);
-    outstr += errstr;
-    free((void*)errstr);
-    json_decref(root);
-    MessagePtr messagePtr(MessageBuffer::fromString(outstr));
-    con->send(messagePtr);
-}
-
 void handleReplyMessage(StatusResponse* reply) {
     auto message = reply->message;
     DLOG(INFO) << "Processing reply of type: " << message->OutMessage_case();
     switch (message->OutMessage_case()) {
         case MessageOut::kRaw:
             handleReplyMessageRaw(message->raw());
-            break;
-        case MessageOut::kError:
-            handleReplyError(message->error());
             break;
         default:
             DLOG(INFO) << "Unknown reply type: " << message->OutMessage_case();
