@@ -438,9 +438,7 @@ void ServerState::removeOp(string& op) {
 }
 
 bool ServerState::isOp(string& op) {
-    if (opList.find(op) != opList.end())
-        return true;
-    return false;
+    return opList.count(op) > 0;
 }
 
 void ServerState::addBan(string& character, long accountid) {
@@ -458,10 +456,7 @@ bool ServerState::removeBan(string& character) {
 }
 
 bool ServerState::isBanned(long accountid) {
-    if (banList.find(accountid) != banList.end())
-        return true;
-
-    return false;
+    return banList.count(accountid) > 0;
 }
 
 void ServerState::addTimeout(string& character, long accountid, int length) {
@@ -551,7 +546,5 @@ void ServerState::rebuildChannelOpList() {
 }
 
 bool ServerState::isChannelOp(string& name) {
-    if (channelOpList.find(name) != channelOpList.end())
-        return true;
-    return false;
+    return channelOpList.count(name) > 0;
 }

@@ -74,6 +74,12 @@ public:
 
     static int isGlobalModerator(lua_State* L);
 
+    static int hasAnyRole(lua_State* L);
+
+    static int hasRole(lua_State* L);
+
+    static int setRoles(lua_State* L);
+
     static int setFriends(lua_State* L);
 
     static int removeFriend(lua_State* L);

@@ -128,8 +128,8 @@ int LuaChat::logMessage(lua_State* L) {
     }
     lua_pop(L, 5);
 
-    LogEntry* entry = new LogEntry();
-    struct timeval tv;
+    auto entry = new LogEntry();
+    struct timeval tv{};
     gettimeofday(&tv, NULL);
     entry->time = (unsigned long long) (tv.tv_sec) * 1000 + (unsigned long long) (tv.tv_usec) / 1000;
     entry->messageType = type;

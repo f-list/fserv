@@ -196,7 +196,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
-	if (u.isAdmin(con) ~= true) and (u.isGlobMod(con) ~= true) then
+    if u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
 
@@ -229,7 +229,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
-	if u.isAdmin(con) ~= true then
+    if u.hasRole(con, "admin") ~= true then
 		return const.FERR_NOT_ADMIN
 	end
 
@@ -271,7 +271,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
-	if u.isAdmin(con) ~= true then
+    if u.hasRole(con, "admin") ~= true then
 		return const.FERR_NOT_ADMIN
 	end
 
@@ -532,11 +532,11 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	if c.isOwner(chan, con) ~= true then
+    if c.isOwner(chan, con) ~= true and u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
 
-	if (c.isMod(chan, args.character) == false) or (u.isAdmin(con) == true) or (u.isGlobMod(con) == true) then
+    if (c.isMod(chan, args.character) == false) then
 		c.addMod(chan, con, args.character)
 
 		local modmessage = args.character.." has been added to the moderator list for "
@@ -607,7 +607,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	if c.isOwner(chan, con) ~= true then
+    if c.isOwner(chan, con) ~= true and u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
 
@@ -645,15 +645,15 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
-	if u.isAdmin(con) or u.isGlobMod(con) then
+    if u.hasRole(con, "admin") ~= true then
+        return const.NOT_OP
+    end
+
 		local found, chan = c.getChannel(string.lower(args.channel))
 		if found ~= true then
 			c.createChannel(args.channel)
 			u.send(con, "SYS", {message=args.channel .. " has been created as a public channel."})
 		end
-	else
-		return const.NOT_OP
-	end
 
 	return const.FERR_OK
 end
@@ -671,7 +671,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	if c.isOwner(chan, con) ~= true then
+    if c.isOwner(chan, con) ~= true and u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
 
@@ -805,7 +805,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
-	if u.isAdmin(con) ~= true then
+    if u.hasRole(con, "admin") ~= true then
 		return const.FERR_NOT_ADMIN
 	end
 
@@ -957,9 +957,10 @@ function (con, args)
 	end
 
 	if c.isOwner(chan, con) then
-		if u.isGlobMod(con) then
+        if u.hasAnyRole(con, { "admin" }) ~= true then
 			s.logAction(con, "KIC", args)
 		end
+        c.logMessage("channel_destroy", con, chan, nil, nil)
 		c.sendAll(chan, "BRO", {message="You are being removed from the channel ".. c.getName(chan) ..". The channel is being destroyed."})
 		c.destroyChannel(string.lower(args.channel))
 		u.send(con, "SYS", {message=args.channel .. " has been removed as a channel."})
@@ -978,7 +979,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
-	if (u.isAdmin(con) ~= true) and (u.isGlobMod(con) ~= true) then
+    if u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
 
@@ -988,7 +989,7 @@ function (con, args)
 	end
 
 	s.logAction(con, "KIK", args)
-	s.logMessagE("global_kick", con, nil, char, nil)
+    s.logMessage("global_kick", con, nil, char, nil)
 	u.sendError(char, const.FERR_KICKED)
 	u.send(con, "SYS", {message=u.getName(char).." has been kicked from chat."})
 	u.close(char)
@@ -1157,7 +1158,7 @@ end
 -- Syntax: PCR
 event.PCR =
 function (con, args)
-	if (u.isAdmin(con) ~= true) and (u.isGlobMod(con) ~= true) and (s.isChanOp(con) ~= true) then
+    if u.hasAnyRole(con, { "admin", "global", "super-cop", "cop" }) ~= true then
 		return const.FERR_NOT_OP
 	end
 	s.sendStaffCalls(con)
@@ -1230,7 +1231,7 @@ end
 -- Syntax: RLD <?save>
 event.RLD =
 function (con, args)
-	if u.isAdmin(con) ~= true then
+    if u.hasRole(con, "admin") ~= true then
 		return const.FERR_NOT_ADMIN
 	end
 
@@ -1414,7 +1415,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
-	if u.isAdmin(con) ~= true then
+    if u.hasRole(con, "admin") ~= true then
 		return const.FERR_NOT_ADMIN
 	end
 
@@ -1443,7 +1444,7 @@ function (con, args)
 		if args.report == nil then
 			return const.FERR_BAD_SYNTAX
 		end
-		if u.isGlobMod(con) ~= true and u.isAdmin(con) ~= true and s.isChanOp(con) ~= true then
+        if u.hasAnyRole(con, { "admin", "global", "super-cop", "cop" }) ~= true then
 			if u.checkUpdateTimer(con, "sfc", const.SFC_FLOOD) == true then
 				return const.FERR_THROTTLE_STAFF_CALL
 			end
@@ -1494,7 +1495,7 @@ function (con, args)
 				end
 			end
 		end
-		if channel_override == false and u.isGlobMod(con) ~= true and u.isAdmin(con) ~= true then
+        if channel_override == false and u.hasAnyRole(con, { "admin", "global", "super-cop" }) ~= true then
 			return const.FERR_NOT_OP
 		end
 --		if call.logid ~= -1 then
@@ -1564,7 +1565,7 @@ function (con, args)
 		return const.FERR_BAD_TIMEOUT_FORMAT
 	end
 
-	if (u.isAdmin(con) ~= true) and (u.isGlobMod(con) ~= true) then
+    if u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
 
@@ -1619,7 +1620,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
-	if (u.isAdmin(con) ~= true) and (u.isGlobMod(con) ~= true) then
+    if u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
 
