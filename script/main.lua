@@ -188,6 +188,13 @@ function bottle_spin (con, bottlers)
 	return nil
 end
 
+function public_staff_override(con, chan)
+    local chantype = c.getType(chan)
+    local staff_override = u.hasAnyRole(con, {"admin", "global"})
+    staff_override = staff_override or (chantype == "public" and u.hasRole(con, "super-cop"))
+    return staff_override
+end
+
 -- Bans a person by their account.
 -- Syntax: ACB <character>
 event.ACB =
@@ -327,24 +334,21 @@ function (con, args)
 	local fchan, chan = c.getChannel(string.lower(args.channel))
 	if fchan ~= true then
 		return const.FERR_CHANNEL_NOT_FOUND
-	end
+    end
 
-	if c.isMod(chan, con) ~= true then
+	if c.isMod(chan, con) ~= true and public_staff_override(con, chan) ~= true then
 		return const.FERR_NOT_OP
 	end
 
-	if c.inChannel(chan, con) ~= true then
-		return const.FERR_USER_NOT_IN_CHANNEL
-	end
-
-	if c.getBanCount(chan) >= const.MAX_CHANNEL_BANS then
+	if c.getBanCount(chan) >= const.MAX_CHANNEL_BANS and staff_override ~= true then
 		return const.FERR_TOO_MANY_CHANNEL_BANS
 	end
 
 	local targetonline, char = u.getConnection(string.lower(args.character))
-	local chantype = c.getType(chan)
+    local chantype = c.getType(chan)
 	if chantype == "public" then
-		if targetonline == true and c.isMod(chan, char) == true then
+		if targetonline == true and (c.isMod(chan, char) == true or
+                u.hasAnyRole(char, {"admin", "global", "super-cop", "cop"})) then
 			return const.FERR_DENIED_ON_OP
 		end
 		s.logAction(con, "CBU", args)
@@ -413,19 +417,19 @@ function (con, args)
 
 	if #args.description > const.CDS_MAX then
 		return const.FERR_DESCRIPTION_TOO_LONG
-	end
+    end
 
-	if c.isMod(chan, con) then
-		if c.getType(chan) == "public" then
-			s.logAction(con, "CDS", args)
-		end
-		local newdesc = s.escapeHTML(args.description)
-		s.logMessage("channel_description", con, chan, nil, args.description)
-		c.setDescription(chan, newdesc)
-		c.sendAll(chan, "CDS", {channel=args.channel, description=newdesc})
-	else
-		return const.FERR_NOT_OP
-	end
+    if c.isMod(chan, con) ~= true and u.hasAnyRole(con, {"admin", "global"}) ~= true then
+        return const.FERR_NOT_OP
+    end
+
+    if c.getType(chan) == "public" then
+        s.logAction(con, "CDS", args)
+    end
+    s.logMessage("channel_description", con, chan, nil, args.description)
+    local newdesc = s.escapeHTML(args.description)
+    c.setDescription(chan, newdesc)
+    c.sendAll(chan, "CDS", {channel=args.channel, description=newdesc})
 
 	return const.FERR_OK
 end
@@ -452,7 +456,11 @@ function (con, args)
 	local found, chan = c.getChannel(string.lower(args.channel))
 	if found ~= true then
 		return const.FERR_CHANNEL_NOT_FOUND
-	end
+    end
+
+    if c.inChannel(chan, con) ~= true then
+        return const.FERR_USER_NOT_IN_CHANNEL
+    end
 
 	local fchar, char = u.getConnection(string.lower(args.character))
 	if fchar ~= true then
@@ -465,9 +473,9 @@ function (con, args)
 		return const.FERR_INVITE_TO_PUBLIC
 	end
 
-	if chantype ~= "pubprivate" and c.isMod(chan, con) ~= true then
+	if chantype ~= "pubprivate" and c.isMod(chan, con) ~= true and c.hasAnyRole(con, {"admin", "global"}) then
 		return const.FERR_NOT_OP
-	end
+    end
 
 	if chantype == "private" then
 		c.invite(chan, char)
@@ -495,7 +503,7 @@ function (con, args)
 		return const.FERR_USER_NOT_FOUND
 	end
 
-	if c.isMod(chan, con) ~= true then
+	if c.isMod(chan, con) ~= true and public_staff_override(con, chan) ~= true then
 		return const.FERR_NOT_OP
 	end
 
@@ -505,7 +513,7 @@ function (con, args)
 
 	local chantype = c.getType(chan)
 	if chantype == "public" then
-		if c.isMod(chan, char) == true then
+		if c.isMod(chan, char) == true or u.hasAnyRole(char, {"admin", "global", "super-cop", "cop"}) then
 			return const.FERR_DENIED_ON_OP
 		end
 		s.logAction(con, "CKU", args)
@@ -718,7 +726,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	if c.isMod(chan, con) ~= true then
+	if c.isMod(chan, con) ~= true and public_staff_override(con, chan) ~= true then
 		return const.FERR_NOT_OP
 	end
 
@@ -779,7 +787,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	if c.isMod(chan, con) ~= true then
+	if c.isMod(chan, con) ~= true and public_staff_override(con, chan) ~= true then
 		return const.FERR_NOT_OP
 	end
 
@@ -925,7 +933,7 @@ function (con, args)
 		return const.FERR_ALREADY_IN_CHANNEL
 	end
 
-	if c.isOwner(chan, con) ~= true and c.isBanned(chan, con) ~= false then
+	if c.isOwner(chan, con) ~= true and u.hasAnyRole(con, { "admin", "global" }) ~= true and c.isBanned(chan, con) ~= false then
 		local banned, ban = c.getBan(chan, con)
 		if banned == true and ban.timeout ~= 0 then
 			u.sendError(con, const.FERR_CHANNEL_BANNED, string.format("You are banned from the channel for another %.2f minute(s).", ((ban.timeout-s.getTime())/60) ))
@@ -956,17 +964,16 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	if c.isOwner(chan, con) then
-        if u.hasAnyRole(con, { "admin" }) ~= true then
-			s.logAction(con, "KIC", args)
-		end
-        c.logMessage("channel_destroy", con, chan, nil, nil)
-		c.sendAll(chan, "BRO", {message="You are being removed from the channel ".. c.getName(chan) ..". The channel is being destroyed."})
-		c.destroyChannel(string.lower(args.channel))
-		u.send(con, "SYS", {message=args.channel .. " has been removed as a channel."})
-	else
-		return const.FERR_NOT_OP
-	end
+	if c.isOwner(chan, con) ~= true and u.hasRole(con, "admin") ~= true then
+        return const.FERR_NOT_OP
+    end
+    if u.hasAnyRole(con, { "admin" }) ~= true then
+        s.logAction(con, "KIC", args)
+    end
+    c.logMessage("channel_destroy", con, chan, nil, nil)
+    c.sendAll(chan, "BRO", {message="You are being removed from the channel ".. c.getName(chan) ..". The channel is being destroyed."})
+    c.destroyChannel(string.lower(args.channel))
+    u.send(con, "SYS", {message=args.channel .. " has been removed as a channel."})
 
 	return const.FERR_OK
 end
@@ -1359,7 +1366,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	if c.isOwner(chan, con) ~= true then
+	if c.isOwner(chan, con) ~= true and u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
 
@@ -1386,7 +1393,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	if c.isOwner(chan, con) ~= true then
+	if c.isOwner(chan, con) ~= true and u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
 
