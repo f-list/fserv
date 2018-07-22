@@ -967,7 +967,7 @@ function (con, args)
 	if c.isOwner(chan, con) ~= true and u.hasRole(con, "admin") ~= true then
         return const.FERR_NOT_OP
     end
-    if u.hasAnyRole(con, { "admin" }) ~= true then
+    if u.hasRole(con, "admin") ~= true then
         s.logAction(con, "KIC", args)
     end
     c.logMessage("channel_destroy", con, chan, nil, nil)

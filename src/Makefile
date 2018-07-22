@@ -16,7 +16,7 @@ FSERV_O=	channel.o connection.o fserv.o http_client.o logger_thread.o login_evht
 PRECOMP_GCH=	$(TARGETDIR)precompiled_headers.hpp.gch
 FACCEPTOR_O=	facceptor.o
 FACCEPTOR_LDFLAGS=	-lev
-FSERV_SCRIPTS=	startup_config.lua main.lua
+FSERV_SCRIPTS=	startup_config.lua main.lua tests.lua
 FSERV_OBJECTS= $(FSERV_O:%.o=$(TARGETDIR)%.o)
 FACCEPTOR_OBJECTS= $(FACCEPTOR_O:%.o=$(TARGETDIR)%.o)
 

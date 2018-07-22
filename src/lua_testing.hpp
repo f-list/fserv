@@ -34,9 +34,11 @@ public:
 
     static int runTests(lua_State* L);
 
-    static int assert(lua_State* L);
+    static int luaAssert(lua_State* L);
 
     static int createConnection(lua_State* L);
 
     static int removeConnection(lua_State* L);
+
+    static int killChannel(lua_State* L);
 };

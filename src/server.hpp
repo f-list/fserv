@@ -46,6 +46,7 @@ using std::string;
 class Server {
 public:
     static void run();
+    static void runTesting();
 
     static void sendWakeup();
     static void sendHTTPWakeup();

@@ -33,10 +33,11 @@
 #define LUATESTING_MODULE_NAME "testing"
 
 static const luaL_Reg luatesting_funcs[] = {
-        {"assert",           LuaTesting::assert},
+        {"assert",           LuaTesting::luaAssert},
         {"runTests",         LuaTesting::runTests},
         {"createConnection", LuaTesting::createConnection},
         {"removeConnection", LuaTesting::removeConnection},
+        {"killChannel",      LuaTesting::killChannel},
         {NULL, NULL}
 };
 
@@ -45,18 +46,31 @@ int LuaTesting::openTestingLib(lua_State* L) {
     return 0;
 }
 
-int LuaTesting::assert(lua_State* L) {
+int LuaTesting::luaAssert(lua_State* L) {
     luaL_checkany(L, 2);
-    auto equal = lua_equal(L, 1, 2);
-    if(equal != 1)
-        return luaL_error(L, "Assert failed! Left: %s Right: %s", 1, 2);
+    string left, right;
+    if(lua_type(L, 1) == LUA_TBOOLEAN)
+        left = lua_toboolean(L, 1) ? "true" : "false";
+    else
+        left = lua_tostring(L, 1);
+    if(lua_type(L, 2) == LUA_TBOOLEAN)
+        right = lua_toboolean(L, 2) ? "true" : "false";
+    else
+        right = lua_tostring(L, 2);
+
+    int equal = lua_equal(L, 1, 2);
+    if (equal != 1) {
+        DLOG(INFO) << "Assert failed: Left " << left << " Right: " << right;
+        return luaL_error(L, "Assert failed! Left: %s Right: %s", left.data(), right.data());
+    }
+
     lua_pop(L, 2);
     return 0;
 }
 
 int LuaTesting::runTests(lua_State* L) {
-    int ret = luaL_dofile(sL, "./script/tests.lua");
-    if(ret) {
+    int ret = luaL_dofile(L, "./script/tests.lua");
+    if (ret) {
         LOG(WARNING) << "Failed to run tests: " << lua_tostring(L, -1);
         return luaL_error(L, "Failed to run tests file.");
     }
@@ -64,9 +78,48 @@ int LuaTesting::runTests(lua_State* L) {
 }
 
 int LuaTesting::createConnection(lua_State* L) {
-    return 0;
+    luaL_checkany(L, 1);
+
+    string charName = luaL_checkstring(L, 1);
+    lua_pop(L, 1);
+
+    auto con = new ConnectionInstance();
+    con->characterName = charName;
+    con->characterNameLower = charName;
+    con->identified = true;
+    con->accountID = 1;
+    con->characterID = 2;
+    con->closed = true;
+    auto conPtr = ConnectionPtr(con);
+    ServerState::addConnection(charName, conPtr);
+
+    lua_pushlightuserdata(L, conPtr.get());
+    return 1;
 }
 
 int LuaTesting::removeConnection(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    string charName = luaL_checkstring(L, 1);
+    lua_pop(L, 1);
+    ServerState::removeConnection(charName);
+
+    return 0;
+}
+
+int LuaTesting::killChannel(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    string chanName = luaL_checkstring(L, 1);
+    lua_pop(L, 1);
+    ChannelPtr chan = ServerState::getChannel(chanName);
+    if (chan) {
+        const chconlist_t particpants = chan->getParticipants();
+        for (chconlist_t::const_iterator i = particpants.begin(); i != particpants.end(); ++i) {
+            chan->part(*i);
+        }
+        ServerState::removeChannel(chanName);
+    }
+
     return 0;
 }

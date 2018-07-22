@@ -603,6 +603,36 @@ void Server::shutdownConnection(ConnectionInstance* instance) {
     instance->writeEvent = 0;
 }
 
+void Server::runTesting() {
+    DLOG(INFO) << "Starting in testing mode.";
+    initLua();
+
+    luaCanTimeout = false;
+    luaInTimeout = false;
+    int ret = luaL_dofile(sL, "./script/tests.lua");
+    if (ret) {
+        LOG(DFATAL) << "Failed to load testing lua script: " << lua_tostring(sL, -1);
+        return;
+    }
+
+    lua_getglobal(sL, "on_error");
+    lua_getglobal(sL, "runTests");
+    if (lua_type(sL, -1) == LUA_TFUNCTION) {
+        luaTimer = luaGetTime();
+        ret = lua_pcall(sL, 0, 0, LUA_ABSINDEX(sL, -2));
+        if (ret) {
+            LOG(WARNING) << "Error calling 'runTests'. Error returned was: " << lua_tostring(sL, -1);
+        }
+        luaInTimeout = false;
+    } else {
+        LOG(WARNING) << "Could not call 'runTests' function. Unexpected type for 'chat_init', expected function, got "
+                     << lua_typename(sL, -1);
+    }
+    lua_pop(sL, 1);
+
+    shutdownLua();
+}
+
 void Server::run() {
     statStartTime = time(NULL);
     DLOG(INFO) << "Server starting.";
@@ -1037,9 +1067,9 @@ FReturnCode Server::loadLuaIntoState(lua_State* tL, string &output, bool testing
     lua_pcall(tL, 1, 0, 0);
 
 #ifndef NDEBUG
-    lua_pushcfunction(tL, LuaTest::openTestingLib);
+    lua_pushcfunction(tL, LuaTesting::openTestingLib);
     lua_pushstring(tL, "testing");
-    lua_pcal(tL, 1, 0, 0);
+    lua_pcall(tL, 1, 0, 0);
 #endif
 
     lua_pushcfunction(tL, Server::luaPrint);
@@ -1142,9 +1172,9 @@ void Server::initLua() {
     lua_pcall(sL, 1, 0, 0);
 
 #ifndef NDEBUG
-    lua_pushcfunction(tL, LuaTest::openTestingLib);
-    lua_pushstring(tL, "testing");
-    lua_pcal(tL, 1, 0, 0);
+    lua_pushcfunction(sL, LuaTesting::openTestingLib);
+    lua_pushstring(sL, "testing");
+    lua_pcall(sL, 1, 0, 0);
 #endif
 
     lua_pushcfunction(sL, Server::luaPrint);

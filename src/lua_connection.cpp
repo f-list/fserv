@@ -527,7 +527,7 @@ int LuaConnection::hasAnyRole(lua_State* L) {
         lua_pop(L, 1);
     }
 
-    lua_pop(L, 3);
+    lua_pop(L, 2);
 
     lua_pushboolean(L, found);
     return 1;
@@ -547,7 +547,7 @@ int LuaConnection::setRoles(lua_State* L) {
         lua_pop(L, 1);
     }
 
-    lua_pop(L, 3);
+    lua_pop(L, 2);
 
     return 0;
 }
