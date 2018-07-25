@@ -11,8 +11,9 @@ function globalSetUp()
     end
     u.setGlobMod(cons.global, true)
     u.setAdmin(cons.admin, true)
-    u.setRoles(cons.super, { "super-cop", "cop" })
-    u.setRoles(cons.cop, { "cop" })
+    u.addRole(cons.super, "super-cop")
+    u.addRole(cons.super, "cop")
+    u.addRole(cons.cop, "cop")
 end
 
 function globalTearDown()
@@ -46,6 +47,9 @@ CALL_ALLOWED = { { "public", "normal", OK }, { "private", "normal", OK } }
 PUBLIC_ALLOWED = { { "public", "normal", OK }, { "private", "normal", NOT_OP } }
 NONE_ALLOWED = { { "public", "normal", NOT_OP }, { "private", "normal", NOT_OP } }
 
+PRIV_CALL_ALLOWED = { { "private", "normal", OK} }
+PRIV_NONE_ALLOWED = { { "private", "normal", NOT_OP} }
+
 NormalMatrix = {
     owner = CALL_ALLOWED,
     admin = CALL_ALLOWED,
@@ -62,6 +66,15 @@ OwnerOnlyMatrix = {
     super = NONE_ALLOWED,
     cop = NONE_ALLOWED,
     normal = NONE_ALLOWED
+}
+
+PrivateOwnerOnlyMatrix = {
+    owner = PRIV_CALL_ALLOWED,
+    admin = PRIV_CALL_ALLOWED,
+    global = PRIV_CALL_ALLOWED,
+    super = PRIV_NONE_ALLOWED,
+    cop = PRIV_NONE_ALLOWED,
+    normal = PRIV_NONE_ALLOWED
 }
 
 function ChannelTest(callEvent, matrix, paramsFunc)
@@ -106,12 +119,33 @@ function CORTest()
     end)
 end
 
+function CSOTest()
+    ChannelTest("CSO", OwnerOnlyMatrix, function(channel, target)
+        return { channel = channel, character = target }
+    end)
+end
+
+function RMOTest()
+    ChannelTest("RMO", OwnerOnlyMatrix, function(channel, target)
+        return { channel = channel, mode = "both" }
+    end)
+end
+
+function RSTTest()
+    ChannelTest("RST", PrivateOwnerOnlyMatrix, function(channel, target)
+        return { channel = channel, status = "public" }
+    end)
+end
+
 tests = {
     CBUTest,
     CKUTest,
     CTUTest,
     COATest,
-    CORTest
+    CORTest,
+    CSOTest,
+    RMOTest,
+    RSTTest
 }
 
 function runTests()

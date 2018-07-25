@@ -78,7 +78,9 @@ public:
 
     static int hasRole(lua_State* L);
 
-    static int setRoles(lua_State* L);
+    static int addRole(lua_State* L);
+
+    static int removeRole(lua_State* L);
 
     static int setFriends(lua_State* L);
 

@@ -823,8 +823,13 @@ int LuaChannel::addMod(lua_State* L) {
     lua_pop(L, 3);
 
     chan->addMod(src, dest);
-    if (chan->getType() == CT_PUBLIC)
+    if (chan->getType() == CT_PUBLIC) {
         ServerState::rebuildChannelOpList();
+        auto con = ServerState::getConnection(dest);
+        if(con) {
+            con->roles.insert("cop");
+        }
+    }
 
     return 0;
 }
@@ -844,8 +849,13 @@ int LuaChannel::removeMod(lua_State* L) {
     lua_pop(L, 2);
 
     chan->remMod(dest);
-    if (chan->getType() == CT_PUBLIC)
+    if (chan->getType() == CT_PUBLIC) {
         ServerState::rebuildChannelOpList();
+        auto con = ServerState::getConnection(dest);
+        if(con && !ServerState::isChannelOp(dest)) {
+            con->roles.erase("cop");
+        }
+    }
 
     return 0;
 }

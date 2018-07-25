@@ -1,5 +1,5 @@
 --[[
- * Copyright (c) 2011-2013, "Kira"
+ * Copyright (c) 2011-2018, "Kira"
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -203,6 +203,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
+	-- V: 2018-07-25
     if u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
@@ -212,7 +213,8 @@ function (con, args)
 		return const.FERR_USER_NOT_FOUND
 	end
 
-	if (u.isAdmin(char) == true) or (u.isGlobMod(char) == true) then
+	-- V: 2018-07-25
+	if u.hasAnyRole(con, { "admin", "global" }) == true then
 		return const.FERR_DENIED_ON_OP
 	end
 
@@ -236,6 +238,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
+    -- V: 2018-07-25
     if u.hasRole(con, "admin") ~= true then
 		return const.FERR_NOT_ADMIN
 	end
@@ -247,6 +250,7 @@ function (con, args)
 	end
 	local name = u.getName(char)
 
+    -- V: 2018-07-25
 	if s.isOp(name) == true then
 		return const.FERR_ALREADY_OP
 	end
@@ -278,6 +282,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
+    -- V: 2018-07-25
     if u.hasRole(con, "admin") ~= true then
 		return const.FERR_NOT_ADMIN
 	end
@@ -303,6 +308,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
+    -- V: 2018-07-25
 	--if c.isMod(chan, con) ~= true then
 	--	return const.FERR_NOT_OP
 	--end
@@ -336,10 +342,14 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
     end
 
-	if c.isMod(chan, con) ~= true and public_staff_override(con, chan) ~= true then
+    local staff_override = public_staff_override(con, chan)
+
+    -- V: 2018-07-25
+	if c.isMod(chan, con) ~= true and staff_override ~= true then
 		return const.FERR_NOT_OP
 	end
 
+    -- V: 2018-07-25
 	if c.getBanCount(chan) >= const.MAX_CHANNEL_BANS and staff_override ~= true then
 		return const.FERR_TOO_MANY_CHANNEL_BANS
 	end
@@ -347,6 +357,7 @@ function (con, args)
 	local targetonline, char = u.getConnection(string.lower(args.character))
     local chantype = c.getType(chan)
 	if chantype == "public" then
+        -- V: 2018-07-25
 		if targetonline == true and (c.isMod(chan, char) == true or
                 u.hasAnyRole(char, {"admin", "global", "super-cop", "cop"})) then
 			return const.FERR_DENIED_ON_OP
@@ -419,7 +430,8 @@ function (con, args)
 		return const.FERR_DESCRIPTION_TOO_LONG
     end
 
-    if c.isMod(chan, con) ~= true and u.hasAnyRole(con, {"admin", "global"}) ~= true then
+    -- V: 2018-07-25
+    if c.isMod(chan, con) ~= true and public_staff_override(con, chan) ~= true then
         return const.FERR_NOT_OP
     end
 
@@ -473,6 +485,7 @@ function (con, args)
 		return const.FERR_INVITE_TO_PUBLIC
 	end
 
+    -- V: 2018-07-25
 	if chantype ~= "pubprivate" and c.isMod(chan, con) ~= true and c.hasAnyRole(con, {"admin", "global"}) then
 		return const.FERR_NOT_OP
     end
@@ -503,6 +516,7 @@ function (con, args)
 		return const.FERR_USER_NOT_FOUND
 	end
 
+    -- V: 2018-07-25
 	if c.isMod(chan, con) ~= true and public_staff_override(con, chan) ~= true then
 		return const.FERR_NOT_OP
 	end
@@ -513,6 +527,7 @@ function (con, args)
 
 	local chantype = c.getType(chan)
 	if chantype == "public" then
+        -- V: 2018-07-25
 		if c.isMod(chan, char) == true or u.hasAnyRole(char, {"admin", "global", "super-cop", "cop"}) then
 			return const.FERR_DENIED_ON_OP
 		end
@@ -540,6 +555,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
+    -- V: 2018-07-25
     if c.isOwner(chan, con) ~= true and u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
@@ -579,6 +595,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
+    -- V: 2018-07-25
 	--if c.isMod(chan, con) ~= true then
 	--	return const.FERR_NOT_OP
 	--end
@@ -615,6 +632,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
+    -- V: 2018-07-25
     if c.isOwner(chan, con) ~= true and u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
@@ -653,6 +671,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
+    -- V: 2018-07-25
     if u.hasRole(con, "admin") ~= true then
         return const.NOT_OP
     end
@@ -679,6 +698,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
+    -- V: 2018-07-25
     if c.isOwner(chan, con) ~= true and u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
@@ -726,7 +746,10 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
-	if c.isMod(chan, con) ~= true and public_staff_override(con, chan) ~= true then
+    local staff_override = public_staff_override(con, chan)
+
+    -- V: 2018-07-25
+	if c.isMod(chan, con) ~= true and staff_override ~= true then
 		return const.FERR_NOT_OP
 	end
 
@@ -734,14 +757,16 @@ function (con, args)
 		return const.FERR_USER_NOT_IN_CHANNEL
 	end
 
-	if c.getBanCount(chan) >= const.MAX_CHANNEL_BANS then
+    -- V: 2018-07-25
+	if c.getBanCount(chan) >= const.MAX_CHANNEL_BANS and staff_override ~= true then
 		return const.FERR_TOO_MANY_CHANNEL_BANS
 	end
 
 	local targetonline, char = u.getConnection(string.lower(args.character))
 	local chantype = c.getType(chan)
 	if chantype == "public" then
-		if targetonline == true and c.isMod(chan, char) == true then
+        -- V: 2018-07-25
+		if targetonline == true and (c.isMod(chan, char) == true or u.hasAnyRole(char, {"admin", "global", "super-cop", "cop"})) then
 			return const.FERR_DENIED_ON_OP
 		end
 		s.logAction(con, "CTU", args)
@@ -787,6 +812,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
+    -- V: 2018-07-25
 	if c.isMod(chan, con) ~= true and public_staff_override(con, chan) ~= true then
 		return const.FERR_NOT_OP
 	end
@@ -813,6 +839,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
+    -- V: 2018-07-25
     if u.hasRole(con, "admin") ~= true then
 		return const.FERR_NOT_ADMIN
 	end
@@ -919,7 +946,7 @@ function (con, args)
 	if args.channel == nil then
 		return const.FERR_BAD_SYNTAX
 	end
-	
+
 	if u.getChannelCount(con) >= 75 and u.getMiscData(con, "no_channel_limit") ~= "yes" then
 		return const.FERR_TOO_MANY_CHANNELS
 	end
@@ -931,9 +958,12 @@ function (con, args)
 
 	if c.inChannel(chan, con) == true then
 		return const.FERR_ALREADY_IN_CHANNEL
-	end
+    end
 
-	if c.isOwner(chan, con) ~= true and u.hasAnyRole(con, { "admin", "global" }) ~= true and c.isBanned(chan, con) ~= false then
+    local staff_override = u.hasAnyRole(con, { "admin", "global" })
+
+    -- V: 2018-07-25
+	if c.isOwner(chan, con) ~= true and staff_override ~= true and c.isBanned(chan, con) ~= false then
 		local banned, ban = c.getBan(chan, con)
 		if banned == true and ban.timeout ~= 0 then
 			u.sendError(con, const.FERR_CHANNEL_BANNED, string.format("You are banned from the channel for another %.2f minute(s).", ((ban.timeout-s.getTime())/60) ))
@@ -943,7 +973,7 @@ function (con, args)
 	end
 
 	local chantype = c.getType(chan)
-	if chantype == "private" and (c.isInvited(chan, con) ~= true and c.isOwner(chan, con) ~= true) then
+	if chantype == "private" and (c.isInvited(chan, con) ~= true and c.isOwner(chan, con) ~= true and staff_override ~= true) then
 		return const.FERR_NOT_INVITED
 	end
 
@@ -962,12 +992,15 @@ function (con, args)
 	local found, chan = c.getChannel(string.lower(args.channel))
 	if found ~= true then
 		return const.FERR_CHANNEL_NOT_FOUND
-	end
+    end
 
-	if c.isOwner(chan, con) ~= true and u.hasRole(con, "admin") ~= true then
+    local staff_override = u.hasRole(con, "admin")
+
+    -- V: 2018-07-25
+	if c.isOwner(chan, con) ~= true and staff_override ~= true then
         return const.FERR_NOT_OP
     end
-    if u.hasRole(con, "admin") ~= true then
+    if staff_override ~= true then
         s.logAction(con, "KIC", args)
     end
     c.logMessage("channel_destroy", con, chan, nil, nil)
@@ -986,6 +1019,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
+    -- V: 2018-07-25
     if u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
@@ -1091,10 +1125,10 @@ function (con, args)
 	if c.inChannel(chan, con) ~= true then
 		return const.FERR_NOT_IN_CHANNEL
 	end
-	
+
 	if hasShortener(args.message) ~= false then
-                return const.FERR_OK
-        end
+        return const.FERR_OK
+    end
 
 	if u.getMiscData(con, "hellban") ~= nil then
 		return const.FERR_OK
@@ -1136,7 +1170,7 @@ function (con, args)
 	if c.inChannel(chan, con) ~= true then
 		return const.FERR_NOT_IN_CHANNEL
 	end
-	
+
 	if hasShortener(args.message) ~= false then
                 return const.FERR_OK
         end
@@ -1165,6 +1199,7 @@ end
 -- Syntax: PCR
 event.PCR =
 function (con, args)
+    -- V: 2018-07-25
     if u.hasAnyRole(con, { "admin", "global", "super-cop", "cop" }) ~= true then
 		return const.FERR_NOT_OP
 	end
@@ -1238,6 +1273,7 @@ end
 -- Syntax: RLD <?save>
 event.RLD =
 function (con, args)
+    -- V: 2018-07-25
     if u.hasRole(con, "admin") ~= true then
 		return const.FERR_NOT_ADMIN
 	end
@@ -1366,6 +1402,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
+    -- V: 2018-07-25
 	if c.isOwner(chan, con) ~= true and u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
@@ -1393,6 +1430,7 @@ function (con, args)
 		return const.FERR_CHANNEL_NOT_FOUND
 	end
 
+    -- V: 2018-07-25
 	if c.isOwner(chan, con) ~= true and u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
@@ -1422,6 +1460,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
+    -- V: 2018-07-25
     if u.hasRole(con, "admin") ~= true then
 		return const.FERR_NOT_ADMIN
 	end
@@ -1450,7 +1489,8 @@ function (con, args)
 	if args.action == "report" then
 		if args.report == nil then
 			return const.FERR_BAD_SYNTAX
-		end
+        end
+        -- V: 2018-07-25
         if u.hasAnyRole(con, { "admin", "global", "super-cop", "cop" }) ~= true then
 			if u.checkUpdateTimer(con, "sfc", const.SFC_FLOOD) == true then
 				return const.FERR_THROTTLE_STAFF_CALL
@@ -1491,9 +1531,11 @@ function (con, args)
 			chanfound = false
 		end
 		if chanfound == true then
+            -- V: 2018-07-25
+            channel_override = u.hasRole(con, "super-cop")
 			authorized_ops = c.getModList(chan)
 		end
-		if authorized_ops ~= nil then
+		if authorized_ops ~= nil and channel_override ~= true then
 			local lname = string.lower(u.getName(con))
 			for i,v in ipairs(authorized_ops) do
 				if string.lower(v) == lname then
@@ -1501,8 +1543,9 @@ function (con, args)
 					break
 				end
 			end
-		end
-        if channel_override == false and u.hasAnyRole(con, { "admin", "global", "super-cop" }) ~= true then
+        end
+        -- V: 2018-07-25
+        if channel_override == false and u.hasAnyRole(con, { "admin", "global" }) ~= true then
 			return const.FERR_NOT_OP
 		end
 --		if call.logid ~= -1 then
@@ -1572,6 +1615,7 @@ function (con, args)
 		return const.FERR_BAD_TIMEOUT_FORMAT
 	end
 
+    -- V: 2018-07-25
     if u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
@@ -1581,6 +1625,7 @@ function (con, args)
 		return const.FERR_USER_NOT_FOUND
 	end
 
+    -- V: 2018-07-25
 	if (u.isAdmin(char) == true) or (u.isGlobMod(char) == true) then
 		return const.FERR_DENIED_ON_OP
 	end
@@ -1627,6 +1672,7 @@ function (con, args)
 		return const.FERR_BAD_SYNTAX
 	end
 
+    -- V: 2018-07-25
     if u.hasAnyRole(con, { "admin", "global" }) ~= true then
 		return const.FERR_NOT_OP
 	end
@@ -1705,22 +1751,33 @@ function (con, args)
 	end
 
 	local isadmin = false
+    -- V: 2018-07-25
 	if args.account.admin == "1" or lname == "kira" then
 		u.setAdmin(con, true)
 		isadmin = true
 	end
 
 	local isop = false
+    -- V: 2018-07-25
 	if s.isOp(name) == true then
 		u.setGlobMod(con, true)
 		isop = true
-	end
+    end
 
+    local issupercop = false
+    -- V: 2018-07-25
+    local iscop = s.isChanOp(con)
+    if iscop then
+        u.addRole(con, "cop")
+    end
+
+    -- V: 2018-07-25
 	if (s.isBanned(con) ~= false) and (isop ~= true) and (isadmin ~= true) then
 		return const.FERR_BANNED_FROM_SERVER
 	end
 
 	local timedout, left = s.isTimedOut(con)
+    -- V: 2018-07-25
 	if (timedout ~= false) and (isop ~= true) and (isadmin ~= true) then
 		u.sendError(con, const.FERR_BANNED_FROM_SERVER, string.format("You have been timed out from chat. There are %.2f minute(s) left on your time out.", (left/60)))
 		u.close(con)
@@ -1796,7 +1853,11 @@ function (con, args)
 		if (args.bits.coder == 1) or (args.bits.admin == 1) or (args.bits.moderator == 1) or (args.bits.helpdesk == 1)
 			or (args.bits.chanop == 1) or (args.bits.chatop == 1) then
 			isstaff = true
-		end
+        end
+        if args.bits.supercop == 1 then
+            u.addRole(con, "super-cop")
+            isstaff = true
+        end
 	end
 
 	u.send(con, "IDN", {character=name})
@@ -1826,11 +1887,11 @@ function (con, args)
 	s.logMessage("connect", con, nil, nil, nil)
 	s.broadcast("NLN", {identity=name, status="online", gender=u.getGender(con)})
 
-	if isop then
+	if isop or issupercop then
 		s.sendStaffCalls(con)
 	end
 
-	if isstaff or isop or (s.isChanOp(con) == true) then
+	if isstaff or isop or issupercop or iscop then
 		local found, chan = c.getChannel("adh-uberawesomestaffroom")
 		if found == true then
 			c.invite(chan, con)
