@@ -47,8 +47,8 @@ CALL_ALLOWED = { { "public", "normal", OK }, { "private", "normal", OK } }
 PUBLIC_ALLOWED = { { "public", "normal", OK }, { "private", "normal", NOT_OP } }
 NONE_ALLOWED = { { "public", "normal", NOT_OP }, { "private", "normal", NOT_OP } }
 
-PRIV_CALL_ALLOWED = { { "private", "normal", OK} }
-PRIV_NONE_ALLOWED = { { "private", "normal", NOT_OP} }
+PRIV_CALL_ALLOWED = { { "private", "normal", OK } }
+PRIV_NONE_ALLOWED = { { "private", "normal", NOT_OP } }
 
 NormalMatrix = {
     owner = CALL_ALLOWED,
