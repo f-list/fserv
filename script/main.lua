@@ -486,7 +486,7 @@ function(con, args)
     end
 
     -- V: 2018-07-25
-    if chantype ~= "pubprivate" and c.isMod(chan, con) ~= true and c.hasAnyRole(con, { "admin", "global" }) then
+    if chantype ~= "pubprivate" and c.isMod(chan, con) ~= true and c.hasAnyRole(con, { "admin", "global" }) ~= true then
         return const.FERR_NOT_OP
     end
 
@@ -1000,7 +1000,7 @@ function(con, args)
     if c.isOwner(chan, con) ~= true and staff_override ~= true then
         return const.FERR_NOT_OP
     end
-    if staff_override ~= true then
+    if staff_override == true then
         s.logAction(con, "KIC", args)
     end
     c.logMessage("channel_destroy", con, chan, nil, nil)
@@ -1513,7 +1513,7 @@ function(con, args)
         if llogid ~= -1 then
             lsfc.logid = llogid
         end
-        s.broadcastOps("SFC", lsfc)
+        s.broadcastStaffCall("SFC", lsfc)
         local chanfound, chan = c.getChannel(string.lower(ltab))
         if chanfound == true and c.getType(chan) == "public" then
             broadcastChannelOps("SFC", lsfc, chan)
@@ -1531,11 +1531,9 @@ function(con, args)
             chanfound = false
         end
         if chanfound == true then
-            -- V: 2018-07-25
-            channel_override = u.hasRole(con, "super-cop")
             authorized_ops = c.getModList(chan)
         end
-        if authorized_ops ~= nil and channel_override ~= true then
+        if authorized_ops ~= nil then
             local lname = string.lower(u.getName(con))
             for i, v in ipairs(authorized_ops) do
                 if string.lower(v) == lname then
@@ -1545,7 +1543,7 @@ function(con, args)
             end
         end
         -- V: 2018-07-25
-        if channel_override == false and u.hasAnyRole(con, { "admin", "global" }) ~= true then
+        if channel_override == false and u.hasAnyRole(con, { "admin", "global", "super-cop" }) ~= true then
             return const.FERR_NOT_OP
         end
         --		if call.logid ~= -1 then
@@ -1857,6 +1855,7 @@ function(con, args)
         if args.bits.supercop == 1 then
             u.addRole(con, "super-cop")
             isstaff = true
+            issupercop = true
         end
     end
 
@@ -1888,6 +1887,7 @@ function(con, args)
     s.broadcast("NLN", { identity = name, status = "online", gender = u.getGender(con) })
 
     if isop or issupercop then
+        s.addToStaffCallTargets(con)
         s.sendStaffCalls(con)
     end
 
@@ -1943,7 +1943,9 @@ function(args)
         u.sendError(v, const.FERR_KICKED)
         u.close(v)
     end
-    s.broadcastOps("SYS", { message = "Chat kick applied against account id: " .. args['a'] .. " was successful." })
+    if args.s ~= true then
+        s.broadcastOps("SYS", { message = "Chat kick applied against account id: " .. args['a'] .. " was successful." })
+    end
     return const.FERR_OK
 end
 

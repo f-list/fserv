@@ -75,6 +75,9 @@ public:
     static int removeStaffCall(lua_State* L);
     static int getStaffCall(lua_State* L);
     static int sendStaffCalls(lua_State* L);
+    static int broadcastStaffCall(lua_State* L);
+
+    static int addToStaffCallTargets(lua_State* L);
 
     static int isChanOp(lua_State* L);
 

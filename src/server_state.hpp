@@ -71,6 +71,7 @@ typedef unordered_map<long, TimeoutRecord> timeoutmap_t; //account id, timeout r
 typedef unordered_map<long, AltWatchRecord> altwatchmap_t; //account id, alt watch record
 typedef unordered_map<string, StaffCallRecord> staffcallmap_t; //call id, staff call record
 typedef unordered_set<string> chanoplist_t;
+typedef unordered_set<ConnectionPtr> conptrset_t;
 
 class ServerState {
 public:
@@ -148,6 +149,13 @@ public:
         return staffCallList;
     }
 
+    static void addStaffCallTarget(ConnectionPtr con);
+    static void removeStaffCallTarget(ConnectionPtr con);
+
+    static const conptrset_t& getStaffCallTargets() {
+        return staffCallTargets;
+    }
+
     static void rebuildChannelOpList();
     static bool isChannelOp(string& name);
 
@@ -177,5 +185,6 @@ private:
     static altwatchmap_t altWatchList;
     static staffcallmap_t staffCallList;
     static chanoplist_t channelOpList;
+    static conptrset_t staffCallTargets;
 };
 #endif //SERVER_STATE_H

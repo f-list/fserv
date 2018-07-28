@@ -46,6 +46,7 @@ timeoutmap_t ServerState::timeoutList;
 altwatchmap_t ServerState::altWatchList;
 staffcallmap_t ServerState::staffCallList;
 chanoplist_t ServerState::channelOpList;
+conptrset_t ServerState::staffCallTargets;
 long ServerState::userCount = 0;
 long ServerState::maxUserCount = 0;
 long ServerState::channelSeed = 0;
@@ -359,6 +360,8 @@ void ServerState::removeConnection(string& name) {
             //DLOG(INFO) << "IP " << addr << " has been removed because it no longer has any connections.";
             connectionCountMap.erase(addr);
         }
+        // Need to remove staff call target if there is one, or connections get leaked..
+        staffCallTargets.erase(connectionMap[name]);
         connectionMap.erase(name);
         --userCount;
     }
@@ -527,6 +530,14 @@ StaffCallRecord ServerState::getStaffCall(string& callid) {
     StaffCallRecord record;
     record.action = "invalid";
     return record;
+}
+
+void ServerState::addStaffCallTarget(ConnectionPtr con) {
+    staffCallTargets.insert(con);
+}
+
+void ServerState::removeStaffCallTarget(ConnectionPtr con) {
+    staffCallTargets.erase(con);
 }
 
 void ServerState::rebuildChannelOpList() {
