@@ -793,7 +793,19 @@ function (con, args)
 
 	-- s.logMessage("channel_ban_remove", con, chan, args.character, nil)
 	c.unban(chan, string.lower(args.character))
-	u.send(con, "SYS", {channel=args.channel, message=args.character.." has been removed from the channel ban list."})
+
+	local modList = c.getModList(chan)
+
+	for index, value in ipairs(modList) do
+		local found, connection = u.getConnection(string.lower(value))
+
+		if found ~= true then
+			u.send(connection, "SYS", {
+				channel = args.channel
+				message = args.character.." has been removed from the channel ban list."
+			})
+		end
+	end
 	return const.FERR_OK
 end
 
