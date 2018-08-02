@@ -47,6 +47,7 @@ static const luaL_Reg luachat_funcs[] = {
         {"broadcast",             LuaChat::broadcast},
         {"broadcastRaw",          LuaChat::broadcastRaw},
         {"broadcastOps",          LuaChat::broadcastOps},
+        {"broadcastStaffCall",    LuaChat::broadcastStaffCall},
         {"getConfigBool",         LuaChat::getConfigBool},
         {"getConfigDouble",       LuaChat::getConfigDouble},
         {"getConfigString",       LuaChat::getConfigString},

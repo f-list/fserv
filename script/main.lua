@@ -1557,7 +1557,7 @@ function(con, args)
         local lsfc = { action = "confirm", moderator = u.getName(con), character = call.character, timestamp = call.timestamp, tab = s.escapeHTML(call.tab), logid = call.logid }
         s.logAction(con, "SFC", lsfc)
         s.removeStaffCall(args.callid)
-        s.broadcastOps("SFC", lsfc)
+        s.broadcastStaffCall("SFC", lsfc)
         if chanfound == true then
             broadcastChannelOps("SFC", lsfc, chan)
         end
