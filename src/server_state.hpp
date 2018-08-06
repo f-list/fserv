@@ -72,6 +72,10 @@ typedef unordered_map<long, AltWatchRecord> altwatchmap_t; //account id, alt wat
 typedef unordered_map<string, StaffCallRecord> staffcallmap_t; //call id, staff call record
 typedef unordered_set<string> chanoplist_t;
 typedef unordered_set<ConnectionPtr> conptrset_t;
+typedef unordered_set<string> scopset_t;
+
+typedef void (*stringFunctionTarget)(string& name);
+typedef void (*clearFunction)();
 
 class ServerState {
 public:
@@ -131,6 +135,9 @@ public:
     static void addOp(string& op);
     static void removeOp(string& op);
     static bool isOp(string& op);
+    static void clearOps() {
+        opList.clear();
+    }
 
     static const oplist_t& getOpList() {
         return opList;
@@ -156,6 +163,22 @@ public:
         return staffCallTargets;
     }
 
+    static void addSuperCop(string& op) {
+        superCopList.insert(op);
+    }
+
+    static void removeSuperCop(string& op) {
+        superCopList.erase(op);
+    }
+
+    static void clearSuperCops() {
+        superCopList.clear();
+    }
+
+    static scopset_t& getSuperCops() {
+        return superCopList;
+    }
+
     static void rebuildChannelOpList();
     static bool isChannelOp(string& name);
 
@@ -166,11 +189,15 @@ public:
     static const long getMaxUserCount() {
         return maxUserCount;
     }
+
+    static void saveSCops();
 private:
 
     ServerState() { }
 
     ~ServerState() { }
+
+    static void loadStringList(string filename, stringFunctionTarget target, clearFunction clear);
 
     static long userCount;
     static long maxUserCount;
@@ -186,5 +213,6 @@ private:
     static staffcallmap_t staffCallList;
     static chanoplist_t channelOpList;
     static conptrset_t staffCallTargets;
+    static scopset_t superCopList;
 };
 #endif //SERVER_STATE_H

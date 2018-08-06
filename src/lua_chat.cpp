@@ -58,6 +58,8 @@ static const luaL_Reg luachat_funcs[] = {
         {"isOp",                  LuaChat::isOp},
         {"addOp",                 LuaChat::addOp},
         {"removeOp",              LuaChat::removeOp},
+        {"addSCop",               LuaChat::addSCop},
+        {"removeSCop",            LuaChat::removeSCop},
         {"addBan",                LuaChat::addBan},
         {"removeBan",             LuaChat::removeBan},
         {"isBanned",              LuaChat::isBanned},
@@ -450,6 +452,28 @@ int LuaChat::removeOp(lua_State* L) {
     lua_pop(L, 1);
 
     ServerState::removeOp(name);
+    ServerState::saveOps();
+    return 0;
+}
+
+int LuaChat::addSCop(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    string name = luaL_checkstring(L, 1);
+    lua_pop(L, 1);
+
+    ServerState::addSuperCop(name);
+    ServerState::saveOps();
+    return 0;
+}
+
+int LuaChat::removeSCop(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    string name = luaL_checkstring(L, 1);
+    lua_pop(L, 1);
+
+    ServerState::removeSuperCop(name);
     ServerState::saveOps();
     return 0;
 }

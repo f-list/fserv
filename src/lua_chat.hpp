@@ -59,6 +59,9 @@ public:
     static int addOp(lua_State* L);
     static int removeOp(lua_State* L);
 
+    static int addSCop(lua_State* L);
+    static int removeSCop(lua_State* L);
+
     static int addBan(lua_State* L);
     static int removeBan(lua_State* L);
     static int isBanned(lua_State* L);

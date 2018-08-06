@@ -1478,6 +1478,28 @@ function(con, args)
     return const.FERR_OK
 end
 
+event.SCP =
+function(con, args)
+    if args.action == nil and args.character == nil then
+        return const.FERR_BAD_SYNTAX
+    end
+
+    -- V: 2018-08-05
+    if u.hasRole(con, "admin") ~= true then
+        return const.FERR_NOT_ADMIN
+    end
+
+    if args.action == "add" then
+        s.addSCop(args.character)
+    elseif args.action == "remove" then
+        s.removeSCop(args.character)
+    else
+        return const.FERR_BAD_SYNTAX
+    end
+
+    return const.FERR_OK
+end
+
 -- Processes a staff call request.
 -- Syntax: SFC <action> (<character> <report>/<callid> <moderator>)
 event.SFC =
