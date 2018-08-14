@@ -59,6 +59,10 @@ static const luaL_Reg luaconnection_funcs[] = {
         {"isAdmin",                LuaConnection::isAdmin},
         {"setGlobMod",             LuaConnection::setGlobalModerator},
         {"isGlobMod",              LuaConnection::isGlobalModerator},
+        {"hasRole",                LuaConnection::hasRole},
+        {"hasAnyRole",             LuaConnection::hasAnyRole},
+        {"addRole",                LuaConnection::addRole},
+        {"removeRole",             LuaConnection::removeRole},
         {"setFriends",             LuaConnection::setFriends},
         {"removeFriend",           LuaConnection::removeFriend},
         {"getFriendList",          LuaConnection::getFriends},
@@ -79,7 +83,7 @@ static const luaL_Reg luaconnection_funcs[] = {
         {"setMiscData",            LuaConnection::setMiscData},
         {"getMiscData",            LuaConnection::getMiscData},
         {"checkUpdateTimer",       LuaConnection::checkUpdateTimer},
-        {NULL,                     NULL}
+        {NULL, NULL}
 };
 
 int LuaConnection::openConnectionLib(lua_State* L) {
@@ -440,6 +444,10 @@ int LuaConnection::setAdmin(lua_State* L) {
     lua_pop(L, 2);
 
     con->admin = newflag;
+    if (newflag)
+        con->roles.insert("admin");
+    else
+        con->roles.erase("admin");
     return 0;
 }
 
@@ -470,6 +478,10 @@ int LuaConnection::setGlobalModerator(lua_State* L) {
     lua_pop(L, 2);
 
     con->globalModerator = newflag;
+    if (newflag)
+        con->roles.insert("global");
+    else
+        con->roles.erase("global");
     return 0;
 }
 
@@ -482,6 +494,71 @@ int LuaConnection::isGlobalModerator(lua_State* L) {
 
     lua_pushboolean(L, con->globalModerator);
     return 1;
+}
+
+int LuaConnection::hasRole(lua_State* L) {
+    luaL_checkany(L, 2);
+
+    LBase* base = nullptr;
+    GETLCON(base, L, 1, con);
+    string role = luaL_checkstring(L, 2);
+    lua_pop(L, 2);
+
+    lua_pushboolean(L, con->roles.count(role) > 0);
+    return 1;
+}
+
+int LuaConnection::hasAnyRole(lua_State* L) {
+    luaL_checkany(L, 2);
+
+    LBase* base = nullptr;
+    GETLCON(base, L, 1, con);
+    if (lua_type(L, 2) != LUA_TTABLE)
+        return luaL_error(L, "Expected table for argument 2.");
+
+    bool found = false;
+
+    lua_pushnil(L);
+    while (lua_next(L, -2)) {
+        if (con->roles.count(lua_tostring(L, -1)) > 0) {
+            found = true;
+            lua_pop(L, 1);
+            break;
+        }
+        lua_pop(L, 1);
+    }
+
+    lua_pop(L, 2);
+
+    lua_pushboolean(L, found);
+    return 1;
+}
+
+int LuaConnection::addRole(lua_State* L) {
+    luaL_checkany(L, 2);
+
+    LBase* base = nullptr;
+    GETLCON(base, L, 1, con);
+    string role = luaL_checkstring(L, 2);
+
+    lua_pop(L, 2);
+
+    con->roles.insert(role);
+
+    return 0;
+}
+
+int LuaConnection::removeRole(lua_State* L) {
+    luaL_checkany(L, 2);
+
+    LBase* base = nullptr;
+    GETLCON(base, L, 1, con);
+    string role = luaL_checkstring(L, 2);
+
+    lua_pop(L, 2);
+
+    con->roles.erase(role);
+    return 0;
 }
 
 int LuaConnection::setFriends(lua_State* L) {

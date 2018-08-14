@@ -46,6 +46,8 @@ timeoutmap_t ServerState::timeoutList;
 altwatchmap_t ServerState::altWatchList;
 staffcallmap_t ServerState::staffCallList;
 chanoplist_t ServerState::channelOpList;
+conptrset_t ServerState::staffCallTargets;
+scopset_t ServerState::superCopList;
 long ServerState::userCount = 0;
 long ServerState::maxUserCount = 0;
 long ServerState::channelSeed = 0;
@@ -163,16 +165,15 @@ void ServerState::removeUnusedChannels() {
     DLOG(INFO) << "Removed " << toremove.size() << " unused channels.";
 }
 
-void ServerState::loadOps() {
-    DLOG(INFO) << "Loading ops.";
-    string contents = floadFile("./ops.json");
+void ServerState::loadStringList(string filename, stringFunctionTarget target, clearFunction clear) {
+    string contents = floadFile(filename.c_str());
     json_error_t jserror;
     json_t* root = json_loads(contents.c_str(), 0, &jserror);
     if (!json_is_array(root)) {
-        LOG(WARNING) << "Failed to parse the ops list json. Error: " << &jserror.text;
+        LOG(WARNING) << "Failed to parse the ops list json. Error: " << jserror.text;
         return;
     }
-    opList.clear();
+    clear();
     size_t size = json_array_size(root);
     for (size_t i = 0; i < size; ++i) {
         json_t* jop = json_array_get(root, i);
@@ -181,9 +182,30 @@ void ServerState::loadOps() {
             continue;
         }
         string op = json_string_value(jop);
-        addOp(op);
+        target(op);
     }
     json_decref(root);
+}
+
+void ServerState::loadOps() {
+    DLOG(INFO) << "Loading ops.";
+    loadStringList("./ops.json", &addOp, &clearOps);
+    DLOG(INFO) << "Loading super cops.";
+    loadStringList("./scops.json", &addSuperCop, &clearSuperCops);
+}
+
+void ServerState::saveSCops() {
+    DLOG(INFO) << "Saving super cops.";
+
+    json_t* root = json_array();
+    for(auto itr = superCopList.begin(); itr != superCopList.end(); ++itr) {
+        json_array_append_new(root, json_string_nocheck(itr->c_str()));
+    }
+    const char* opstr = json_dumps(root, JSON_INDENT(4));
+    string contents = opstr;
+    free((void*) opstr);
+    json_decref(root);
+    fsaveFile("./scops.json", contents);
 }
 
 void ServerState::saveOps() {
@@ -197,6 +219,7 @@ void ServerState::saveOps() {
     free((void*) opstr);
     json_decref(root);
     fsaveFile("./ops.json", contents);
+    saveSCops();
 }
 
 void ServerState::loadBans() {
@@ -359,6 +382,8 @@ void ServerState::removeConnection(string& name) {
             //DLOG(INFO) << "IP " << addr << " has been removed because it no longer has any connections.";
             connectionCountMap.erase(addr);
         }
+        // Need to remove staff call target if there is one, or connections get leaked..
+        staffCallTargets.erase(connectionMap[name]);
         connectionMap.erase(name);
         --userCount;
     }
@@ -438,9 +463,7 @@ void ServerState::removeOp(string& op) {
 }
 
 bool ServerState::isOp(string& op) {
-    if (opList.find(op) != opList.end())
-        return true;
-    return false;
+    return opList.count(op) > 0;
 }
 
 void ServerState::addBan(string& character, long accountid) {
@@ -458,10 +481,7 @@ bool ServerState::removeBan(string& character) {
 }
 
 bool ServerState::isBanned(long accountid) {
-    if (banList.find(accountid) != banList.end())
-        return true;
-
-    return false;
+    return banList.count(accountid) > 0;
 }
 
 void ServerState::addTimeout(string& character, long accountid, int length) {
@@ -534,6 +554,14 @@ StaffCallRecord ServerState::getStaffCall(string& callid) {
     return record;
 }
 
+void ServerState::addStaffCallTarget(ConnectionPtr con) {
+    staffCallTargets.insert(con);
+}
+
+void ServerState::removeStaffCallTarget(ConnectionPtr con) {
+    staffCallTargets.erase(con);
+}
+
 void ServerState::rebuildChannelOpList() {
     channelOpList.clear();
     const chanptrmap_t chans = getChannels();
@@ -551,7 +579,5 @@ void ServerState::rebuildChannelOpList() {
 }
 
 bool ServerState::isChannelOp(string& name) {
-    if (channelOpList.find(name) != channelOpList.end())
-        return true;
-    return false;
+    return channelOpList.count(name) > 0;
 }

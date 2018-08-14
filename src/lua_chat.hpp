@@ -59,6 +59,9 @@ public:
     static int addOp(lua_State* L);
     static int removeOp(lua_State* L);
 
+    static int addSCop(lua_State* L);
+    static int removeSCop(lua_State* L);
+
     static int addBan(lua_State* L);
     static int removeBan(lua_State* L);
     static int isBanned(lua_State* L);
@@ -75,6 +78,9 @@ public:
     static int removeStaffCall(lua_State* L);
     static int getStaffCall(lua_State* L);
     static int sendStaffCalls(lua_State* L);
+    static int broadcastStaffCall(lua_State* L);
+
+    static int addToStaffCallTargets(lua_State* L);
 
     static int isChanOp(lua_State* L);
 

@@ -44,40 +44,44 @@ using std::string;
 #define LUACHAT_MODULE_NAME "s"
 
 static const luaL_Reg luachat_funcs[] = {
-        {"broadcast",       LuaChat::broadcast},
-        {"broadcastRaw",    LuaChat::broadcastRaw},
-        {"broadcastOps",    LuaChat::broadcastOps},
-        {"getConfigBool",   LuaChat::getConfigBool},
-        {"getConfigDouble", LuaChat::getConfigDouble},
-        {"getConfigString", LuaChat::getConfigString},
-        {"getTime",         LuaChat::getTime},
-        {"getUserCount",    LuaChat::getUserCount},
-        {"sendUserList",    LuaChat::sendUserList},
-        {"getOpList",       LuaChat::getOpList},
-        {"isOp",            LuaChat::isOp},
-        {"addOp",           LuaChat::addOp},
-        {"removeOp",        LuaChat::removeOp},
-        {"addBan",          LuaChat::addBan},
-        {"removeBan",       LuaChat::removeBan},
-        {"isBanned",        LuaChat::isBanned},
-        {"addTimeout",      LuaChat::addTimeout},
-        {"removeTimeout",   LuaChat::removeTimeout},
-        {"isTimedOut",      LuaChat::isTimedOut},
-        {"addAltWatch",     LuaChat::addAltWatch},
-        {"getAltWatch",     LuaChat::getAltWatch},
-        {"addStaffCall",    LuaChat::addStaffCall},
-        {"removeStaffCall", LuaChat::removeStaffCall},
-        {"getStaffCall",    LuaChat::getStaffCall},
-        {"sendStaffCalls",  LuaChat::sendStaffCalls},
-        {"isChanOp",        LuaChat::isChanOp},
-        {"escapeHTML",      LuaChat::escapeHTML},
-        {"reload",          LuaChat::reload},
-        {"logMessage",      LuaChat::logMessage},
+        {"broadcast",             LuaChat::broadcast},
+        {"broadcastRaw",          LuaChat::broadcastRaw},
+        {"broadcastOps",          LuaChat::broadcastOps},
+        {"broadcastStaffCall",    LuaChat::broadcastStaffCall},
+        {"getConfigBool",         LuaChat::getConfigBool},
+        {"getConfigDouble",       LuaChat::getConfigDouble},
+        {"getConfigString",       LuaChat::getConfigString},
+        {"getTime",               LuaChat::getTime},
+        {"getUserCount",          LuaChat::getUserCount},
+        {"sendUserList",          LuaChat::sendUserList},
+        {"getOpList",             LuaChat::getOpList},
+        {"isOp",                  LuaChat::isOp},
+        {"addOp",                 LuaChat::addOp},
+        {"removeOp",              LuaChat::removeOp},
+        {"addSCop",               LuaChat::addSCop},
+        {"removeSCop",            LuaChat::removeSCop},
+        {"addBan",                LuaChat::addBan},
+        {"removeBan",             LuaChat::removeBan},
+        {"isBanned",              LuaChat::isBanned},
+        {"addTimeout",            LuaChat::addTimeout},
+        {"removeTimeout",         LuaChat::removeTimeout},
+        {"isTimedOut",            LuaChat::isTimedOut},
+        {"addAltWatch",           LuaChat::addAltWatch},
+        {"getAltWatch",           LuaChat::getAltWatch},
+        {"addStaffCall",          LuaChat::addStaffCall},
+        {"removeStaffCall",       LuaChat::removeStaffCall},
+        {"getStaffCall",          LuaChat::getStaffCall},
+        {"sendStaffCalls",        LuaChat::sendStaffCalls},
+        {"addToStaffCallTargets", LuaChat::addToStaffCallTargets},
+        {"isChanOp",              LuaChat::isChanOp},
+        {"escapeHTML",            LuaChat::escapeHTML},
+        {"reload",                LuaChat::reload},
+        {"logMessage",            LuaChat::logMessage},
         //{"shutdown", LuaChat::shutdown},
-        {"getStats",        LuaChat::getStats},
-        {"logAction",       LuaChat::logAction},
-        {"toJSON",          LuaChat::toJsonString},
-        {"fromJSON",        LuaChat::fromJsonString},
+        {"getStats",              LuaChat::getStats},
+        {"logAction",             LuaChat::logAction},
+        {"toJSON",                LuaChat::toJsonString},
+        {"fromJSON",              LuaChat::fromJsonString},
         {NULL, NULL}
 };
 
@@ -128,8 +132,8 @@ int LuaChat::logMessage(lua_State* L) {
     }
     lua_pop(L, 5);
 
-    LogEntry* entry = new LogEntry();
-    struct timeval tv;
+    auto entry = new LogEntry();
+    struct timeval tv{};
     gettimeofday(&tv, NULL);
     entry->time = (unsigned long long) (tv.tv_sec) * 1000 + (unsigned long long) (tv.tv_usec) / 1000;
     entry->messageType = type;
@@ -226,6 +230,42 @@ int LuaChat::broadcastOps(lua_State* L) {
             con->send(outMessage);
         }
     }
+    return 0;
+}
+
+int LuaChat::broadcastStaffCall(lua_State* L) {
+    luaL_checkany(L, 2);
+    if (lua_type(L, 2) != LUA_TTABLE)
+        return luaL_error(L, "broadcastStaffCall requires a table as the second argument.");
+
+    string message = luaL_checkstring(L, 1);
+    message += " ";
+    json_t* json = luaToJson(L);
+    const char* jsonstr = json_dumps(json, JSON_COMPACT);
+    message += jsonstr;
+    free((void*) jsonstr);
+    json_decref(json);
+    lua_pop(L, 2);
+    MessagePtr outMessage(MessageBuffer::fromString(message));
+    auto targets = ServerState::getStaffCallTargets();
+    for (auto i = targets.begin(); i != targets.end(); ++i) {
+        ConnectionPtr con(*i);
+        if (con != 0) {
+            con->send(outMessage);
+        }
+    }
+    return 0;
+}
+
+int LuaChat::addToStaffCallTargets(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    LBase* base = nullptr;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
+
+    ServerState::addStaffCallTarget(con);
+
     return 0;
 }
 
@@ -412,6 +452,28 @@ int LuaChat::removeOp(lua_State* L) {
     lua_pop(L, 1);
 
     ServerState::removeOp(name);
+    ServerState::saveOps();
+    return 0;
+}
+
+int LuaChat::addSCop(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    string name = luaL_checkstring(L, 1);
+    lua_pop(L, 1);
+
+    ServerState::addSuperCop(name);
+    ServerState::saveOps();
+    return 0;
+}
+
+int LuaChat::removeSCop(lua_State* L) {
+    luaL_checkany(L, 1);
+
+    string name = luaL_checkstring(L, 1);
+    lua_pop(L, 1);
+
+    ServerState::removeSuperCop(name);
     ServerState::saveOps();
     return 0;
 }

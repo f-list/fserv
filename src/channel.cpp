@@ -27,7 +27,7 @@
 #include "channel.hpp"
 #include "logging.hpp"
 
-#include <time.h>
+#include <ctime>
 
 string Channel::privChanDescriptionDefault("Welcome to your private room! Invite friends with the [b]/invite[/b] command. Change this text with [b]/setdescription[/b]. You can open the room to the public with [b]/openroom[/b] For more, read [url=http://www.f-list.net/doc/chat_faq.php]the help[/url].");
 
@@ -69,6 +69,7 @@ refCount(0) {
 
 Channel::~Channel() {
     assert(participants.size() == 0);
+    assert(participantCount == 0);
 }
 
 void Channel::sendToAll(string& message) {
@@ -88,7 +89,7 @@ void Channel::sendToChannel(ConnectionPtr src, string& message) {
 }
 
 void Channel::join(ConnectionPtr con) {
-    lastActivity = time(0);
+    lastActivity = time(nullptr);
     ++participantCount;
     participants.insert(con);
     con->joinChannel(this);
@@ -97,7 +98,7 @@ void Channel::join(ConnectionPtr con) {
 }
 
 void Channel::part(ConnectionPtr con) {
-    lastActivity = time(0);
+    lastActivity = time(nullptr);
     --participantCount;
     timerMap.erase(con->characterNameLower);
     participants.erase(con);
@@ -111,7 +112,7 @@ void Channel::kick(ConnectionPtr dest) {
 void Channel::ban(ConnectionPtr src, ConnectionPtr dest) {
     BanRecord ban;
     ban.banner = src->characterName;
-    ban.time = time(0);
+    ban.time = time(nullptr);
     ban.timeout = 0;
     bans[dest->characterNameLower] = ban;
 }
@@ -119,7 +120,7 @@ void Channel::ban(ConnectionPtr src, ConnectionPtr dest) {
 void Channel::ban(ConnectionPtr src, string dest) {
     BanRecord ban;
     ban.banner = src->characterName;
-    ban.time = time(0);
+    ban.time = time(nullptr);
     ban.timeout = 0;
     bans[dest] = ban;
 }
@@ -127,16 +128,16 @@ void Channel::ban(ConnectionPtr src, string dest) {
 void Channel::timeout(ConnectionPtr src, ConnectionPtr dest, long length) {
     BanRecord ban;
     ban.banner = src->characterName;
-    ban.time = time(0);
-    ban.timeout = time(0) + length;
+    ban.time = time(nullptr);
+    ban.timeout = time(nullptr) + length;
     bans[dest->characterNameLower] = ban;
 }
 
 void Channel::timeout(ConnectionPtr src, string dest, long length) {
     BanRecord ban;
     ban.banner = src->characterName;
-    ban.time = time(0);
-    ban.timeout = time(0) + length;
+    ban.time = time(nullptr);
+    ban.timeout = time(nullptr) + length;
     bans[dest] = ban;
 }
 
@@ -157,7 +158,7 @@ bool Channel::isBanned(ConnectionPtr con) {
     chbanmap_t::const_iterator itr = bans.find(con->characterNameLower);
     if (itr != bans.end()) {
         BanRecord b = itr->second;
-        if (b.timeout == 0 || b.timeout >= time(0)) {
+        if (b.timeout == 0 || b.timeout >= time(nullptr)) {
             return true;
         } else {
             bans.erase(con->characterNameLower);
@@ -171,7 +172,7 @@ bool Channel::isBanned(string& name) {
     chbanmap_t::const_iterator itr = bans.find(name);
     if (itr != bans.end()) {
         BanRecord b = itr->second;
-        if (b.timeout == 0 || b.timeout >= time(0)) {
+        if (b.timeout == 0 || b.timeout >= time(nullptr)) {
             return true;
         } else {
             bans.erase(name);
@@ -221,14 +222,14 @@ void Channel::cleanExpiredTimeouts() {
 void Channel::addMod(ConnectionPtr src, string& dest) {
     ModRecord mod;
     mod.modder = src->characterName;
-    mod.time = time(0);
+    mod.time = time(nullptr);
     moderators[dest] = mod;
 }
 
 void Channel::addMod(string& dest) {
     ModRecord mod;
     mod.modder = "[System]";
-    mod.time = time(0);
+    mod.time = time(nullptr);
     moderators[dest] = mod;
 }
 
@@ -237,31 +238,23 @@ void Channel::remMod(string& dest) {
 }
 
 bool Channel::isMod(ConnectionPtr con) {
-    if (con->globalModerator || con->admin || (owner == con->characterName) || moderators.find(con->characterName) != moderators.end())
-        return true;
+    return (owner == con->characterName) || moderators.count(con->characterName) > 0;
 
-    return false;
 }
 
 bool Channel::isMod(string& name) {
-    if ((owner == name) || moderators.find(name) != moderators.end())
-        return true;
+    return (owner == name) || moderators.find(name) != moderators.end();
 
-    return false;
 }
 
 bool Channel::isOwner(ConnectionPtr con) {
-    if (con->globalModerator || con->admin || (owner == con->characterName))
-        return true;
+    return owner == con->characterName;
 
-    return false;
 }
 
 bool Channel::isOwner(string& name) {
-    if (owner == name)
-        return true;
+    return owner == name;
 
-    return false;
 }
 
 const double Channel::getTimerEntry(ConnectionPtr con) {
@@ -285,7 +278,6 @@ string Channel::getTypeString() {
         case CT_PUBPRIVATE:
             return "pubprivate";
     }
-    return "public";
 }
 
 void Channel::invite(ConnectionPtr dest) {
@@ -297,10 +289,8 @@ void Channel::removeInvite(string& dest) {
 }
 
 bool Channel::isInvited(ConnectionPtr con) {
-    if (invites.find(con->characterNameLower) != invites.end())
-        return true;
+    return invites.count(con->characterNameLower) > 0;
 
-    return false;
 }
 
 void Channel::setPublic(bool newstatus) {
@@ -384,7 +374,7 @@ json_t* Channel::saveChannel() {
 }
 
 void Channel::loadChannel(const json_t* channode) {
-    lastActivity = time(0);
+    lastActivity = time(nullptr);
     {
         json_t* descnode = json_object_get(channode, "description");
         if (descnode) {
@@ -586,7 +576,6 @@ string Channel::modeToString() {
         case CMM_CHAT_ONLY:
             return "chat";
     }
-    return "both";
 }
 
 ChannelMessageMode Channel::stringToMode(string modestring) {
@@ -610,7 +599,6 @@ string Channel::typeToString() {
         case CT_PUBLIC:
             return "public";
     }
-    return "private";
 }
 
 ChannelType Channel::stringToType(string typestring) {

@@ -117,6 +117,8 @@ public:
     stringset_t friends;
     stringset_t ignores;
 
+    stringset_t roles;
+
     chanlist_t channelList;
 
     stringmap_t miscMap;

@@ -45,52 +45,52 @@ using std::string;
 #define LUACHANNEL_MODULE_NAME "c"
 
 static const luaL_Reg luachannel_funcs[] = {
-    {"sendCHA", LuaChannel::sendCHA},
-    {"sendORS", LuaChannel::sendORS},
-    {"getChannel", LuaChannel::getChannel},
-    {"getName", LuaChannel::getName},
-    {"getUserCount", LuaChannel::getUserCount},
-    {"getTopUserCount", LuaChannel::getTopUserCount},
-    {"createChannel", LuaChannel::createChannel},
-    {"createPrivateChannel", LuaChannel::createPrivateChannel},
-    {"createSpecialPrivateChannel", LuaChannel::createSpecialPrivateChannel},
-    {"destroyChannel", LuaChannel::destroyChannel},
-    {"sendAll", LuaChannel::sendToAll},
-    {"sendAllRaw", LuaChannel::sendToAllRaw},
-    {"sendChannel", LuaChannel::sendToChannel},
-    {"sendChannelRaw", LuaChannel::sendToChannelRaw},
-    {"sendICH", LuaChannel::sendICH},
-    {"join", LuaChannel::joinChannel},
-    {"part", LuaChannel::partChannel},
-    {"ban", LuaChannel::ban},
-    {"timeout", LuaChannel::timeout},
-    {"unban", LuaChannel::unban},
-    {"isBanned", LuaChannel::isBanned},
-    {"getBan", LuaChannel::getBan},
-    {"getBanList", LuaChannel::getBanList},
-    {"getBanCount", LuaChannel::getBanCount},
-    {"invite", LuaChannel::invite},
-    {"removeInvite", LuaChannel::removeInvite},
-    {"isInvited", LuaChannel::isInvited},
-    {"inChannel", LuaChannel::inChannel},
-    {"addMod", LuaChannel::addMod},
-    {"removeMod", LuaChannel::removeMod},
-    {"isMod", LuaChannel::isMod},
-    {"isOwner", LuaChannel::isOwner},
-    {"getModList", LuaChannel::getModList},
-    {"checkUpdateTimer", LuaChannel::checkUpdateTimer},
-    {"getType", LuaChannel::getType},
-    {"setMode", LuaChannel::setMode},
-    {"getMode", LuaChannel::getMode},
-    {"setPublic", LuaChannel::setPublic},
-    {"getDescription", LuaChannel::getDescription},
-    {"setDescription", LuaChannel::setDescription},
-    {"getTitle", LuaChannel::getTitle},
-    {"setTitle", LuaChannel::setTitle},
-    {"setOwner", LuaChannel::setOwner},
-    {"getBottleList", LuaChannel::getBottleList},
-    {"canDestroy", LuaChannel::canDestroy},
-    {NULL, NULL}
+        {"sendCHA",                     LuaChannel::sendCHA},
+        {"sendORS",                     LuaChannel::sendORS},
+        {"getChannel",                  LuaChannel::getChannel},
+        {"getName",                     LuaChannel::getName},
+        {"getUserCount",                LuaChannel::getUserCount},
+        {"getTopUserCount",             LuaChannel::getTopUserCount},
+        {"createChannel",               LuaChannel::createChannel},
+        {"createPrivateChannel",        LuaChannel::createPrivateChannel},
+        {"createSpecialPrivateChannel", LuaChannel::createSpecialPrivateChannel},
+        {"destroyChannel",              LuaChannel::destroyChannel},
+        {"sendAll",                     LuaChannel::sendToAll},
+        {"sendAllRaw",                  LuaChannel::sendToAllRaw},
+        {"sendChannel",                 LuaChannel::sendToChannel},
+        {"sendChannelRaw",              LuaChannel::sendToChannelRaw},
+        {"sendICH",                     LuaChannel::sendICH},
+        {"join",                        LuaChannel::joinChannel},
+        {"part",                        LuaChannel::partChannel},
+        {"ban",                         LuaChannel::ban},
+        {"timeout",                     LuaChannel::timeout},
+        {"unban",                       LuaChannel::unban},
+        {"isBanned",                    LuaChannel::isBanned},
+        {"getBan",                      LuaChannel::getBan},
+        {"getBanList",                  LuaChannel::getBanList},
+        {"getBanCount",                 LuaChannel::getBanCount},
+        {"invite",                      LuaChannel::invite},
+        {"removeInvite",                LuaChannel::removeInvite},
+        {"isInvited",                   LuaChannel::isInvited},
+        {"inChannel",                   LuaChannel::inChannel},
+        {"addMod",                      LuaChannel::addMod},
+        {"removeMod",                   LuaChannel::removeMod},
+        {"isMod",                       LuaChannel::isMod},
+        {"isOwner",                     LuaChannel::isOwner},
+        {"getModList",                  LuaChannel::getModList},
+        {"checkUpdateTimer",            LuaChannel::checkUpdateTimer},
+        {"getType",                     LuaChannel::getType},
+        {"setMode",                     LuaChannel::setMode},
+        {"getMode",                     LuaChannel::getMode},
+        {"setPublic",                   LuaChannel::setPublic},
+        {"getDescription",              LuaChannel::getDescription},
+        {"setDescription",              LuaChannel::setDescription},
+        {"getTitle",                    LuaChannel::getTitle},
+        {"setTitle",                    LuaChannel::setTitle},
+        {"setOwner",                    LuaChannel::setOwner},
+        {"getBottleList",               LuaChannel::getBottleList},
+        {"canDestroy",                  LuaChannel::canDestroy},
+        {NULL, NULL}
 };
 
 int LuaChannel::openChannelLib(lua_State* L) {
@@ -113,7 +113,7 @@ int LuaChannel::sendCHA(lua_State* L) {
     static time_t cache_time = 0;
     static MessagePtr cached_message;
 
-    if(cache_time > time(nullptr)) {
+    if (cache_time > time(nullptr)) {
         con->send(cached_message);
         return 0;
     }
@@ -126,14 +126,14 @@ int LuaChannel::sendCHA(lua_State* L) {
         if (i->second->getType() == CT_PUBLIC) {
             json_t* channode = json_object();
             json_object_set_new_nocheck(channode, "name",
-                    json_string_nocheck(i->second->getName().c_str())
-                    );
+                                        json_string_nocheck(i->second->getName().c_str())
+            );
             json_object_set_new_nocheck(channode, "mode",
-                    json_string_nocheck(i->second->getModeString().c_str())
-                    );
+                                        json_string_nocheck(i->second->getModeString().c_str())
+            );
             json_object_set_new_nocheck(channode, "characters",
-                    json_integer(i->second->getParticipantCount())
-                    );
+                                        json_integer(i->second->getParticipantCount())
+            );
             json_array_append_new(array, channode);
         }
     }
@@ -164,7 +164,7 @@ int LuaChannel::sendORS(lua_State* L) {
     static time_t cache_time = 0;
     static MessagePtr cached_message;
 
-    if(cache_time > time(nullptr)) {
+    if (cache_time > time(nullptr)) {
         con->send(cached_message);
         return 0;
     }
@@ -177,15 +177,15 @@ int LuaChannel::sendORS(lua_State* L) {
         if (i->second->getType() == CT_PUBPRIVATE) {
             json_t* channode = json_object();
             json_object_set_new_nocheck(channode, "name",
-                    json_string_nocheck(i->second->getName().c_str())
-                    );
+                                        json_string_nocheck(i->second->getName().c_str())
+            );
             json_t* titlenode = json_string(i->second->getTitle().c_str());
             if (!titlenode)
                 titlenode = json_string("This channel had an invalid title. This is a safe default.");
             json_object_set_new_nocheck(channode, "title", titlenode);
             json_object_set_new_nocheck(channode, "characters",
-                    json_integer(i->second->getParticipantCount())
-                    );
+                                        json_integer(i->second->getParticipantCount())
+            );
             json_array_append_new(array, channode);
         }
     }
@@ -298,7 +298,7 @@ int LuaChannel::createPrivateChannel(lua_State* L) {
     GETLCON(base, L, 1, con);
     string title = luaL_checkstring(L, 2);
     lua_pop(L, 2);
-    
+
     string namehash = ServerState::generatePrivateChannelID(con, title);
     Channel* privchan = new Channel(namehash, CT_PRIVATE, con);
     privchan->setTitle(title);
@@ -350,11 +350,11 @@ int LuaChannel::destroyChannel(lua_State* L) {
         for (chconlist_t::const_iterator i = particpants.begin(); i != particpants.end(); ++i) {
             json_t* root = json_object();
             json_object_set_new_nocheck(root, "channel",
-                    json_string_nocheck(channame)
-                    );
+                                        json_string_nocheck(channame)
+            );
             json_object_set_new_nocheck(root, "character",
-                    json_string_nocheck((*i)->characterName.c_str())
-                    );
+                                        json_string_nocheck((*i)->characterName.c_str())
+            );
             const char* leavestr = json_dumps(root, JSON_COMPACT);
             string msg = "LCH ";
             msg += leavestr;
@@ -481,18 +481,18 @@ int LuaChannel::sendICH(lua_State* L) {
 
     json_t* root = json_object();
     json_object_set_new_nocheck(root, "channel",
-            json_string_nocheck(chan->getName().c_str())
-            );
+                                json_string_nocheck(chan->getName().c_str())
+    );
     json_object_set_new_nocheck(root, "mode",
-            json_string_nocheck(chan->getModeString().c_str())
-            );
+                                json_string_nocheck(chan->getModeString().c_str())
+    );
     json_t* array = json_array();
     const chconlist_t participants = chan->getParticipants();
     for (chconlist_t::const_iterator i = participants.begin(); i != participants.end(); ++i) {
         json_t* charnode = json_object();
         json_object_set_new_nocheck(charnode, "identity",
-                json_string_nocheck((*i)->characterName.c_str())
-                );
+                                    json_string_nocheck((*i)->characterName.c_str())
+        );
         json_array_append_new(array, charnode);
     }
 
@@ -823,8 +823,13 @@ int LuaChannel::addMod(lua_State* L) {
     lua_pop(L, 3);
 
     chan->addMod(src, dest);
-    if (chan->getType() == CT_PUBLIC)
+    if (chan->getType() == CT_PUBLIC) {
         ServerState::rebuildChannelOpList();
+        auto con = ServerState::getConnection(dest);
+        if (con) {
+            con->roles.insert("cop");
+        }
+    }
 
     return 0;
 }
@@ -844,8 +849,13 @@ int LuaChannel::removeMod(lua_State* L) {
     lua_pop(L, 2);
 
     chan->remMod(dest);
-    if (chan->getType() == CT_PUBLIC)
+    if (chan->getType() == CT_PUBLIC) {
         ServerState::rebuildChannelOpList();
+        auto con = ServerState::getConnection(dest);
+        if (con && !ServerState::isChannelOp(dest)) {
+            con->roles.erase("cop");
+        }
+    }
 
     return 0;
 }
@@ -925,6 +935,13 @@ int LuaChannel::getModList(lua_State* L) {
     for (chmodmap_t::const_iterator itr = mods.begin(); itr != mods.end(); ++itr) {
         lua_pushstring(L, itr->first.c_str());
         lua_rawseti(L, -2, i++);
+    }
+    if (chan->getType() == CT_PUBLIC) {
+        auto scops = ServerState::getSuperCops();
+        for (auto itr = scops.begin(); itr != scops.end(); ++itr) {
+            lua_pushstring(L, itr->c_str());
+            lua_rawseti(L, -2, i++);
+        }
     }
     return 1;
 }
@@ -1140,7 +1157,8 @@ int LuaChannel::getBottleList(lua_State* L) {
     lua_newtable(L);
     int n = 1;
     for (chconlist_t::const_iterator i = participants.begin(); i != participants.end(); ++i) {
-        if (((*i)->status == "online" || (*i)->status == "looking") && ((*i)->characterNameLower != con->characterNameLower)) {
+        if (((*i)->status == "online" || (*i)->status == "looking") &&
+            ((*i)->characterNameLower != con->characterNameLower)) {
             lua_pushstring(L, (*i)->characterName.c_str());
             lua_rawseti(L, -2, n++);
         }

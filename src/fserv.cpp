@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
     getrlimit(RLIMIT_NOFILE, &fdlimit);
     if (fdlimit.rlim_max < desiredlimit) {
         LOG(WARNING) << "File limit was below the desired value of " << desiredlimit << ". Current: "
-                << fdlimit.rlim_cur << " Max: " << fdlimit.rlim_max;
+                     << fdlimit.rlim_cur << " Max: " << fdlimit.rlim_max;
         fdlimit.rlim_cur = desiredlimit;
         if (setrlimit(RLIMIT_NOFILE, &fdlimit) != 0) {
             getrlimit(RLIMIT_NOFILE, &fdlimit);
@@ -69,15 +69,24 @@ int main(int argc, char* argv[]) {
             if (setrlimit(RLIMIT_NOFILE, &fdlimit) != 0) {
                 LOG(WARNING) << "Call to raise the limit for open files failed.";
                 printf("Call to raise the limit for open files failed. Continue with caution\n");
-            }
-            else {
-                printf("Could not raise the limit for open files to %u. Current: %u Max: %u\n", static_cast<unsigned int> (desiredlimit), static_cast<unsigned int> (fdlimit.rlim_cur), static_cast<unsigned int> (fdlimit.rlim_max));            
+            } else {
+                printf("Could not raise the limit for open files to %u. Current: %u Max: %u\n",
+                       static_cast<unsigned int> (desiredlimit), static_cast<unsigned int> (fdlimit.rlim_cur),
+                       static_cast<unsigned int> (fdlimit.rlim_max));
             }
         }
     }
 
     LuaConstants::initClass();
     StartupConfig::init();
+
+    if(argc > 1 && strcmp("test", argv[1]) == 0) {
+        Server::runTesting();
+        LOG(INFO) << "Server shutdown completed.";
+        google::ShutdownGoogleLogging();
+        return 0;
+    }
+
     if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
         LOG(ERROR) << "Curl global startup failed.";
     LoginEvHTTPClient::setMaxLoginSlots(static_cast<unsigned int> (StartupConfig::getDouble("loginslots")));
@@ -100,9 +109,7 @@ int main(int argc, char* argv[]) {
         pthread_attr_init(&redisAttr);
         pthread_attr_setdetachstate(&redisAttr, PTHREAD_CREATE_JOINABLE);
         pthread_create(&redisThread, &redisAttr, &Redis::runThread, 0);
-    }
-    else
-    {
+    } else {
         Redis::stopThread(); //Need to prevent redis from accepting requests.
     }
 
