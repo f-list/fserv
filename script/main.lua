@@ -47,7 +47,7 @@ function broadcastChannelOps(event, message, channel)
     local chanops = c.getModList(channel)
     for i, v in ipairs(chanops) do
         local confound, opcon = u.getConnection(string.lower(v))
-        if confound == true then
+        if confound == true and u.hasAnyRole(opcon, { "admin", "global", "super-cop" }) ~= true then
             u.send(opcon, event, message)
         end
     end
