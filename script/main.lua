@@ -1003,7 +1003,7 @@ function(con, args)
     if staff_override == true then
         s.logAction(con, "KIC", args)
     end
-    c.logMessage("channel_destroy", con, chan, nil, nil)
+    s.logMessage("channel_destroy", con, chan, nil, nil)
     c.sendAll(chan, "BRO", { message = "You are being removed from the channel " .. c.getName(chan) .. ". The channel is being destroyed." })
     c.destroyChannel(string.lower(args.channel))
     u.send(con, "SYS", { message = args.channel .. " has been removed as a channel." })
