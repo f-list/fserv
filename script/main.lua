@@ -125,7 +125,7 @@ function dice_roll(con, diceargs)
                 u.close(con)
                 return nil
             end
-            if num == nil or num > 10000 or num < -10000 then
+            if num == nil or math.abs(num) > 10000 then
                 return nil
             end
             table.insert(results, num)
@@ -136,14 +136,16 @@ function dice_roll(con, diceargs)
                 u.close(con)
                 return nil
             end
-            local mod = 0
-            if rolls == nil or sides == nil or rolls > 9 or sides > 500 or sides < 2 then
+            if rolls == nil or sides == nil then
                 return nil
-            elseif rolls < 0 then
+            end
+            local mod = 1
+            if rolls < 0 then
                 rolls = math.abs(rolls)
                 mod = -1
-            else
-                mod = 1
+            end
+            if rolls > 9 or sides > 500 or sides < 2 then
+                return nil
             end
             local sum = 0
             for v = 1, rolls, 1 do
