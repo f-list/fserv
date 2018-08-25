@@ -488,7 +488,7 @@ function(con, args)
     end
 
     -- V: 2018-07-25
-    if chantype ~= "pubprivate" and c.isMod(chan, con) ~= true and c.hasAnyRole(con, { "admin", "global" }) ~= true then
+    if chantype == "private" and c.isMod(chan, con) ~= true and u.hasAnyRole(con, { "admin", "global" }) ~= true then
         return const.FERR_NOT_OP
     end
 
