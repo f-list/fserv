@@ -88,9 +88,9 @@ function joinChannel(chan, con)
     c.join(chan, con)
     s.logMessage("channel_join", con, chan, nil, nil)
     if chantype == "public" then
-        c.sendAll(chan, "JCH", { channel = channame, character = { identity = u.getName(con), gender=u.getGender(con) } }, title = channame })
+        c.sendAll(chan, "JCH", { channel = channame, character = { identity = u.getName(con), gender = u.getGender(con) }, title = channame })
     else
-        c.sendAll(chan, "JCH", { channel = channame, character = { identity = u.getName(con), gender=u.getGender(con) } }, title = c.getTitle(chan) })
+        c.sendAll(chan, "JCH", { channel = channame, character = { identity = u.getName(con), gender = u.getGender(con) }, title = c.getTitle(chan) })
     end
     u.send(con, "COL", { channel = channame, array_oplist = c.getModList(chan) })
     c.sendICH(chan, con)
@@ -1631,34 +1631,34 @@ end
 -- Adds/Removes a temporary status subscription.
 -- Syntax: SUB <action> <id>/<name>
 event.SUB =
-function (con, args)
-	if args.action == nil or args.cookie == nil or (args.character == nil and args.id == nil) then
-		return const.FERR_BAD_SYNTAX
-	end
+function(con, args)
+    if args.action == nil or args.cookie == nil or (args.character == nil and args.id == nil) then
+        return const.FERR_BAD_SYNTAX
+    end
 
-	if not (args.action == "add" or args.action == "remove") then
-		return const.FERR_BAD_SYTAX
-	end
+    if not (args.action == "add" or args.action == "remove") then
+        return const.FERR_BAD_SYTAX
+    end
 
-	local cookie = tonumber(args.cookie)
-	if cookie == nil then
-		cookie = 0
-	end
+    local cookie = tonumber(args.cookie)
+    if cookie == nil then
+        cookie = 0
+    end
 
-	local target
-	local found, char = u.getConnection(string.lower(args.character))
-	if found then
-		target = u.getCharacterID(char)
-	else
-		target = tonumber(args.id)
-	end
+    local target
+    local found, char = u.getConnection(string.lower(args.character))
+    if found then
+        target = u.getCharacterID(char)
+    else
+        target = tonumber(args.id)
+    end
 
-	if target == nil or target == 0 then
-		return const.FERR_USER_NOT_FOUND
-	end
+    if target == nil or target == 0 then
+        return const.FERR_USER_NOT_FOUND
+    end
 
-	s.subUpdate(args.action, con, target, cookie)
-	return const.FERR_OK
+    s.subUpdate(args.action, con, target, cookie)
+    return const.FERR_OK
 end
 
 -- Sets a timeout on an account.

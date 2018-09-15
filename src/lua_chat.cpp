@@ -67,8 +67,6 @@ static const luaL_Reg luachat_funcs[] = {
         {"addTimeout",            LuaChat::addTimeout},
         {"removeTimeout",         LuaChat::removeTimeout},
         {"isTimedOut",            LuaChat::isTimedOut},
-        {"addAltWatch",           LuaChat::addAltWatch},
-        {"getAltWatch",           LuaChat::getAltWatch},
         {"addStaffCall",          LuaChat::addStaffCall},
         {"removeStaffCall",       LuaChat::removeStaffCall},
         {"getStaffCall",          LuaChat::getStaffCall},

@@ -1,7 +1,5 @@
 syntax = "proto3";
 
-package messages;
-
 message FillMessageIn {
     message CharacterStatus {
         uint32 CharacterID = 1;
