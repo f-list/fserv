@@ -1988,6 +1988,11 @@ function(args)
     return const.FERR_OK
 end
 
+rtb.SUB =
+function(args)
+    s.forcedSubUpdate(args.action, args.source, args.target)
+end
+
 rtb.HLB =
 function(args)
     local account_cons = u.getByAccountID(args.a)

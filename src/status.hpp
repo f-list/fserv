@@ -101,6 +101,7 @@ public:
 
     void sendSubUpdate(ConnectionPtr con, uint32_t target, SubscriptionChangeIn_ChangeType type, uint64_t cookie);
 
+    void sendForcedSubUpdate(uint32_t source, uint32_t target, SubscriptionChangeIn_ChangeType type);
 
     static void* runThread(void* param);
 

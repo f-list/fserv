@@ -174,6 +174,17 @@ StatusClient::sendSubUpdate(ConnectionPtr con, uint32_t target, SubscriptionChan
     addRequest(request);
 }
 
+void StatusClient::sendForcedSubUpdate(uint32_t source, uint32_t target, SubscriptionChangeIn_ChangeType type) {
+    auto subMessage = new MessageIn();
+    auto request = new StatusRequest(subMessage);
+    auto innerMessage = subMessage->mutable_subscription();
+    innerMessage->set_action(type);
+    innerMessage->set_sourceid(source);
+    innerMessage->set_targetid(target);
+    innerMessage->set_cookie(0);
+    addRequest(request);
+}
+
 void StatusClient::startResync() {
     // Clearing request queue here races with replies.
     auto reply = new StatusResponse();

@@ -77,12 +77,13 @@ static const luaL_Reg luachat_funcs[] = {
         {"reload",                LuaChat::reload},
         {"logMessage",            LuaChat::logMessage},
         //{"shutdown", LuaChat::shutdown},
-        {"getStats",        LuaChat::getStats},
-        {"logAction",       LuaChat::logAction},
-        {"timeUpdate",      LuaChat::timeUpdate},
-        {"subUpdate",       LuaChat::subUpdate},
-        {"toJSON",          LuaChat::toJsonString},
-        {"fromJSON",        LuaChat::fromJsonString},
+        {"getStats",              LuaChat::getStats},
+        {"logAction",             LuaChat::logAction},
+        {"timeUpdate",            LuaChat::timeUpdate},
+        {"subUpdate",             LuaChat::subUpdate},
+        {"forcedSubUpdate",       LuaChat::forcedSubUpdate},
+        {"toJSON",                LuaChat::toJsonString},
+        {"fromJSON",              LuaChat::fromJsonString},
         {NULL, NULL}
 };
 
@@ -102,10 +103,25 @@ int LuaChat::subUpdate(lua_State* L) {
     lua_pop(L, 4);
 
     SubscriptionChangeIn_ChangeType statusAction = SubscriptionChangeIn_ChangeType_ADD;
-    if(action == "remove")
+    if (action == "remove")
         statusAction = SubscriptionChangeIn_ChangeType_REMOVE;
 
     StatusClient::instance()->sendSubUpdate(con, target, statusAction, cookie);
+    return 0;
+}
+
+int LuaChat::forcedSubUpdate(lua_State* L) {
+    luaL_checkany(L, 3);
+    string action = luaL_checkstring(L, 1);
+    uint32_t source = luaL_checkint(L, 2);
+    uint32_t target = luaL_checkint(L, 3);
+    lua_pop(L, 3);
+
+    SubscriptionChangeIn_ChangeType statusAction = SubscriptionChangeIn_ChangeType_SERVER_ADD;
+    if (action == "remove")
+        statusAction = SubscriptionChangeIn_ChangeType_SERVER_REMOVE;
+
+    StatusClient::instance()->sendForcedSubUpdate(source, target, statusAction);
     return 0;
 }
 
