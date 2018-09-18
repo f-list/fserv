@@ -44,9 +44,9 @@ static void sock_nonblock(int socket) {
         fcntl(socket, F_SETFL, flags | O_NONBLOCK);
 }
 
-const char* LogEntry::asJSON() {
-    if (jsonCopy.length())
-        return jsonCopy.c_str();
+void LogEntry::toJSON() {
+    if (!jsonCopy.empty())
+        return;
     json_t* root = json_object();
     json_object_set_new_nocheck(root, "message_type", json_string_nocheck(messageType.c_str()));
     json_object_set_new_nocheck(root, "from_character", json_string_nocheck(fromCharacter.c_str()));
@@ -72,7 +72,6 @@ const char* LogEntry::asJSON() {
     jsonCopy = json_dumps(root, JSON_COMPACT);
     json_decref(root);
     jsonCopy.append("\n");
-    return jsonCopy.c_str();
 }
 
 LoggerConnection::LoggerConnection(int fd, struct ev_loop* loop, ChatLogThread* instance) :
@@ -100,7 +99,7 @@ void LoggerConnection::sendEntry(LogEntryPtr entry) {
 }
 
 void LoggerConnection::writeCallback(struct ev_loop* loop, ev_io* w, int events) {
-    LoggerConnection* con = (LoggerConnection*) w->data;
+    auto con = (LoggerConnection*) w->data;
 
     if (events & EV_ERROR) {
         delete con;
@@ -108,20 +107,28 @@ void LoggerConnection::writeCallback(struct ev_loop* loop, ev_io* w, int events)
     }
 
     if (events & EV_WRITE) {
-        while (con->entryQueue.size()) {
+        while (!con->entryQueue.empty()) {
             LogEntryPtr entry = con->entryQueue.front();
-            const char* entryValue = entry->asJSON();
-            int len = (int) strlen(entryValue) - con->writeOffset;
-            int sent = send(w->fd, entryValue + con->writeOffset, len, 0);
+            const char* entryValue = entry->jsonCopy.c_str();
+            ssize_t len = entry->jsonCopy.length() - con->writeOffset;
+            if(len < 0) {
+                LOG(ERROR) << "Invalid write offset during logging write, resulting in negative write length.";
+                delete con;
+                return;
+            }
+            ssize_t sent = send(w->fd, entryValue + con->writeOffset, (size_t)len, 0);
             if (sent < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
                 return;
             } else if (sent <= 0) {
-                close(w->fd);
+                // Send failure
+                delete con;
                 return;
             } else if (sent != len) {
+                // Partial send
                 con->writeOffset += sent;
                 return;
             } else {
+                // Complete send
                 con->entryQueue.pop();
                 con->writeOffset = 0;
             }
@@ -139,6 +146,10 @@ void ChatLogThread::removeConnection(LoggerConnection* connection) {
 }
 
 void ChatLogThread::startThread() {
+    if(doRun) {
+        LOG(WARNING) << "Attempting to start another logging instance while one already exists.";
+        return;
+    }
     doRun = true;
     pthread_attr_t loggingAttr;
     pthread_attr_init(&loggingAttr);
@@ -147,7 +158,7 @@ void ChatLogThread::startThread() {
 }
 
 void* ChatLogThread::runThread(void* params) {
-    ChatLogThread* instance = (ChatLogThread*) params;
+    auto instance = (ChatLogThread*) params;
     instance->runner();
     pthread_exit(NULL);
 }
@@ -157,11 +168,11 @@ void ChatLogThread::stopThread() {
     doRun = false;
     list<LoggerConnection*> list_copy;
 
-    for(auto it = connectionList.begin(); it != connectionList.end(); it++) {
-        list_copy.push_back(*it);
+    for (auto &it : connectionList) {
+        list_copy.push_back(it);
     }
-    for(auto it = list_copy.begin(); it != list_copy.end(); it++) {
-        delete *it;
+    for (auto &it : list_copy) {
+        delete it;
     }
     connectionList.clear();
     ev_async_send(logger_loop, logger_async);
@@ -212,7 +223,7 @@ void ChatLogThread::acceptCallback(struct ev_loop* loop, ev_io* w, int events) {
 
     ChatLogThread* instance = (ChatLogThread*) w->data;
     LOG(INFO) << "Accepting connection for logging thread.";
-    struct sockaddr_un remote_addr;
+    struct sockaddr_un remote_addr{};
     int socklen = sizeof(remote_addr);
     int newfd = accept(w->fd, (sockaddr*) &remote_addr, (socklen_t*) &socklen);
     if (newfd < 0)
@@ -224,7 +235,7 @@ void ChatLogThread::acceptCallback(struct ev_loop* loop, ev_io* w, int events) {
 
 int ChatLogThread::createSocket() {
     string path = StartupConfig::getString("log_socket_path");
-    struct sockaddr_un address;
+    struct sockaddr_un address{};
     address.sun_family = AF_UNIX;
     strncpy(address.sun_path, path.c_str(), path.length());
     address.sun_path[path.length()] = 0;
@@ -248,8 +259,8 @@ int ChatLogThread::createSocket() {
 void ChatLogThread::processEntry(LogEntry* entry) {
     // Ownership of the log entry is taken here. Automatic reference counting will clean it up after this point.
     LogEntryPtr log_entry(entry);
-    for (list<LoggerConnection*>::iterator itr = connectionList.begin(); itr != connectionList.end(); itr++) {
-        LoggerConnection* con = *itr;
+    entry->toJSON();
+    for (auto con : connectionList) {
         con->sendEntry(log_entry);
     }
 }
@@ -271,9 +282,9 @@ void ChatLogThread::processQueue(struct ev_loop* loop, ev_async* w, int revents)
 }
 
 LogEntry* ChatLogThread::getQueueEntry() {
-    LogEntry* ret = 0;
+    LogEntry* ret = nullptr;
     MUT_LOCK(requestMutex);
-    if (requestQueue.size() > 0) {
+    if (!requestQueue.empty()) {
         ret = requestQueue.front();
         requestQueue.pop();
     }
@@ -285,7 +296,7 @@ bool ChatLogThread::addLogEntry(LogEntry* newEntry) {
     if (!doRun)
         return false;
     DLOG(INFO) << "Adding log entry;";
-    struct timespec abs_time;
+    struct timespec abs_time{};
     clock_gettime(CLOCK_REALTIME, &abs_time);
     abs_time.tv_nsec += LOGGER_MUTEX_TIMEOUT;
     if (MUT_TIMEDLOCK(requestMutex, abs_time)) {
