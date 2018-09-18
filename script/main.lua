@@ -68,9 +68,7 @@ function partChannel(chan, con, is_disconnect)
     local cname = c.getName(chan)
     local lcname = string.lower(cname)
     local conname = u.getName(con)
-    if is_disconnect ~= true then
-        c.sendAll(chan, "LCH", { channel = cname, character = conname })
-    end
+    c.sendAll(chan, "LCH", { channel = cname, character = conname, disconnect = is_disconnect })
     c.part(chan, con)
     s.logMessage("channel_leave", con, chan, nil, nil)
     local chantype = c.getType(chan)
