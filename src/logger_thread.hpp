@@ -58,7 +58,7 @@ public:
 
     ~LogEntry() {}
 
-    const char* asJSON();
+    void toJSON();
 
     string messageType;
     string messageBody;
@@ -71,7 +71,6 @@ public:
     long toCharacterID;
     long fromAccountID;
     long toAccountID;
-private:
     string jsonCopy;
 protected:
     int refCount;
@@ -102,7 +101,7 @@ private:
     struct ev_loop* loop;
     ev_io* writer_io;
     int fd;
-    int writeOffset;
+    size_t writeOffset;
     ChatLogThread* logger;
 };
 
@@ -132,8 +131,6 @@ private:
     static void processQueue(struct ev_loop* loop, ev_async* w, int events);
 
     static void acceptCallback(struct ev_loop* loop, ev_io* w, int events);
-
-    static void writeCallback(struct ev_loop* loop, ev_io* w, int events);
 
     int createSocket();
 
