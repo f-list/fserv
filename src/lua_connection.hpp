@@ -100,9 +100,9 @@ public:
 
     static int getKinks(lua_State* L);
 
-    static int setGender(lua_State* L);
+    static int setSex(lua_State* L);
 
-    static int getGender(lua_State* L);
+    static int getSex(lua_State* L);
 
     static int setCustomKinks(lua_State* L);
 

@@ -77,8 +77,8 @@ static const luaL_Reg luaconnection_funcs[] = {
         {"getCustomKinks",         LuaConnection::getCustomKinks},
         {"setInfoTags",            LuaConnection::setInfoTags},
         {"getInfoTags",            LuaConnection::getInfoTags},
-        {"setGender",              LuaConnection::setGender},
-        {"getGender",              LuaConnection::getGender},
+        {"setSex",                 LuaConnection::setSex},
+        {"getSex",                 LuaConnection::getSex},
         {"setStatus",              LuaConnection::setStatus},
         {"getStatus",              LuaConnection::getStatus},
         {"setMiscData",            LuaConnection::setMiscData},
@@ -764,36 +764,36 @@ int LuaConnection::getKinks(lua_State* L) {
 }
 
 /**
- * Sets the gender for a connection.
+ * Sets the sex for a connection.
  * @param LUD connection
- * @param string gender
+ * @param string sex
  * @returns Nothing.
  */
-int LuaConnection::setGender(lua_State* L) {
+int LuaConnection::setSex(lua_State* L) {
     luaL_checkany(L, 2);
 
     LBase* base = 0;
     GETLCON(base, L, 1, con);
-    string gender = luaL_checkstring(L, 2);
+    string sex = luaL_checkstring(L, 2);
     lua_pop(L, 2);
 
-    con->gender = gender;
+    con->sex = sex;
     return 0;
 }
 
 /**
- * Retrieves the gender string for a connection.
+ * Retrieves the sex string for a connection.
  * @param LUD connection
- * @returns [string] gender string.
+ * @returns [string] sex string.
  */
-int LuaConnection::getGender(lua_State* L) {
+int LuaConnection::getSex(lua_State* L) {
     luaL_checkany(L, 1);
 
     LBase* base = 0;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
-    lua_pushstring(L, con->gender.c_str());
+    lua_pushstring(L, con->sex.c_str());
     return 1;
 }
 
@@ -989,14 +989,14 @@ int LuaConnection::getMiscData(lua_State* L) {
  * @returns int character ID
  */
 int LuaConnection::getCharacterID(lua_State* L) {
-     luaL_checkany(L, 1);
+    luaL_checkany(L, 1);
 
-     LBase* base = nullptr;
-     GETLCON(base, L, 1, con);
-     lua_pop(L, 1);
+    LBase* base = nullptr;
+    GETLCON(base, L, 1, con);
+    lua_pop(L, 1);
 
-     lua_pushinteger(L, con->characterID);
-     return 1;
+    lua_pushinteger(L, con->characterID);
+    return 1;
 }
 
 /**

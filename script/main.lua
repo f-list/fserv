@@ -88,9 +88,9 @@ function joinChannel(chan, con)
     c.join(chan, con)
     s.logMessage("channel_join", con, chan, nil, nil)
     if chantype == "public" then
-        c.sendAll(chan, "JCH", { channel = channame, character = { identity = u.getName(con), gender = u.getGender(con) }, title = channame })
+        c.sendAll(chan, "JCH", { channel = channame, character = { identity = u.getName(con), sex = u.getSex(con) }, title = channame })
     else
-        c.sendAll(chan, "JCH", { channel = channame, character = { identity = u.getName(con), gender = u.getGender(con) }, title = c.getTitle(chan) })
+        c.sendAll(chan, "JCH", { channel = channame, character = { identity = u.getName(con), sex = u.getSex(con) }, title = c.getTitle(chan) })
     end
     u.send(con, "COL", { channel = channame, array_oplist = c.getModList(chan) })
     c.sendICH(chan, con)
@@ -1844,11 +1844,11 @@ function(con, args)
     end
 
     if args.select ~= nil then
-        if args.select.Gender ~= nil and const.gender[string.lower(args.select.Gender)] ~= nil then
-            u.setGender(con, string.lower(args.select.Gender))
+        if args.select.Gender ~= nil and const.sex[string.lower(args.select.Gender)] ~= nil then
+            u.setSex(con, string.lower(args.select.Gender))
         else
             args.select.Gender = "None"
-            u.setGender(con, "None")
+            u.setSex(con, "None")
         end
         if args.select.Orientation == nil then
             args.select.Orientation = "None"
@@ -1875,7 +1875,7 @@ function(con, args)
         newselect["Dom/Sub Role"] = "None"
         newselect.Position = "None"
         u.setInfoTags(con, newselect)
-        u.setGender(con, "None")
+        u.setSex(con, "None")
     end
 
     if args.array_kinks ~= nil then
@@ -1947,7 +1947,7 @@ function(con, args)
     -- s.sendUserList(con, "LIS", 100)
 
     s.logMessage("connect", con, nil, nil, nil)
-    u.send("NLN", { identity = name, status = "online", gender = u.getGender(con) })
+    u.send("NLN", { identity = name, status = "online", sex = u.getSex(con) })
 
     if isop or issupercop then
         s.addToStaffCallTargets(con)
@@ -2056,15 +2056,15 @@ function chat_init()
         c.setDescription(chanopchan, "This room is for website and chat staff.\nPlease take any questions and official discussion to Slack.")
     end
     -- The numbers have no meaning.
-    const.gender = {}
-    const.gender["none"] = 1
-    const.gender["male"] = 2
-    const.gender["female"] = 3
-    const.gender["shemale"] = 4
-    const.gender["transgender"] = 5
-    const.gender["herm"] = 6
-    const.gender["male-herm"] = 7
-    const.gender["cunt-boy"] = 8
+    const.sex = {}
+    const.sex["none"] = 1
+    const.sex["male"] = 2
+    const.sex["female"] = 3
+    const.sex["shemale"] = 4
+    const.sex["transgender"] = 5
+    const.sex["herm"] = 6
+    const.sex["male-herm"] = 7
+    const.sex["cunt-boy"] = 8
 
     const.status = {}
     const.status["online"] = 1

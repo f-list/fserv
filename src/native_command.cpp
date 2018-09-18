@@ -294,9 +294,9 @@ FReturnCode NativeCommand::SearchCommand(intrusive_ptr< ConnectionInstance >& co
     if (json_array_size(kinksnode) > 5)
         return FERR_TOO_MANY_SEARCH_TERMS;
 
-    json_t* gendersnode = json_object_get(rootnode, "genders");
-    if (json_is_array(gendersnode))
-        SearchFilterList(gendersnode, tosearch, "Gender");
+    json_t* sexesnode = json_object_get(rootnode, "sexes");
+    if (json_is_array(sexesnode))
+        SearchFilterList(sexesnode, tosearch, "Gender");
 
     json_t* orientationsnode = json_object_get(rootnode, "orientations");
     if (json_is_array(orientationsnode))

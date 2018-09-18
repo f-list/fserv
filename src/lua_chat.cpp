@@ -394,7 +394,7 @@ int LuaChat::sendUserList(lua_State* L) {
                               json_string_nocheck(i->second->characterName.c_str())
         );
         json_array_append_new(cha,
-                              json_string_nocheck(i->second->gender.c_str())
+                              json_string_nocheck(i->second->sex.c_str())
         );
         json_array_append_new(cha,
                               json_string_nocheck(i->second->status.c_str())

@@ -156,7 +156,7 @@ This is where serialization and deserialization of channels from json happens.
 
 Handles all connection networking and debug Lua states.
 
-Maintains kink lists, status, status message and gender.
+Maintains kink lists, status, status message and sex.
 
 Maintains ignore and friend list.
 

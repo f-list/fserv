@@ -113,7 +113,7 @@ public:
 
     string status;
     string statusMessage;
-    string gender;
+    string sex;
     stringset_t friends;
     stringset_t ignores;
 
