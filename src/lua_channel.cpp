@@ -488,11 +488,12 @@ int LuaChannel::sendICH(lua_State* L) {
     );
     json_t* array = json_array();
     const chconlist_t participants = chan->getParticipants();
-    for (chconlist_t::const_iterator i = participants.begin(); i != participants.end(); ++i) {
+    for (const auto &participant : participants) {
         json_t* charnode = json_object();
         json_object_set_new_nocheck(charnode, "identity",
-                                    json_string_nocheck((*i)->characterName.c_str())
+                                    json_string_nocheck(participant->characterName.c_str())
         );
+        json_object_set_new_nocheck(charnode, "sex", json_string_nocheck(participant->sex.c_str()));
         json_array_append_new(array, charnode);
     }
 
