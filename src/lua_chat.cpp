@@ -149,7 +149,7 @@ int LuaChat::logMessage(lua_State* L) {
     string to_character_string;
     ConnectionPtr to_connection(0);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 2, from_connection);
     if (lua_type(L, 3) != LUA_TNIL) {
         GETLCHAN(base, L, 3, channel);
@@ -377,7 +377,7 @@ int LuaChat::getUserCount(lua_State* L) {
 int LuaChat::sendUserList(lua_State* L) {
     luaL_checkany(L, 3);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     string prefix = luaL_checkstring(L, 2);
     prefix += " ";
@@ -524,7 +524,7 @@ int LuaChat::removeSCop(lua_State* L) {
 int LuaChat::addBan(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -559,7 +559,7 @@ int LuaChat::isBanned(lua_State* L) {
     bool ret = false;
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -577,7 +577,7 @@ int LuaChat::isBanned(lua_State* L) {
 int LuaChat::addTimeout(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     long length = luaL_checkinteger(L, 2);
     lua_pop(L, 2);
@@ -612,7 +612,7 @@ int LuaChat::isTimedOut(lua_State* L) {
     bool ret = false;
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -707,7 +707,7 @@ int LuaChat::getStaffCall(lua_State* L) {
 int LuaChat::sendStaffCalls(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -756,7 +756,7 @@ int LuaChat::sendStaffCalls(lua_State* L) {
 int LuaChat::isChanOp(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -851,7 +851,7 @@ int LuaChat::getStats(lua_State* L) {
 int LuaChat::logAction(lua_State* L) {
     luaL_checkany(L, 3);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     string type = luaL_checkstring(L, 2);
     json_t* args = luaToJson(L);

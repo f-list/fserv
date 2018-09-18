@@ -120,7 +120,7 @@ int LuaConnection::getConnection(lua_State* L) {
 int LuaConnection::getIPCount(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -157,7 +157,7 @@ int LuaConnection::getByCharacterID(lua_State* L) {
 int LuaConnection::getByAccount(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -201,7 +201,7 @@ int LuaConnection::getByAccountID(lua_State* L) {
 int LuaConnection::getConnectionIDs(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -219,7 +219,7 @@ int LuaConnection::getConnectionIDs(lua_State* L) {
 int LuaConnection::getName(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -230,7 +230,7 @@ int LuaConnection::getName(lua_State* L) {
 int LuaConnection::getChannelCount(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -246,7 +246,7 @@ int LuaConnection::getChannelCount(lua_State* L) {
 int LuaConnection::getChannels(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -269,7 +269,7 @@ int LuaConnection::getChannels(lua_State* L) {
 int LuaConnection::send(lua_State* L) {
     luaL_checkany(L, 3);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     string message = luaL_checkstring(L, 2);
     message += " ";
@@ -294,7 +294,7 @@ int LuaConnection::send(lua_State* L) {
 int LuaConnection::sendRaw(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     string message = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -317,7 +317,7 @@ int LuaConnection::sendRaw(lua_State* L) {
 int LuaConnection::sendError(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     int code = luaL_checknumber(L, 2);
     if (lua_gettop(L) == 3) {
@@ -342,7 +342,7 @@ int LuaConnection::sendError(lua_State* L) {
 int LuaConnection::close(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -361,7 +361,7 @@ int LuaConnection::close(lua_State* L) {
 int LuaConnection::closef(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -388,7 +388,7 @@ int LuaConnection::setIdent(lua_State* L) {
     bool ret = false;
     luaL_checkany(L, 4);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     string name = luaL_checkstring(L, 2);
     string lowername = luaL_checkstring(L, 3);
@@ -427,7 +427,7 @@ int LuaConnection::setIdent(lua_State* L) {
 int LuaConnection::setAccountID(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     long accountid = luaL_checkinteger(L, 2);
     lua_pop(L, 2);
@@ -445,7 +445,7 @@ int LuaConnection::setAccountID(lua_State* L) {
 int LuaConnection::setAdmin(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     if (lua_type(L, 2) != LUA_TBOOLEAN)
         return luaL_error(L, "Expected boolean for argument 2.");
@@ -468,7 +468,7 @@ int LuaConnection::setAdmin(lua_State* L) {
 int LuaConnection::isAdmin(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -479,7 +479,7 @@ int LuaConnection::isAdmin(lua_State* L) {
 int LuaConnection::setGlobalModerator(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     if (lua_type(L, 2) != LUA_TBOOLEAN)
         return luaL_error(L, "Expected boolean for argument 2.");
@@ -497,7 +497,7 @@ int LuaConnection::setGlobalModerator(lua_State* L) {
 int LuaConnection::isGlobalModerator(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -573,7 +573,7 @@ int LuaConnection::removeRole(lua_State* L) {
 int LuaConnection::setFriends(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     if (lua_type(L, 2) != LUA_TTABLE)
         return luaL_error(L, "Expected table for argument 2.");
@@ -592,7 +592,7 @@ int LuaConnection::setFriends(lua_State* L) {
 int LuaConnection::removeFriend(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     string name = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -604,7 +604,7 @@ int LuaConnection::removeFriend(lua_State* L) {
 int LuaConnection::getFriends(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -621,7 +621,7 @@ int LuaConnection::getFriends(lua_State* L) {
 int LuaConnection::setIgnores(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     if (lua_type(L, 2) != LUA_TTABLE)
         return luaL_error(L, "Expected table for argument 2.");
@@ -640,7 +640,7 @@ int LuaConnection::setIgnores(lua_State* L) {
 int LuaConnection::addIgnore(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     string name = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -677,7 +677,7 @@ int LuaConnection::addIgnore(lua_State* L) {
 int LuaConnection::removeIgnore(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     string name = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -714,7 +714,7 @@ int LuaConnection::removeIgnore(lua_State* L) {
 int LuaConnection::getIgnores(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -738,7 +738,7 @@ int LuaConnection::getIgnores(lua_State* L) {
 int LuaConnection::setKinks(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     if (lua_type(L, 2) != LUA_TTABLE)
         return luaL_error(L, "Expected table for argument 2.");
@@ -772,7 +772,7 @@ int LuaConnection::getKinks(lua_State* L) {
 int LuaConnection::setSex(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     string sex = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -789,7 +789,7 @@ int LuaConnection::setSex(lua_State* L) {
 int LuaConnection::getSex(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -806,7 +806,7 @@ int LuaConnection::getSex(lua_State* L) {
 int LuaConnection::setCustomKinks(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     if (lua_type(L, 2) != LUA_TTABLE)
         return luaL_error(L, "Expected table for argument 2.");
@@ -830,7 +830,7 @@ int LuaConnection::setCustomKinks(lua_State* L) {
 int LuaConnection::getCustomKinks(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -853,7 +853,7 @@ int LuaConnection::getCustomKinks(lua_State* L) {
 int LuaConnection::setInfoTags(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     if (lua_type(L, 2) != LUA_TTABLE)
         return luaL_error(L, "Expected table for argument 2.");
@@ -877,7 +877,7 @@ int LuaConnection::setInfoTags(lua_State* L) {
 int LuaConnection::getInfoTags(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -902,7 +902,7 @@ int LuaConnection::getInfoTags(lua_State* L) {
 int LuaConnection::setStatus(lua_State* L) {
     luaL_checkany(L, 4);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     uint64_t cookie = (uint64_t) luaL_checkinteger(L, 2);
     string status = luaL_checkstring(L, 3);
@@ -932,7 +932,7 @@ int LuaConnection::setStatus(lua_State* L) {
 int LuaConnection::getStatus(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -951,7 +951,7 @@ int LuaConnection::getStatus(lua_State* L) {
 int LuaConnection::setMiscData(lua_State* L) {
     luaL_checkany(L, 3);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     string key = luaL_checkstring(L, 2);
     string data = luaL_checkstring(L, 3);
@@ -970,7 +970,7 @@ int LuaConnection::setMiscData(lua_State* L) {
 int LuaConnection::getMiscData(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     string key = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -1010,7 +1010,7 @@ int LuaConnection::checkUpdateTimer(lua_State* L) {
     bool ret = false;
     luaL_checkany(L, 3);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     string timer = luaL_checkstring(L, 2);
     double timeout = luaL_checknumber(L, 3);

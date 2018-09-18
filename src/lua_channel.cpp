@@ -106,7 +106,7 @@ int LuaChannel::openChannelLib(lua_State* L) {
 int LuaChannel::sendCHA(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -157,7 +157,7 @@ int LuaChannel::sendCHA(lua_State* L) {
 int LuaChannel::sendORS(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     lua_pop(L, 1);
 
@@ -228,7 +228,7 @@ int LuaChannel::getChannel(lua_State* L) {
 int LuaChannel::getName(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     lua_pop(L, 1);
 
@@ -244,7 +244,7 @@ int LuaChannel::getName(lua_State* L) {
 int LuaChannel::getUserCount(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     lua_pop(L, 1);
 
@@ -260,7 +260,7 @@ int LuaChannel::getUserCount(lua_State* L) {
 int LuaChannel::getTopUserCount(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     lua_pop(L, 1);
 
@@ -294,7 +294,7 @@ int LuaChannel::createChannel(lua_State* L) {
 int LuaChannel::createPrivateChannel(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCON(base, L, 1, con);
     string title = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -381,7 +381,7 @@ int LuaChannel::destroyChannel(lua_State* L) {
 int LuaChannel::sendToAll(lua_State* L) {
     luaL_checkany(L, 3);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     string message = luaL_checkstring(L, 2);
     if (lua_type(L, 3) != LUA_TTABLE)
@@ -407,7 +407,7 @@ int LuaChannel::sendToAll(lua_State* L) {
 int LuaChannel::sendToAllRaw(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     string message = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -427,7 +427,7 @@ int LuaChannel::sendToAllRaw(lua_State* L) {
 int LuaChannel::sendToChannel(lua_State* L) {
     luaL_checkany(L, 4);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, con);
     string message = luaL_checkstring(L, 3);
@@ -455,7 +455,7 @@ int LuaChannel::sendToChannel(lua_State* L) {
 int LuaChannel::sendToChannelRaw(lua_State* L) {
     luaL_checkany(L, 3);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, con);
     string message = luaL_checkstring(L, 3);
@@ -474,7 +474,7 @@ int LuaChannel::sendToChannelRaw(lua_State* L) {
 int LuaChannel::sendICH(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, con);
     lua_pop(L, 2);
@@ -517,7 +517,7 @@ int LuaChannel::sendICH(lua_State* L) {
 int LuaChannel::joinChannel(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, con);
     lua_pop(L, 2);
@@ -535,7 +535,7 @@ int LuaChannel::joinChannel(lua_State* L) {
 int LuaChannel::partChannel(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, con);
     lua_pop(L, 2);
@@ -554,7 +554,7 @@ int LuaChannel::partChannel(lua_State* L) {
 int LuaChannel::ban(lua_State* L) {
     luaL_checkany(L, 3);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, src);
     int type = lua_type(L, 3);
@@ -581,7 +581,7 @@ int LuaChannel::ban(lua_State* L) {
 int LuaChannel::timeout(lua_State* L) {
     luaL_checkany(L, 4);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, src);
     long length = luaL_checkinteger(L, 4);
@@ -608,7 +608,7 @@ int LuaChannel::timeout(lua_State* L) {
 int LuaChannel::unban(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     string dest = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -627,7 +627,7 @@ int LuaChannel::isBanned(lua_State* L) {
     bool ret = false;
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     int type = lua_type(L, 2);
     if (type == LUA_TLIGHTUSERDATA) {
@@ -654,7 +654,7 @@ int LuaChannel::getBan(lua_State* L) {
     bool ret = false;
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     int type = lua_type(L, 2);
     BanRecord ban;
@@ -691,7 +691,7 @@ int LuaChannel::getBan(lua_State* L) {
 int LuaChannel::getBanList(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     lua_pop(L, 1);
 
@@ -726,7 +726,7 @@ int LuaChannel::getBanCount(lua_State* L) {
 int LuaChannel::invite(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, dest);
     lua_pop(L, 2);
@@ -748,7 +748,7 @@ int LuaChannel::invite(lua_State* L) {
 int LuaChannel::removeInvite(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     string dest = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -771,7 +771,7 @@ int LuaChannel::isInvited(lua_State* L) {
     bool ret = false;
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, con);
     lua_pop(L, 2);
@@ -794,7 +794,7 @@ int LuaChannel::isInvited(lua_State* L) {
 int LuaChannel::inChannel(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, con);
     lua_pop(L, 2);
@@ -817,7 +817,7 @@ int LuaChannel::inChannel(lua_State* L) {
 int LuaChannel::addMod(lua_State* L) {
     luaL_checkany(L, 3);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, src);
     string dest = luaL_checkstring(L, 3);
@@ -844,7 +844,7 @@ int LuaChannel::addMod(lua_State* L) {
 int LuaChannel::removeMod(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     string dest = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -871,7 +871,7 @@ int LuaChannel::isMod(lua_State* L) {
     bool ret = false;
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     int type = lua_type(L, 2);
     if (type == LUA_TLIGHTUSERDATA) {
@@ -899,7 +899,7 @@ int LuaChannel::isOwner(lua_State* L) {
     bool ret = false;
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     int type = lua_type(L, 2);
     if (type == LUA_TLIGHTUSERDATA) {
@@ -924,7 +924,7 @@ int LuaChannel::isOwner(lua_State* L) {
 int LuaChannel::getModList(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     lua_pop(L, 1);
 
@@ -958,7 +958,7 @@ int LuaChannel::checkUpdateTimer(lua_State* L) {
     bool ret = false;
     luaL_checkany(L, 3);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, con);
     double timeout = luaL_checknumber(L, 3);
@@ -984,7 +984,7 @@ int LuaChannel::checkUpdateTimer(lua_State* L) {
 int LuaChannel::setPublic(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     if (lua_type(L, 2) != LUA_TBOOLEAN)
         return luaL_error(L, "setpublic expects boolean for argument 2.");
@@ -1007,7 +1007,7 @@ int LuaChannel::setPublic(lua_State* L) {
 int LuaChannel::getType(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     lua_pop(L, 1);
 
@@ -1024,7 +1024,7 @@ int LuaChannel::getType(lua_State* L) {
 int LuaChannel::setMode(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     string mode = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -1047,7 +1047,7 @@ int LuaChannel::setMode(lua_State* L) {
 int LuaChannel::getMode(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     lua_pop(L, 1);
 
@@ -1063,7 +1063,7 @@ int LuaChannel::getMode(lua_State* L) {
 int LuaChannel::getDescription(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     lua_pop(L, 1);
 
@@ -1080,7 +1080,7 @@ int LuaChannel::getDescription(lua_State* L) {
 int LuaChannel::setDescription(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     string newdesc = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -1097,7 +1097,7 @@ int LuaChannel::setDescription(lua_State* L) {
 int LuaChannel::getTitle(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     lua_pop(L, 1);
 
@@ -1114,7 +1114,7 @@ int LuaChannel::getTitle(lua_State* L) {
 int LuaChannel::setTitle(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     string newtitle = luaL_checkstring(L, 2);
     lua_pop(L, 2);
@@ -1132,7 +1132,7 @@ int LuaChannel::setTitle(lua_State* L) {
 int LuaChannel::setOwner(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, con);
     lua_pop(L, 2);
@@ -1149,7 +1149,7 @@ int LuaChannel::setOwner(lua_State* L) {
 int LuaChannel::getBottleList(lua_State* L) {
     luaL_checkany(L, 2);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     GETLCON(base, L, 2, con);
     lua_pop(L, 1);
@@ -1171,7 +1171,7 @@ int LuaChannel::getBottleList(lua_State* L) {
 int LuaChannel::canDestroy(lua_State* L) {
     luaL_checkany(L, 1);
 
-    LBase* base = 0;
+    LBase* base = nullptr;
     GETLCHAN(base, L, 1, chan);
     lua_pop(L, 1);
 
