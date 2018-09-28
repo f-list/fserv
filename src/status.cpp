@@ -82,6 +82,7 @@ void StatusClient::handleReplyResync(StatusResponse* reply) {
             auto character = itr->second;
             auto fillCharacter = fillMessage->add_characters();
             fillCharacter->set_characterid(character->characterID);
+            fillCharacter->set_userid(character->accountID);
             fillCharacter->set_status(character->status);
             fillCharacter->set_name(character->characterName);
             fillCharacter->set_sex(character->sex);
@@ -141,6 +142,7 @@ void StatusClient::sendStatusTimeUpdate(ConnectionPtr con, bool disconnect, bool
     auto timeMessage = updateMessage->mutable_timeupdate();
     timeMessage->set_name(con->characterName);
     timeMessage->set_characterid(con->characterID);
+    timeMessage->set_userid(con->accountID);
     timeMessage->set_killsession(disconnect);
     timeMessage->set_needinitial(needInitial);
     timeMessage->set_sex(con->sex);

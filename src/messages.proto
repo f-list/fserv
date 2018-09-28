@@ -3,11 +3,12 @@ syntax = "proto3";
 message FillMessageIn {
     message CharacterStatus {
         uint32 CharacterID = 1;
-        string Name = 2;
-        string Sex = 3;
-        string Status = 4;
-        string StatusText = 5;
-        uint64 Session = 6;
+        uint32 UserID = 2;
+        string Name = 3;
+        string Sex = 4;
+        string Status = 5;
+        string StatusText = 6;
+        uint64 Session = 7;
     }
     repeated CharacterStatus Characters = 1;
     bool Final = 2;
@@ -29,12 +30,13 @@ message SubscriptionChangeIn {
 
 message TimeUpdateIn {
     uint32 CharacterID = 1;
-    string Name = 2;
-    string Sex = 3;
-    uint64 SessionID = 4;
-    int64 Timestamp = 5;
-    bool KillSession = 6;
-    bool NeedInitial = 7;
+    uint32 UserID = 2;
+    string Name = 3;
+    string Sex = 4;
+    uint64 SessionID = 5;
+    int64 Timestamp = 6;
+    bool KillSession = 7;
+    bool NeedInitial = 8;
 }
 
 message StatusUpdateIn {

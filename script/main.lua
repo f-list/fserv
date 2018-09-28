@@ -1788,7 +1788,7 @@ function(con, args)
         return const.FERR_BANNED_FROM_SERVER
     end
 
-    if u.setIdent(con, name, lname) ~= true then
+    if u.setIdent(con, name, lname, args.char.character_id) ~= true then
         return const.FERR_IDENT_FAILED
     end
 
@@ -1801,7 +1801,6 @@ function(con, args)
         print("Failed to login because the character id was zero")
         return const.FERR_IDENT_FAILED
     end
-    u.setCharacterID(con, args.char.character_id)
 
     if lname == "adl" then
         u.setMiscData(con, "no_channel_limit", "yes")
@@ -1945,7 +1944,7 @@ function(con, args)
     -- s.sendUserList(con, "LIS", 100)
 
     s.logMessage("connect", con, nil, nil, nil)
-    u.send("NLN", { identity = name, status = "online", sex = u.getSex(con) })
+    u.send(con, "NLN", { identity = name, status = "online", sex = u.getSex(con) })
 
     if isop or issupercop then
         s.addToStaffCallTargets(con)
@@ -1990,7 +1989,8 @@ end
 
 rtb.SUB =
 function(args)
-    s.forcedSubUpdate(args.action, args.source, args.target)
+    s.forcedSubUpdate(args.a, args.s, args.t)
+    return const.FERR_OK
 end
 
 rtb.HLB =
