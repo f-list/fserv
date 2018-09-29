@@ -69,8 +69,10 @@ void LogEntry::toJSON() {
     date_buffer[marker] = 0;
     json_object_set_new_nocheck(root, "date", json_string_nocheck(date_buffer));
 
-    jsonCopy = json_dumps(root, JSON_COMPACT);
+    const char* jsonString = json_dumps(root, JSON_COMPACT);
+    jsonCopy = jsonString;
     json_decref(root);
+    free((void*)jsonString);
     jsonCopy.append("\n");
 }
 
