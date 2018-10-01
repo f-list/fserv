@@ -107,7 +107,9 @@ private:
 
 class ChatLogThread {
 public:
-    ChatLogThread() : logThread() {}
+    ChatLogThread() : doRun(false), logger_loop(nullptr), logger_async(nullptr), logger_accept_io(nullptr),
+                      logThread() {}
+
     ~ChatLogThread() {}
 
     static void* runThread(void* params);
