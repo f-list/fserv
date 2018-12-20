@@ -100,9 +100,8 @@ bool ConnectionInstance::sendRaw(string &message) {
     if (closed)
         return false;
 
-    MessageBuffer* buffer = new MessageBuffer();
-    MessagePtr outMessage(buffer);
-    buffer->set(message.data(), message.length());
+    MessagePtr outMessage(new MessageBuffer());
+    outMessage->set(message.data(), message.length());
 
     writeQueue.try_emplace(outMessage);
 
