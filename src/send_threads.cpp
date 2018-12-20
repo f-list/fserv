@@ -88,9 +88,6 @@ void SendThreads::notify(ConnectionPtr &con) {
 
 static void threadRun(SendThreadState* state) {
     currentState = state;
-    state->async = new ev_async;
-    ev_async_init(state->async, asyncCallback);
-    ev_async_start(state->loop, state->async);
     ev_loop(state->loop, 0);
 }
 
@@ -106,7 +103,9 @@ void SendThreads::start() {
         newState->run = true;
         newState->queue = new ReaderWriterQueue<ConnectionPtr>(5000);
         newState->loop = ev_loop_new(EVFLAG_AUTO);
-        newState->async = nullptr;
+        newState->async = new ev_async;
+        ev_async_init(newState->async, asyncCallback);
+        ev_async_start(newState->loop, newState->async);
         queues[i] = newState->queue;
         threads[i] = newState;
         auto newThread = new std::thread(threadRun, newState);
