@@ -26,6 +26,7 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
+#include <atomic>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/functional/hash.hpp>
 #include <tr1/unordered_map>
@@ -38,12 +39,17 @@
 #include "ferror.hpp"
 #include "lua_base.hpp"
 #include "messagebuffer.hpp"
+#include "precompiled_headers.hpp"
 
+#include "queue/readerwriterqueue.h"
+
+using std::atomic;
 using std::string;
 using std::tr1::unordered_map;
 using std::tr1::unordered_set;
 using std::deque;
 using boost::intrusive_ptr;
+using moodycamel::ReaderWriterQueue;
 
 struct lua_State;
 
@@ -55,7 +61,11 @@ typedef unordered_set<int> intlist_t;
 typedef unordered_set<string> stringset_t;
 typedef unordered_map<string, string> stringmap_t;
 typedef unordered_map<string, double> timermap_t;
-typedef deque<MessagePtr> messagelist_t;
+typedef ReaderWriterQueue<MessagePtr> messagelist_t;
+
+class ConnectionInstance;
+
+typedef intrusive_ptr <ConnectionInstance> ConnectionPtr;
 
 class ConnectionInstance : public LBase {
 public:
@@ -108,7 +118,7 @@ public:
     bool globalModerator;
     ProtocolVersion protocol;
     struct sockaddr_in clientAddress;
-    bool closed;
+    atomic<bool> closed;
     bool delayClose;
 
     string statusMessage;
@@ -127,20 +137,24 @@ public:
     intlist_t kinkList;
 
 
-    //Buffers
+    //Read
     string readBuffer;
+
+    //Send
     messagelist_t writeQueue;
     size_t writePosition;
+    int sendQueue;
+    atomic<bool> writeNotified;
+    atomic<ev_io*> writeEvent2; //Investigate removal of atomic.
+
 
     //Timers
     timermap_t timers;
-
     //Event loop items
     struct ev_loop* loop;
     ev_timer* pingEvent;
     ev_timer* timerEvent;
     ev_io* readEvent;
-    ev_io* writeEvent;
     ev_tstamp lastActivity;
 
     //Lua

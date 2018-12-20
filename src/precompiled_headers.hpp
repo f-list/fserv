@@ -53,4 +53,5 @@
 #include "flua.hpp"
 #include "fthread.hpp"
 #include "fjson.hpp"
+#include "queue/readerwriterqueue.h"
 #endif //PRECOMPILED_HEADERS_H

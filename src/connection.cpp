@@ -33,6 +33,7 @@
 #include "server.hpp"
 #include "lua_constants.hpp"
 #include "channel.hpp"
+#inclued "send_threads.hpp"
 
 #define MAX_SEND_QUEUE_ITEMS 150
 // This sets the size at which long messages are split into multiple pieces.
@@ -40,27 +41,30 @@
 #define MAX_SEND_QUEUE_ITEM_SIZE 8192
 
 ConnectionInstance::ConnectionInstance()
-:
-LBase(),
-accountID(0),
-characterID(0),
-authStarted(false),
-identified(false),
-admin(false),
-globalModerator(false),
-protocol(PROTOCOL_UNKNOWN),
-closed(false),
-delayClose(false),
-status("online"),
-gender("None"),
-writePosition(0),
-loop(0),
-pingEvent(0),
-timerEvent(0),
-readEvent(0),
-writeEvent(0),
-debugL(0),
-refCount(0) {
+        :
+        LBase(),
+        accountID(0),
+        characterID(0),
+        authStarted(false),
+        identified(false),
+        admin(false),
+        globalModerator(false),
+        protocol(PROTOCOL_UNKNOWN),
+        closed(false),
+        delayClose(false),
+        status("online"),
+        gender("None"),
+        writeQueue(MAX_SEND_QUEUE_ITEMS),
+        writePosition(0),
+        sendQueue(-1),
+        writeNotified(false),
+        writeEvent2(nullptr),
+        loop(nullptr),
+        pingEvent(nullptr),
+        timerEvent(nullptr),
+        readEvent(nullptr),
+        debugL(nullptr),
+        refCount(0) {
 }
 
 ConnectionInstance::~ConnectionInstance() {
@@ -72,12 +76,25 @@ ConnectionInstance::~ConnectionInstance() {
     }
 }
 
+/**
+ * Queue a message buffer to be send on this connection.
+ *
+ * If the queue is already full this does not fail. Failure on a full queue would result in immediate disconnects during
+ * disconnection storms and escalate until all connections were disconnected.
+ * @param message
+ * @return
+ */
 bool ConnectionInstance::send(MessagePtr message) {
-    if (closed || writeQueue.size() > MAX_SEND_QUEUE_ITEMS)
+    if (closed)
         return false;
 
-    writeQueue.push_back(message);
-    ev_io_start(loop, writeEvent);
+    writeQueue.try_emplace(message);
+
+    ev_io_start(loop, writeEvent2);
+    if (!writeNotified) {
+        // TODO: Push an entry to some send notification queue here.
+        writeNotified = true;
+    }
     return true;
 }
 
@@ -89,8 +106,13 @@ bool ConnectionInstance::sendRaw(string& message) {
     MessagePtr outMessage(buffer);
     buffer->set(message.data(), message.length());
 
-    writeQueue.push_back(outMessage);
-    ev_io_start(loop, writeEvent);
+    writeQueue.try_emplace(outMessage);
+
+    ev_io_start(loop, writeEvent2);
+    if (!writeNotified) {
+        // TODO: Push an entry to some send notification queue here.
+        writeNotified = true;
+    }
     return true;
 }
 

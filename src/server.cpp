@@ -212,8 +212,9 @@ void Server::connectionWriteCallback(struct ev_loop* loop, ev_io* w, int revents
         prepareShutdownConnection(con.get());
         close(w->fd);
     } else if (revents & EV_WRITE) {
-        while (con->writeQueue.size()) {
-            MessagePtr outMessage = con->writeQueue.front();
+        MessagePtr* outMessagePtr = con->writeQueue.peek();
+        while (outMessagePtr) {
+            MessagePtr outMessage = *outMessagePtr;
             int len = outMessage->length() - con->writePosition;
             int sent = send(w->fd, outMessage->buffer() + con->writePosition, len, 0);
             if (sent < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
@@ -227,9 +228,10 @@ void Server::connectionWriteCallback(struct ev_loop* loop, ev_io* w, int revents
                 con->writePosition += sent;
                 return;
             } else {
-                con->writeQueue.pop_front();
+                con->writeQueue.pop();
                 con->writePosition = 0;
             }
+            outMessagePtr = con->writeQueue.peek();
         }
         ev_io_stop(loop, w);
     }
@@ -262,7 +264,7 @@ void Server::connectionTimerCallback(struct ev_loop* loop, ev_timer* w, int reve
         return;
     } else if (con->delayClose) {
         DLOG(INFO) << "Closing a connection marked for delay close.";
-        close(con->writeEvent->fd);
+        close(con->readEvent->fd);
         prepareShutdownConnection(con.get());
         return;
     }
@@ -394,7 +396,7 @@ void Server::listenCallback(struct ev_loop* loop, ev_io* w, int revents) {
         ev_io* write = new ev_io;
         ev_io_init(write, Server::connectionWriteCallback, newfd, EV_WRITE);
         write->data = newcon.get();
-        newcon->writeEvent = write;
+        newcon->writeEvent2 = write;
     }
 }
 
@@ -577,7 +579,7 @@ void Server::prepareShutdownConnection(ConnectionInstance* instance) {
             delete req;
     }
     instance->closed = true;
-    ev_io_stop(server_loop, instance->writeEvent);
+    ev_io_stop(server_loop, instance->writeEvent2);
     ev_io_stop(server_loop, instance->readEvent);
     ev_timer_stop(server_loop, instance->pingEvent);
     ev_timer_stop(server_loop, instance->timerEvent);
@@ -598,9 +600,9 @@ void Server::shutdownConnection(ConnectionInstance* instance) {
     delete instance->readEvent;
     instance->readEvent = 0;
 
-    ev_io_stop(server_loop, instance->writeEvent);
-    delete instance->writeEvent;
-    instance->writeEvent = 0;
+    ev_io_stop(server_loop, instance->writeEvent2);
+    delete instance->writeEvent2;
+    instance->writeEvent2 = nullptr;
 }
 
 void Server::runTesting() {
