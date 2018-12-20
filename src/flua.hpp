@@ -46,7 +46,7 @@ extern "C" {
 #define GETLCON(lbase, lstate, index, varname) if(lua_type(lstate, index) != LUA_TLIGHTUSERDATA) \
                                                         return luaL_error(lstate, "#1 Argument "#index" was not a ConnectionPtr was a %s", lua_typename(lstate, index)); \
                                                 lbase = static_cast<LBase*>(lua_touserdata(lstate, index)); \
-                                                ConnectionPtr varname(dynamic_cast<ConnectionInstance*>( lbase )); \
+                                                ConnectionInstance* varname = dynamic_cast<ConnectionInstance*>( lbase ); \
                                                 lbase = 0; \
                                                 if( varname == 0 ) \
                                                         return luaL_error(lstate, "#2 Argument "#index" was not a ConnectionPtr.")
