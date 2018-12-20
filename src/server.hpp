@@ -38,6 +38,7 @@
 
 #include <string>
 
+class SendThreads;
 class ConnectionInstance;
 class HTTPReply;
 
@@ -55,6 +56,8 @@ public:
     static void startShutdown();
     static double getEventTime();
 
+    static void notifySend(ConnectionInstance* instance);
+
     static unsigned long long getAcceptedConnections() {
         return statAcceptedConnections;
     }
@@ -66,8 +69,8 @@ public:
     static inline ChatLogThread* logger() {
         return chatLogger;
     }
-
     static void loggerStart();
+
     static void loggerStop();
 
 private:
@@ -75,7 +78,6 @@ private:
     Server() { }
 
     ~Server() { }
-
     static void processWakeupCallback(struct ev_loop* loop, ev_async* w, int revents);
     static void processHTTPWakeup(struct ev_loop* loop, ev_async* w, int revents);
     static void idleTasksCallback(struct ev_loop* loop, ev_timer* w, int revents);
@@ -83,7 +85,6 @@ private:
     static void rtbCallback(struct ev_loop* loop, ev_io* w, int revents);
     static void handshakeCallback(struct ev_loop* loop, ev_io* w, int revents);
     static void connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents);
-    static void connectionWriteCallback(struct ev_loop* loop, ev_io* w, int revents);
     static void connectionTimerCallback(struct ev_loop* loop, ev_timer* w, int revents);
     static void prepareCallback(struct ev_loop* loop, ev_prepare* w, int revents);
     static void pingCallback(struct ev_loop* loop, ev_timer* w, int revents);
@@ -127,6 +128,7 @@ private:
     static bool luaCanTimeout;
 
     static ChatLogThread* chatLogger;
+    static SendThreads* sendThreads;
 
     // Stats
     static unsigned long long statAcceptedConnections;

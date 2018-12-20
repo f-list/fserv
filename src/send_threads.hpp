@@ -8,13 +8,16 @@ using moodycamel::ReaderWriterQueue;
 
 struct SendThreadState;
 
+namespace std {
+    class thread;
+}
+
 class SendThreads {
 public:
     SendThreads(int count);
     ~SendThreads();
 
-    ~SendThreads();
-
+    void start();
     void notify(ConnectionPtr &con);
 
     const int nextQueue() {
@@ -25,8 +28,9 @@ public:
     }
 
 private:
-    vector<ReaderWriterQueue> queues;
+    vector<ReaderWriterQueue<ConnectionPtr>* > queues;
     vector<SendThreadState*> threads;
+    vector<std::thread*> runningThreads;
     int threadCount;
     int queueID;
 };

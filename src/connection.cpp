@@ -88,8 +88,8 @@ bool ConnectionInstance::send(MessagePtr message) {
 
     writeQueue.try_emplace(message);
 
-    ev_io_start(loop, writeEvent2);
     if (!writeNotified) {
+        Server::notifySend(this);
         // TODO: Push an entry to some send notification queue here.
         writeNotified = true;
     }
@@ -106,9 +106,8 @@ bool ConnectionInstance::sendRaw(string &message) {
 
     writeQueue.try_emplace(outMessage);
 
-    ev_io_start(loop, writeEvent2);
     if (!writeNotified) {
-        // TODO: Push an entry to some send notification queue here.
+        Server::notifySend(this);
         writeNotified = true;
     }
     return true;

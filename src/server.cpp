@@ -42,6 +42,7 @@
 #include "lua_http.hpp"
 #include "lua_testing.hpp"
 #include "server_state.hpp"
+#include "send_threads.hpp"
 #include "md5.hpp"
 
 #include <time.h>
@@ -64,6 +65,7 @@ ev_io* Server::server_listen = nullptr;
 ev_io* Server::rtb_listen = nullptr;
 ev_prepare* Server::server_prepare = nullptr;
 ChatLogThread* Server::chatLogger = nullptr;
+SendThreads* Server::sendThreads = nullptr;
 
 lua_State* Server::sL = nullptr;
 ev_tstamp Server::luaTimer = 0;
@@ -99,6 +101,12 @@ static void sock_nonblock(int socket) {
         fcntl(socket, F_SETFL, flags | O_NONBLOCK);
     static const int dokeepalive = 1;
     setsockopt(socket, SOL_SOCKET, SO_KEEPALIVE, &dokeepalive, sizeof(dokeepalive));
+}
+
+void Server::notifySend(ConnectionInstance* instance) {
+    ConnectionPtr con(instance);
+
+    sendThreads->notify(con);
 }
 
 void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents) {
@@ -198,42 +206,6 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
                 }
             }
         }
-    }
-}
-
-void Server::connectionWriteCallback(struct ev_loop* loop, ev_io* w, int revents) {
-    ConnectionPtr con(static_cast<ConnectionInstance*> (w->data));
-
-    if (con->closed)
-        return;
-
-    //DLOG(INFO) << "Write event.";
-    if (revents & EV_ERROR) {
-        prepareShutdownConnection(con.get());
-        close(w->fd);
-    } else if (revents & EV_WRITE) {
-        MessagePtr* outMessagePtr = con->writeQueue.peek();
-        while (outMessagePtr) {
-            MessagePtr outMessage = *outMessagePtr;
-            int len = outMessage->length() - con->writePosition;
-            int sent = send(w->fd, outMessage->buffer() + con->writePosition, len, 0);
-            if (sent < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-                return;
-            } else if (sent <= 0) {
-                prepareShutdownConnection(con.get());
-                close(w->fd);
-                return;
-            } else if (sent != len) {
-                // We've properly filled the buffer, come back later.
-                con->writePosition += sent;
-                return;
-            } else {
-                con->writeQueue.pop();
-                con->writePosition = 0;
-            }
-            outMessagePtr = con->writeQueue.peek();
-        }
-        ev_io_stop(loop, w);
     }
 }
 
@@ -643,6 +615,8 @@ void Server::run() {
     ServerState::loadChannels();
     ServerState::rebuildChannelOpList();
     ServerState::sendUserListToRedis();
+    sendThreads = new SendThreads(2);
+    sendThreads->start();
     initLua();
     initAsyncLoop();
     initTimer();
