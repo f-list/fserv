@@ -84,7 +84,7 @@ public:
         _connection = connection;
     }
 
-    ConnectionPtr connection() {
+    const ConnectionPtr& connection() const {
         return _connection;
     }
 

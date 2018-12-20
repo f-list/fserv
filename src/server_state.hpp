@@ -108,18 +108,18 @@ public:
 
     static void addConnection(string& name, ConnectionPtr con);
     static void removeConnection(string& name);
-    static ConnectionPtr getConnection(string& name);
+    static ConnectionInstance* getConnection(string& name);
 
     static const conptrmap_t& getConnections() {
         return connectionMap;
     }
-    static const int getConnectionIPCount(ConnectionPtr con);
+    static const int getConnectionIPCount(ConnectionInstance* con);
 
     static const long getConnectionCount() {
         return connectionMap.size();
     }
 
-    static string generatePrivateChannelID(ConnectionPtr con, string& title);
+    static string generatePrivateChannelID(ConnectionInstance* con, string& title);
     static void addChannel(string& name, Channel* channel);
     static void removeChannel(string& name);
     static ChannelPtr getChannel(string& name);
@@ -156,8 +156,8 @@ public:
         return staffCallList;
     }
 
-    static void addStaffCallTarget(ConnectionPtr con);
-    static void removeStaffCallTarget(ConnectionPtr con);
+    static void addStaffCallTarget(ConnectionInstance* con);
+    static void removeStaffCallTarget(ConnectionInstance* con);
 
     static const conptrset_t& getStaffCallTargets() {
         return staffCallTargets;

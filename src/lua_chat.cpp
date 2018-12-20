@@ -109,7 +109,7 @@ int LuaChat::logMessage(lua_State* L) {
 
     Channel* to_channel = 0;
     string to_character_string;
-    ConnectionPtr to_connection(0);
+    ConnectionInstance* to_connection = nullptr;
 
     LBase* base = 0;
     GETLCON(base, L, 2, from_connection);
@@ -225,8 +225,8 @@ int LuaChat::broadcastOps(lua_State* L) {
         for (int x = 0; x < length; ++x) {
             name[x] = tolower(name[x]);
         }
-        ConnectionPtr con = ServerState::getConnection(name);
-        if (con != 0) {
+        ConnectionInstance* con = ServerState::getConnection(name);
+        if (con != nullptr) {
             con->send(outMessage);
         }
     }
@@ -249,8 +249,8 @@ int LuaChat::broadcastStaffCall(lua_State* L) {
     MessagePtr outMessage(MessageBuffer::fromString(message));
     auto targets = ServerState::getStaffCallTargets();
     for (auto i = targets.begin(); i != targets.end(); ++i) {
-        ConnectionPtr con(*i);
-        if (con != 0) {
+        ConnectionInstance* con = (*i).get();
+        if (con != nullptr) {
             con->send(outMessage);
         }
     }

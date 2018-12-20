@@ -104,28 +104,25 @@ static void sock_nonblock(int socket) {
 }
 
 void Server::notifySend(ConnectionInstance* instance) {
-    ConnectionPtr con(instance);
-
-    sendThreads->notify(con);
+    sendThreads->notify(instance);
 }
 
 void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents) {
-    ConnectionPtr con(static_cast<ConnectionInstance*> (w->data));
+    auto con = static_cast<ConnectionInstance*> (w->data);
 
     if (con->closed)
         return;
 
     if (revents & EV_ERROR) {
-        prepareShutdownConnection(con.get());
-        close(w->fd);
+        prepareShutdownConnection(con);
     } else if (revents & EV_READ) {
         if (con->readBuffer.size() > MAX_CONNECTION_READ_BUFFER) {
             LOG(WARNING) << "Connection " << inet_ntoa(con->clientAddress.sin_addr) << ":"
                          << ntohs(con->clientAddress.sin_port) <<
                          " exceeded the maximum read buffer size of " << (MAX_CONNECTION_READ_BUFFER / 1024)
                          << "kB and is being closed.";
-            prepareShutdownConnection(con.get());
-            close(w->fd);
+            prepareShutdownConnection(con);
+            return;
         }
         char recvbuffer[8192];
         bzero(&recvbuffer[0], sizeof(recvbuffer));
@@ -134,8 +131,8 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
             return;
         } else if (received <= 0) {
             //DLOG(INFO) << "Closing connection because of socket error, or closed on other side.";
-            prepareShutdownConnection(con.get());
-            close(w->fd);
+            prepareShutdownConnection(con);
+            return;
         } else {
             con->lastActivity = ev_now(loop);
             con->readBuffer.append(&recvbuffer[0], received);
@@ -146,7 +143,7 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
             while (--repeat && con->readBuffer.size()) {
                 switch (con->protocol) {
                     case PROTOCOL_HYBI:
-                        ret = Websocket::Hybi::receive(con.get(), con->readBuffer, message);
+                        ret = Websocket::Hybi::receive(con, con->readBuffer, message);
                         break;
                     default:
                         break;
@@ -156,16 +153,14 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
                     return;
                 else if (ret == WS_RESULT_ERROR || ret == WS_RESULT_CLOSE) {
                     //DLOG(INFO) << "Closing connection because it requested a WS close or caused a WS error.";
-                    prepareShutdownConnection(con.get());
-                    close(w->fd);
+                    prepareShutdownConnection(con);
                     return;
                 } else {
                     // Smallest valid message size is 3 characters long.
                     size_t message_size = message.size();
                     if (message_size < 3) {
                         //DLOG(INFO) << "Closing connection because it sent a message that was too short.";
-                        prepareShutdownConnection(con.get());
-                        close(w->fd);
+                        prepareShutdownConnection(con);
                         return;
                     }
 
@@ -187,12 +182,12 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
                     } else if (command == "ZZZ") {
                         errorcode = NativeCommand::DebugCommand(con, payload);
                     } else if (command == "VAR") {
-                        errorcode = runLuaEvent(con.get(), command, payload);
+                        errorcode = runLuaEvent(con, command, payload);
                     } else {
                         if (!con->identified) {
                             errorcode = FERR_REQUIRES_IDENT;
                         } else {
-                            errorcode = runLuaEvent(con.get(), command, payload);
+                            errorcode = runLuaEvent(con, command, payload);
                         }
                     }
 
@@ -223,11 +218,11 @@ void Server::connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents)
  * This should be the only way a connection can be closed and cleaned up.
  */
 void Server::connectionTimerCallback(struct ev_loop* loop, ev_timer* w, int revents) {
-    ConnectionPtr con(static_cast<ConnectionInstance*> (w->data));
+    auto  con = static_cast<ConnectionInstance*> (w->data);
     if (con->closed) {
         DLOG(INFO) << "Shutting down a connection marked as preclosed.";
         //sendClosing(con);
-        shutdownConnection(con.get());
+        shutdownConnection(con);
         if (con->identified)
             ServerState::removeConnection(con->characterNameLower);
         else
@@ -236,8 +231,7 @@ void Server::connectionTimerCallback(struct ev_loop* loop, ev_timer* w, int reve
         return;
     } else if (con->delayClose) {
         DLOG(INFO) << "Closing a connection marked for delay close.";
-        close(con->readEvent->fd);
-        prepareShutdownConnection(con.get());
+        prepareShutdownConnection(con);
         return;
     }
 
@@ -246,8 +240,7 @@ void Server::connectionTimerCallback(struct ev_loop* loop, ev_timer* w, int reve
                                                                                : CONNECTION_TIMEOUT_PERIOD_IDENT);
     if (now > timeout) {
         //HACK: Have to cheat to get the FD here.
-        prepareShutdownConnection(con.get());
-        close(con->readEvent->fd);
+        prepareShutdownConnection(con);
     } else {
         w->repeat = timeout - now;
         ev_timer_again(loop, w);
@@ -255,22 +248,21 @@ void Server::connectionTimerCallback(struct ev_loop* loop, ev_timer* w, int reve
 }
 
 void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents) {
-    ConnectionPtr con(static_cast<ConnectionInstance*> (w->data));
+    auto con = static_cast<ConnectionInstance*> (w->data);
 
     if (con->closed)
         return;
 
     if (revents & EV_ERROR) {
-        prepareShutdownConnection(con.get());
-        close(w->fd);
+        prepareShutdownConnection(con);
     } else if (revents & EV_READ) {
         if (con->readBuffer.size() > MAX_HANDSHAKE_READ_BUFFER) {
             LOG(WARNING) << "Connection " << inet_ntoa(con->clientAddress.sin_addr) << ":"
                          << ntohs(con->clientAddress.sin_port) <<
                          " exceeded the maximum handshake buffer size of " << (MAX_HANDSHAKE_READ_BUFFER / 1024)
                          << "kB and is being closed.";
-            prepareShutdownConnection(con.get());
-            close(w->fd);
+            prepareShutdownConnection(con);
+            return;
         }
         char recvbuffer[8192];
         bzero(&recvbuffer[0], sizeof(recvbuffer));
@@ -278,8 +270,8 @@ void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents) {
         if (received < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
             return;
         } else if (received <= 0) {
-            prepareShutdownConnection(con.get());
-            close(w->fd);
+            prepareShutdownConnection(con);
+            return;
         } else {
             con->lastActivity = ev_now(loop);
             con->readBuffer.append(&recvbuffer[0], received);
@@ -295,8 +287,7 @@ void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents) {
                 case PROTOCOL_UNKNOWN:
                 case PROTOCOL_BAD:
                 default:
-                    prepareShutdownConnection(con.get());
-                    close(w->fd);
+                    prepareShutdownConnection(con);
                     return;
 
             }
@@ -304,8 +295,7 @@ void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents) {
             if (ntohl(con->clientAddress.sin_addr.s_addr) == 0x7f000001) {
                 if (inet_pton(AF_INET, ip.c_str(), &con->clientAddress.sin_addr) != 1) {
                     LOG(WARNING) << "Could not determine the endpoint address from the TLS proxy.";
-                    prepareShutdownConnection(con.get());
-                    close(w->fd);
+                    prepareShutdownConnection(con);
                     return;
                 }
                 LOG(INFO) << "Accepted connection from TLS proxy for endpoint: "
@@ -316,7 +306,7 @@ void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents) {
             con->readBuffer.clear();
             ev_io* read = new ev_io;
             ev_io_init(read, Server::connectionReadCallback, w->fd, EV_READ);
-            read->data = con.get();
+            read->data = con;
             ev_io_stop(loop, w);
             delete con->readEvent;
             ev_io_start(server_loop, read);
@@ -341,7 +331,7 @@ void Server::listenCallback(struct ev_loop* loop, ev_io* w, int revents) {
             LOG(INFO) << "Incoming connection from: " << &ntopbuf[0] << ":" << ntohs(client_addr.sin_port);
         }
         sock_nonblock(newfd);
-        ConnectionPtr newcon(new ConnectionInstance);
+        auto newcon = new ConnectionInstance;
         ServerState::addUnidentified(newcon);
         memcpy(&(newcon->clientAddress), &client_addr, sizeof(client_addr));
 
@@ -349,19 +339,19 @@ void Server::listenCallback(struct ev_loop* loop, ev_io* w, int revents) {
 
         ev_timer* ping = new ev_timer;
         ev_timer_init(ping, Server::pingCallback, CONNECTION_PING_TIME, CONNECTION_PING_TIME);
-        ping->data = newcon.get();
+        ping->data = newcon;
         newcon->pingEvent = ping;
 
         ev_timer* timeout = new ev_timer;
         ev_timer_init(timeout, Server::connectionTimerCallback, CONNECTION_TIMEOUT_PERIOD_IDENT,
                       CONNECTION_TIMEOUT_PERIOD_IDENT);
-        timeout->data = newcon.get();
+        timeout->data = newcon;
         ev_timer_start(server_loop, timeout);
         newcon->timerEvent = timeout;
 
         ev_io* read = new ev_io;
         ev_io_init(read, Server::handshakeCallback, newfd, EV_READ);
-        read->data = newcon.get();
+        read->data = newcon;
         ev_io_start(server_loop, read);
         newcon->readEvent = read;
 
@@ -432,7 +422,7 @@ void Server::prepareCallback(struct ev_loop* loop, ev_prepare* w, int revents) {
 
 void Server::pingCallback(struct ev_loop* loop, ev_timer* w, int revents) {
     static string ping_command("PIN");
-    ConnectionPtr con(static_cast<ConnectionInstance*> (w->data));
+    auto con = static_cast<ConnectionInstance*> (w->data);
     MessagePtr outMessage(MessageBuffer::fromString(ping_command));
     con->send(outMessage);
     ev_timer_again(server_loop, w);
@@ -443,9 +433,9 @@ void Server::processWakeupCallback(struct ev_loop* loop, ev_async* w, int revent
 
     LoginReply* reply = LoginEvHTTPClient::getReply();
     while (reply) {
-        ConnectionPtr con = reply->connection;
+        auto con = reply->connection.get();
         if (!con->closed) {
-            FReturnCode code = processLogin(con.get(), reply->message, reply->success);
+            FReturnCode code = processLogin(con, reply->message, reply->success);
             if (code != FERR_OK) {
                 con->sendError(code);
                 con->setDelayClose();
@@ -463,7 +453,7 @@ void Server::processHTTPWakeup(struct ev_loop* loop, ev_async* w, int revents) {
 
     HTTPReply* reply = HTTPClient::getReply();
     while (reply) {
-        ConnectionPtr con = reply->connection();
+        auto con = reply->connection().get();
         FReturnCode code = processHTTPReply(reply);
         if (con && !con->closed && code != FERR_OK) {
             con->sendError(code);
@@ -488,8 +478,9 @@ FReturnCode Server::processHTTPReply(HTTPReply* reply) {
     lua_getglobal(sL, "on_error");
     lua_getglobal(sL, "httpcb");
     lua_getfield(sL, -1, reply->callback().c_str());
-    if (reply->connection()) {
-        lua_pushlightuserdata(sL, reply->connection().get());
+    ConnectionPtr con(reply->connection());
+    if (con) {
+        lua_pushlightuserdata(sL, con.get());
     } else {
         lua_pushnil(sL);
     }

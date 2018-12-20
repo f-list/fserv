@@ -26,19 +26,17 @@
 #ifndef NATIVE_EVENT_H
 #define NATIVE_EVENT_H
 
-#include <boost/intrusive_ptr.hpp>
 #include <string>
 #include "ferror.hpp"
 
 using std::string;
-using boost::intrusive_ptr;
 class ConnectionInstance;
 
 class NativeCommand {
 public:
-    static FReturnCode DebugCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
-    static FReturnCode IdentCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
-    static FReturnCode SearchCommand(intrusive_ptr<ConnectionInstance>& con, string& payload);
+    static FReturnCode DebugCommand(ConnectionInstance* con, string& payload);
+    static FReturnCode IdentCommand(ConnectionInstance* con, string& payload);
+    static FReturnCode SearchCommand(ConnectionInstance* con, string& payload);
 private:
 };
 

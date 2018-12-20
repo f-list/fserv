@@ -100,13 +100,13 @@ int LuaConnection::getConnection(lua_State* L) {
     luaL_checkany(L, 1);
     string conname = luaL_checkstring(L, 1);
     lua_pop(L, 1);
-    ConnectionPtr con = ServerState::getConnection(conname);
-    if (con == 0) {
+    ConnectionInstance* con = ServerState::getConnection(conname);
+    if (con == nullptr) {
         lua_pushboolean(L, false);
         return 1;
     }
     lua_pushboolean(L, true);
-    lua_pushlightuserdata(L, con.get());
+    lua_pushlightuserdata(L, con);
     return 2;
 }
 

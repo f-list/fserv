@@ -90,10 +90,9 @@ int LuaTesting::createConnection(lua_State* L) {
     con->accountID = 1;
     con->characterID = 2;
     con->closed = true;
-    auto conPtr = ConnectionPtr(con);
-    ServerState::addConnection(charName, conPtr);
+    ServerState::addConnection(charName, con);
 
-    lua_pushlightuserdata(L, conPtr.get());
+    lua_pushlightuserdata(L, con);
     return 1;
 }
 
@@ -116,7 +115,7 @@ int LuaTesting::killChannel(lua_State* L) {
     if (chan) {
         const chconlist_t particpants = chan->getParticipants();
         for (chconlist_t::const_iterator i = particpants.begin(); i != particpants.end(); ++i) {
-            chan->part(*i);
+            chan->part((*i).get());
         }
         ServerState::removeChannel(chanName);
     }

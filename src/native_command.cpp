@@ -36,7 +36,7 @@
 
 #include <google/profiler.h>
 
-FReturnCode NativeCommand::DebugCommand(ConnectionPtr& con, string& payload) {
+FReturnCode NativeCommand::DebugCommand(ConnectionInstance* con, string& payload) {
     if (con->admin != true)
         return FERR_NOT_ADMIN;
 
@@ -149,7 +149,7 @@ FReturnCode NativeCommand::DebugCommand(ConnectionPtr& con, string& payload) {
     return FERR_OK;
 }
 
-FReturnCode NativeCommand::IdentCommand(ConnectionPtr& con, string& payload) {
+FReturnCode NativeCommand::IdentCommand(ConnectionInstance* con, string& payload) {
     LOG(INFO) << "Ident command with payload: " << payload;
 
     if (con->identified || con->authStarted)
@@ -221,7 +221,7 @@ fail:
     return FERR_BAD_SYNTAX;
 }
 
-void SearchFilterList(const json_t* node, unordered_set<ConnectionPtr>& conlist, string item) {
+void SearchFilterList(const json_t* node, unordered_set<ConnectionInstance*>& conlist, string item) {
     unordered_set<string> items;
     size_t size = json_array_size(node);
     for (size_t i = 0; i < size; ++i) {
@@ -238,7 +238,7 @@ void SearchFilterList(const json_t* node, unordered_set<ConnectionPtr>& conlist,
     }
 }
 
-void SearchFilterListF(const json_t* node, unordered_set<ConnectionPtr>& conlist) {
+void SearchFilterListF(const json_t* node, unordered_set<ConnectionInstance*>& conlist) {
     list<int> items;
     size_t size = json_array_size(node);
     for (size_t i = 0; i < size; ++i) {
@@ -266,7 +266,7 @@ void SearchFilterListF(const json_t* node, unordered_set<ConnectionPtr>& conlist
     }
 }
 
-FReturnCode NativeCommand::SearchCommand(intrusive_ptr< ConnectionInstance >& con, string& payload) {
+FReturnCode NativeCommand::SearchCommand(ConnectionInstance* con, string& payload) {
     //DLOG(INFO) << "Starting search with payload " << payload;
     static string FKSstring("FKS");
     static double timeout = 5.0;
@@ -276,12 +276,12 @@ FReturnCode NativeCommand::SearchCommand(intrusive_ptr< ConnectionInstance >& co
     else
         con->timers[FKSstring] = time;
 
-    typedef unordered_set<ConnectionPtr> clist_t;
+    typedef unordered_set<ConnectionInstance*> clist_t;
     clist_t tosearch;
     const conptrmap_t cons = ServerState::getConnections();
     for (conptrmap_t::const_iterator i = cons.begin(); i != cons.end(); ++i) {
         if ((i->second != con) && (i->second->kinkList.size() != 0) && (i->second->status == "online" || i->second->status == "looking"))
-            tosearch.insert(i->second);
+            tosearch.insert(i->second.get());
     }
 
     json_t* rootnode = json_loads(payload.c_str(), 0, 0);

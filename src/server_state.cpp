@@ -389,18 +389,18 @@ void ServerState::removeConnection(string& name) {
     }
 }
 
-ConnectionPtr ServerState::getConnection(string& name) {
+ConnectionInstance* ServerState::getConnection(string& name) {
     if (connectionMap.find(name) != connectionMap.end())
-        return connectionMap[name];
+        return connectionMap[name].get();
 
     return 0;
 }
 
-const int ServerState::getConnectionIPCount(ConnectionPtr con) {
+const int ServerState::getConnectionIPCount(ConnectionInstance* con) {
     return connectionCountMap[(int) con->clientAddress.sin_addr.s_addr];
 }
 
-string ServerState::generatePrivateChannelID(ConnectionPtr con, string& title) {
+string ServerState::generatePrivateChannelID(ConnectionInstance* con, string& title) {
     while (true) {
         char buf[1024];
         bzero(&buf[0], sizeof (buf));
@@ -554,11 +554,11 @@ StaffCallRecord ServerState::getStaffCall(string& callid) {
     return record;
 }
 
-void ServerState::addStaffCallTarget(ConnectionPtr con) {
+void ServerState::addStaffCallTarget(ConnectionInstance* con) {
     staffCallTargets.insert(con);
 }
 
-void ServerState::removeStaffCallTarget(ConnectionPtr con) {
+void ServerState::removeStaffCallTarget(ConnectionInstance* con) {
     staffCallTargets.erase(con);
 }
 

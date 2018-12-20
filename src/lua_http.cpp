@@ -74,7 +74,7 @@ int LuaHTTP::getRequest(lua_State* L) {
     string url = luaL_checkstring(L, 2);
 
     LBase* base = nullptr;
-    ConnectionPtr con(nullptr);
+    ConnectionInstance* con = nullptr;
     if(lua_type(L, 3) == LUA_TLIGHTUSERDATA) {
         GETLCON(base, L, 4, temp_con);
         con = temp_con;
@@ -113,7 +113,7 @@ int LuaHTTP::postRequest(lua_State* L) {
     string url = luaL_checkstring(L, 2);
 
     LBase* base = nullptr;
-    ConnectionPtr con(nullptr);
+    ConnectionInstance* con = nullptr;
     int arg_type = lua_type(L, 4);
     if (arg_type == LUA_TLIGHTUSERDATA) {
         GETLCON(base, L, 4, temp_con);

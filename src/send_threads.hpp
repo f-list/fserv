@@ -7,6 +7,7 @@ using std::vector;
 using moodycamel::ReaderWriterQueue;
 
 struct SendThreadState;
+class ConnectionInstance;
 
 namespace std {
     class thread;
@@ -18,7 +19,10 @@ public:
     ~SendThreads();
 
     void start();
-    void notify(ConnectionPtr &con);
+
+    void notify(ConnectionInstance* con);
+
+    void notifyClose(ConnectionInstance* con);
 
     const int nextQueue() {
         int id = queueID++;

@@ -49,7 +49,7 @@ refCount(0) {
     }
 }
 
-Channel::Channel(string channame, ChannelType chantype, ConnectionPtr creator)
+Channel::Channel(string channame, ChannelType chantype, ConnectionInstance* creator)
 :
 LBase(),
 name(channame),
@@ -79,16 +79,16 @@ void Channel::sendToAll(string& message) {
     }
 }
 
-void Channel::sendToChannel(ConnectionPtr src, string& message) {
+void Channel::sendToChannel(ConnectionInstance* src, string& message) {
     MessagePtr outMessage(MessageBuffer::fromString(message));
     for (chconlist_t::iterator i = participants.begin(); i != participants.end(); ++i) {
-        ConnectionPtr p = *i;
+        ConnectionInstance* p = (*i).get();
         if (p != src)
             p->send(outMessage);
     }
 }
 
-void Channel::join(ConnectionPtr con) {
+void Channel::join(ConnectionInstance* con) {
     lastActivity = time(nullptr);
     ++participantCount;
     participants.insert(con);
@@ -97,7 +97,7 @@ void Channel::join(ConnectionPtr con) {
         topUsers = participantCount;
 }
 
-void Channel::part(ConnectionPtr con) {
+void Channel::part(ConnectionInstance* con) {
     lastActivity = time(nullptr);
     --participantCount;
     timerMap.erase(con->characterNameLower);
@@ -105,11 +105,11 @@ void Channel::part(ConnectionPtr con) {
     con->leaveChannel(this);
 }
 
-void Channel::kick(ConnectionPtr dest) {
+void Channel::kick(ConnectionInstance* dest) {
     part(dest);
 }
 
-void Channel::ban(ConnectionPtr src, ConnectionPtr dest) {
+void Channel::ban(ConnectionInstance* src, ConnectionInstance* dest) {
     BanRecord ban;
     ban.banner = src->characterName;
     ban.time = time(nullptr);
@@ -117,7 +117,7 @@ void Channel::ban(ConnectionPtr src, ConnectionPtr dest) {
     bans[dest->characterNameLower] = ban;
 }
 
-void Channel::ban(ConnectionPtr src, string dest) {
+void Channel::ban(ConnectionInstance* src, string dest) {
     BanRecord ban;
     ban.banner = src->characterName;
     ban.time = time(nullptr);
@@ -125,7 +125,7 @@ void Channel::ban(ConnectionPtr src, string dest) {
     bans[dest] = ban;
 }
 
-void Channel::timeout(ConnectionPtr src, ConnectionPtr dest, long length) {
+void Channel::timeout(ConnectionInstance* src, ConnectionInstance* dest, long length) {
     BanRecord ban;
     ban.banner = src->characterName;
     ban.time = time(nullptr);
@@ -133,7 +133,7 @@ void Channel::timeout(ConnectionPtr src, ConnectionPtr dest, long length) {
     bans[dest->characterNameLower] = ban;
 }
 
-void Channel::timeout(ConnectionPtr src, string dest, long length) {
+void Channel::timeout(ConnectionInstance* src, string dest, long length) {
     BanRecord ban;
     ban.banner = src->characterName;
     ban.time = time(nullptr);
@@ -145,7 +145,7 @@ void Channel::unban(string& dest) {
     bans.erase(dest);
 }
 
-bool Channel::inChannel(ConnectionPtr con) {
+bool Channel::inChannel(ConnectionInstance* con) {
     for (chconlist_t::iterator i = participants.begin(); i != participants.end(); ++i) {
         if (con == (*i))
             return true;
@@ -154,7 +154,7 @@ bool Channel::inChannel(ConnectionPtr con) {
     return false;
 }
 
-bool Channel::isBanned(ConnectionPtr con) {
+bool Channel::isBanned(ConnectionInstance* con) {
     chbanmap_t::const_iterator itr = bans.find(con->characterNameLower);
     if (itr != bans.end()) {
         BanRecord b = itr->second;
@@ -182,7 +182,7 @@ bool Channel::isBanned(string& name) {
     return false;
 }
 
-bool Channel::getBan(ConnectionPtr con, BanRecord& ban) {
+bool Channel::getBan(ConnectionInstance* con, BanRecord& ban) {
     chbanmap_t::const_iterator itr = bans.find(con->characterNameLower);
     if (itr != bans.end()) {
         BanRecord tmp = itr->second;
@@ -219,7 +219,7 @@ void Channel::cleanExpiredTimeouts() {
     }
 }
 
-void Channel::addMod(ConnectionPtr src, string& dest) {
+void Channel::addMod(ConnectionInstance* src, string& dest) {
     ModRecord mod;
     mod.modder = src->characterName;
     mod.time = time(nullptr);
@@ -237,7 +237,7 @@ void Channel::remMod(string& dest) {
     moderators.erase(dest);
 }
 
-bool Channel::isMod(ConnectionPtr con) {
+bool Channel::isMod(ConnectionInstance* con) {
     return (owner == con->characterName) || moderators.count(con->characterName) > 0;
 
 }
@@ -247,7 +247,7 @@ bool Channel::isMod(string& name) {
 
 }
 
-bool Channel::isOwner(ConnectionPtr con) {
+bool Channel::isOwner(ConnectionInstance* con) {
     return owner == con->characterName;
 
 }
@@ -257,14 +257,14 @@ bool Channel::isOwner(string& name) {
 
 }
 
-const double Channel::getTimerEntry(ConnectionPtr con) {
+const double Channel::getTimerEntry(ConnectionInstance* con) {
     if (timerMap.find(con->characterNameLower) != timerMap.end())
         return timerMap[con->characterNameLower];
 
     return -1;
 }
 
-void Channel::setTimerEntry(ConnectionPtr con, double newvalue) {
+void Channel::setTimerEntry(ConnectionInstance* con, double newvalue) {
     timerMap[con->characterNameLower] = newvalue;
 }
 
@@ -280,7 +280,7 @@ string Channel::getTypeString() {
     }
 }
 
-void Channel::invite(ConnectionPtr dest) {
+void Channel::invite(ConnectionInstance* dest) {
     invites.insert(dest->characterNameLower);
 }
 
@@ -288,7 +288,7 @@ void Channel::removeInvite(string& dest) {
     invites.erase(dest);
 }
 
-bool Channel::isInvited(ConnectionPtr con) {
+bool Channel::isInvited(ConnectionInstance* con) {
     return invites.count(con->characterNameLower) > 0;
 
 }

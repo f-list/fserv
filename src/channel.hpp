@@ -75,25 +75,25 @@ typedef unordered_map<string, double> chtimermap_t;
 class Channel : public LBase {
 public:
     Channel(string channame, ChannelType chantype);
-    Channel(string channame, ChannelType chantype, ConnectionPtr creator);
+    Channel(string channame, ChannelType chantype, ConnectionInstance* creator);
     virtual ~Channel();
 
     void sendToAll(string& message); //Sends to everyone, including source.
-    void sendToChannel(ConnectionPtr src, string& message); //Sends to everyone, excluding source.
+    void sendToChannel(ConnectionInstance* src, string& message); //Sends to everyone, excluding source.
 
-    void join(ConnectionPtr con);
-    void part(ConnectionPtr con);
-    bool inChannel(ConnectionPtr con);
+    void join(ConnectionInstance* con);
+    void part(ConnectionInstance* con);
+    bool inChannel(ConnectionInstance* con);
 
-    void kick(ConnectionPtr dest);
-    void ban(ConnectionPtr src, ConnectionPtr dest);
-    void ban(ConnectionPtr src, string dest);
-    void timeout(ConnectionPtr src, ConnectionPtr dest, long length);
-    void timeout(ConnectionPtr src, string dest, long length);
+    void kick(ConnectionInstance* dest);
+    void ban(ConnectionInstance* src, ConnectionInstance* dest);
+    void ban(ConnectionInstance* src, string dest);
+    void timeout(ConnectionInstance* src, ConnectionInstance* dest, long length);
+    void timeout(ConnectionInstance* src, string dest, long length);
     void unban(string& dest);
-    bool isBanned(ConnectionPtr con);
+    bool isBanned(ConnectionInstance* con);
     bool isBanned(string& name);
-    bool getBan(ConnectionPtr con, BanRecord& ban);
+    bool getBan(ConnectionInstance* con, BanRecord& ban);
     bool getBan(string& name, BanRecord& ban);
     void cleanExpiredTimeouts();
 
@@ -106,20 +106,20 @@ public:
         return bans.size();
     }
 
-    void addMod(ConnectionPtr src, string& dest);
+    void addMod(ConnectionInstance* src, string& dest);
     void addMod(string& dest);
     void remMod(string& dest);
 
     const chmodmap_t& getModRecords() const {
         return moderators;
     }
-    bool isMod(ConnectionPtr con);
+    bool isMod(ConnectionInstance* con);
     bool isMod(string& name);
 
     const string& getOwner() const {
         return owner;
     }
-    bool isOwner(ConnectionPtr con);
+    bool isOwner(ConnectionInstance* con);
     bool isOwner(string& name);
 
     void setOwner(string& name) {
@@ -138,8 +138,8 @@ public:
         return name;
     }
 
-    const double getTimerEntry(ConnectionPtr con);
-    void setTimerEntry(ConnectionPtr con, double newvalue);
+    const double getTimerEntry(ConnectionInstance* con);
+    void setTimerEntry(ConnectionInstance* con, double newvalue);
 
     string getTypeString();
 
@@ -179,9 +179,9 @@ public:
         canDestroy = destroyable;
     }
 
-    void invite(ConnectionPtr dest);
+    void invite(ConnectionInstance* dest);
     void removeInvite(string& dest);
-    bool isInvited(ConnectionPtr con);
+    bool isInvited(ConnectionInstance* con);
 
     void setPublic(bool newstatus);
 
