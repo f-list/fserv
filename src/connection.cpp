@@ -36,9 +36,6 @@
 #inclued "send_threads.hpp"
 
 #define MAX_SEND_QUEUE_ITEMS 150
-// This sets the size at which long messages are split into multiple pieces.
-// No more than this amount will ever be sent to a single send() call at once.
-#define MAX_SEND_QUEUE_ITEM_SIZE 8192
 
 ConnectionInstance::ConnectionInstance()
         :
@@ -68,7 +65,7 @@ ConnectionInstance::ConnectionInstance()
 }
 
 ConnectionInstance::~ConnectionInstance() {
-    if (closed != true) {
+    if (!closed) {
         LOG(FATAL) << "[BUG] Deleting a connection not marked as closed.";
     }
     if (debugL) {
@@ -98,7 +95,7 @@ bool ConnectionInstance::send(MessagePtr message) {
     return true;
 }
 
-bool ConnectionInstance::sendRaw(string& message) {
+bool ConnectionInstance::sendRaw(string &message) {
     if (closed)
         return false;
 
@@ -120,11 +117,11 @@ void ConnectionInstance::sendError(int error) {
     string outstr("ERR ");
     json_t* topnode = json_object();
     json_object_set_new_nocheck(topnode, "number",
-            json_integer(error)
-            );
+                                json_integer(error)
+    );
     json_object_set_new_nocheck(topnode, "message",
-            json_string_nocheck(LuaConstants::getErrorMessage(error).c_str())
-            );
+                                json_string_nocheck(LuaConstants::getErrorMessage(error).c_str())
+    );
     const char* errstr = json_dumps(topnode, JSON_COMPACT);
     outstr += errstr;
     MessagePtr message(MessageBuffer::fromString(outstr));
@@ -138,11 +135,12 @@ void ConnectionInstance::sendError(int error, string message) {
     string outstr("ERR ");
     json_t* topnode = json_object();
     json_object_set_new_nocheck(topnode, "number",
-            json_integer(error)
-            );
+                                json_integer(error)
+    );
     json_t* messagenode = json_string(message.c_str());
     if (!messagenode)
-        messagenode = json_string_nocheck("There was an error encoding this error message. Please report this to Kira.");
+        messagenode = json_string_nocheck(
+                "There was an error encoding this error message. Please report this to Kira.");
     json_object_set_new_nocheck(topnode, "message", messagenode);
     const char* errstr = json_dumps(topnode, JSON_COMPACT);
     outstr += errstr;
@@ -186,7 +184,7 @@ void ConnectionInstance::leaveChannel(Channel* channel) {
     channelList.erase(chan);
 }
 
-FReturnCode ConnectionInstance::reloadIsolation(string& output) {
+FReturnCode ConnectionInstance::reloadIsolation(string &output) {
     lua_State* newstate = luaL_newstate();
     FReturnCode ret = Server::loadLuaIntoState(newstate, output, true);
     if (ret == FERR_OK) {
@@ -199,7 +197,7 @@ FReturnCode ConnectionInstance::reloadIsolation(string& output) {
     return ret;
 }
 
-FReturnCode ConnectionInstance::isolateLua(string& output) {
+FReturnCode ConnectionInstance::isolateLua(string &output) {
     lua_State* newstate = luaL_newstate();
     FReturnCode ret = Server::loadLuaIntoState(newstate, output, true);
     if (ret == FERR_OK)

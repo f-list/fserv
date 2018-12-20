@@ -54,7 +54,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include <google/malloc_extension.h>
+#include <gperftools/malloc_extension.h>
 
 struct ev_loop* Server::server_loop = nullptr;
 ev_async* Server::server_async = nullptr;
@@ -590,15 +590,15 @@ void Server::prepareShutdownConnection(ConnectionInstance* instance) {
 void Server::shutdownConnection(ConnectionInstance* instance) {
     ev_timer_stop(server_loop, instance->pingEvent);
     delete instance->pingEvent;
-    instance->pingEvent = 0;
+    instance->pingEvent = nullptr;
 
     ev_timer_stop(server_loop, instance->timerEvent);
     delete instance->timerEvent;
-    instance->timerEvent = 0;
+    instance->timerEvent = nullptr;
 
     ev_io_stop(server_loop, instance->readEvent);
     delete instance->readEvent;
-    instance->readEvent = 0;
+    instance->readEvent = nullptr;
 
     ev_io_stop(server_loop, instance->writeEvent2);
     delete instance->writeEvent2;

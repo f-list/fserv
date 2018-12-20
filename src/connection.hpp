@@ -56,10 +56,11 @@ struct lua_State;
 class Channel;
 
 
-typedef unordered_set< intrusive_ptr<Channel>, boost::hash< intrusive_ptr<Channel> > > chanlist_t;
+typedef unordered_set <intrusive_ptr<Channel>, boost::hash<intrusive_ptr < Channel>> >
+chanlist_t;
 typedef unordered_set<int> intlist_t;
-typedef unordered_set<string> stringset_t;
-typedef unordered_map<string, string> stringmap_t;
+typedef unordered_set <string> stringset_t;
+typedef unordered_map <string, string> stringmap_t;
 typedef unordered_map<string, double> timermap_t;
 typedef ReaderWriterQueue<MessagePtr> messagelist_t;
 
@@ -70,40 +71,48 @@ typedef intrusive_ptr <ConnectionInstance> ConnectionPtr;
 class ConnectionInstance : public LBase {
 public:
     ConnectionInstance();
+
     ~ConnectionInstance();
 
     bool send(MessagePtr message);
-    bool sendRaw(string& message);
+
+    bool sendRaw(string &message);
+
     void sendError(int error);
+
     void sendError(int error, string message);
+
     void sendDebugReply(string message);
 
     void setDelayClose();
 
     void leaveChannel(Channel* channel);
+
     void joinChannel(Channel* channel);
 
-    FReturnCode reloadIsolation(string& output);
-    FReturnCode isolateLua(string& output);
+    FReturnCode reloadIsolation(string &output);
+
+    FReturnCode isolateLua(string &output);
+
     void deisolateLua();
 
-    const stringset_t& getFriends() const {
+    const stringset_t &getFriends() const {
         return friends;
     }
 
-    const stringset_t& getIgnores() const {
+    const stringset_t &getIgnores() const {
         return ignores;
     }
 
-    const stringmap_t& getCustomKinks() const {
+    const stringmap_t &getCustomKinks() const {
         return customKinkMap;
     }
 
-    const stringmap_t& getInfoTags() const {
+    const stringmap_t &getInfoTags() const {
         return infotagMap;
     }
 
-    const stringmap_t& getMiscData() const {
+    const stringmap_t &getMiscData() const {
         return miscMap;
     }
 
@@ -163,22 +172,20 @@ public:
 protected:
     int refCount;
 
-    friend inline void intrusive_ptr_release(ConnectionInstance* p)
-    {
+    friend inline void intrusive_ptr_release(ConnectionInstance* p) {
         if (__sync_sub_and_fetch(&p->refCount, 1) <= 0) {
             delete p;
         }
     }
+
     friend inline void intrusive_ptr_add_ref(ConnectionInstance* p) { __sync_fetch_and_add(&p->refCount, 1); }
 };
 
-typedef intrusive_ptr<ConnectionInstance> ConnectionPtr;
-
 namespace std {
     namespace tr1 {
-        template <>
+        template<>
         struct hash<ConnectionPtr> : public unary_function<ConnectionPtr, size_t> {
-            size_t operator()(const ConnectionPtr& v) const {
+            size_t operator()(const ConnectionPtr &v) const {
                 return reinterpret_cast<size_t>(v.get());
             }
         };
