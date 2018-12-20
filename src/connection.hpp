@@ -155,6 +155,7 @@ public:
     int sendQueue;
     atomic<bool> writeNotified;
     atomic<ev_io*> writeEvent2; //Investigate removal of atomic.
+    int fileDescriptor;
 
 
     //Timers

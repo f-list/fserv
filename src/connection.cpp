@@ -33,7 +33,7 @@
 #include "server.hpp"
 #include "lua_constants.hpp"
 #include "channel.hpp"
-#inclued "send_threads.hpp"
+#include "send_threads.hpp"
 
 #define MAX_SEND_QUEUE_ITEMS 150
 
@@ -56,6 +56,7 @@ ConnectionInstance::ConnectionInstance()
         sendQueue(-1),
         writeNotified(false),
         writeEvent2(nullptr),
+        fileDescriptor(-1),
         loop(nullptr),
         pingEvent(nullptr),
         timerEvent(nullptr),

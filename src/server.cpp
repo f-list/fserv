@@ -393,10 +393,8 @@ void Server::listenCallback(struct ev_loop* loop, ev_io* w, int revents) {
         ev_io_start(server_loop, read);
         newcon->readEvent = read;
 
-        ev_io* write = new ev_io;
-        ev_io_init(write, Server::connectionWriteCallback, newfd, EV_WRITE);
-        write->data = newcon.get();
-        newcon->writeEvent2 = write;
+        newcon->fileDescriptor = newfd;
+        newcon->sendQueue = sendThreads->nextQueue();
     }
 }
 
@@ -579,7 +577,6 @@ void Server::prepareShutdownConnection(ConnectionInstance* instance) {
             delete req;
     }
     instance->closed = true;
-    ev_io_stop(server_loop, instance->writeEvent2);
     ev_io_stop(server_loop, instance->readEvent);
     ev_timer_stop(server_loop, instance->pingEvent);
     ev_timer_stop(server_loop, instance->timerEvent);
@@ -600,7 +597,6 @@ void Server::shutdownConnection(ConnectionInstance* instance) {
     delete instance->readEvent;
     instance->readEvent = nullptr;
 
-    ev_io_stop(server_loop, instance->writeEvent2);
     delete instance->writeEvent2;
     instance->writeEvent2 = nullptr;
 }
