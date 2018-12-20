@@ -47,16 +47,25 @@ using std::string;
 class Server {
 public:
     static void run();
+
     static void runTesting();
 
     static void sendWakeup();
+
     static void sendHTTPWakeup();
-    static FReturnCode loadLuaIntoState(lua_State* tL, string& output, bool testing);
-    static FReturnCode reloadLuaState(string& output);
+
+    static void sendCloseWakeup(ConnectionInstance* instance);
+
+    static FReturnCode loadLuaIntoState(lua_State* tL, string &output, bool testing);
+
+    static FReturnCode reloadLuaState(string &output);
+
     static void startShutdown();
+
     static double getEventTime();
 
     static void notifySend(ConnectionInstance* instance);
+
 
     static unsigned long long getAcceptedConnections() {
         return statAcceptedConnections;
@@ -69,52 +78,81 @@ public:
     static inline ChatLogThread* logger() {
         return chatLogger;
     }
+
     static void loggerStart();
 
     static void loggerStop();
 
 private:
 
-    Server() { }
+    Server() {}
 
-    ~Server() { }
+    ~Server() {}
+
     static void processWakeupCallback(struct ev_loop* loop, ev_async* w, int revents);
+
     static void processHTTPWakeup(struct ev_loop* loop, ev_async* w, int revents);
+
+    static void processClosedWakeup(struct ev_loop* loop, ev_async* w, int revents);
+
     static void idleTasksCallback(struct ev_loop* loop, ev_timer* w, int revents);
+
     static void listenCallback(struct ev_loop* loop, ev_io* w, int revents);
+
     static void rtbCallback(struct ev_loop* loop, ev_io* w, int revents);
+
     static void handshakeCallback(struct ev_loop* loop, ev_io* w, int revents);
+
     static void connectionReadCallback(struct ev_loop* loop, ev_io* w, int revents);
+
     static void connectionTimerCallback(struct ev_loop* loop, ev_timer* w, int revents);
+
     static void prepareCallback(struct ev_loop* loop, ev_prepare* w, int revents);
+
     static void pingCallback(struct ev_loop* loop, ev_timer* w, int revents);
 
     static void prepareShutdownConnection(ConnectionInstance* instance);
+
     static void shutdownConnection(ConnectionInstance* instance);
 
     static int bindAndListen();
+
     static int bindAndListenRTB();
+
     static void initTimer();
+
     static void shutdownTimer();
+
     static void initLua();
+
     static void shutdownLua();
+
     static void initAsyncLoop();
+
     static void shutdownAsyncLoop();
 
-    static FReturnCode runLuaEvent(ConnectionInstance* instance, string& event, string& payload);
-    static void runLuaRTB(string& event, string& payload);
+    static FReturnCode runLuaEvent(ConnectionInstance* instance, string &event, string &payload);
+
+    static void runLuaRTB(string &event, string &payload);
+
     static int luaOnError(lua_State* L1);
+
     static int luaError(lua_State* L1);
+
     static int luaPrint(lua_State* L1);
+
     static void luaTimeHook(lua_State* L1, lua_Debug* db);
+
     static double luaGetTime();
 
-    static FReturnCode processLogin(ConnectionInstance* instance, string& message, bool success);
+    static FReturnCode processLogin(ConnectionInstance* instance, string &message, bool success);
+
     static FReturnCode processHTTPReply(HTTPReply* reply);
 
     static struct ev_loop* server_loop;
     static ev_async* server_async;
     static ev_async* http_async;
+    static ev_async* close_async;
     static ev_timer* server_timer;
     static ev_io* server_listen;
     static ev_io* rtb_listen;

@@ -1,10 +1,4 @@
 
-#include <vector>
-#include "connection.hpp"
-#include "queue/readerwriterqueue.h"
-
-using std::vector;
-using moodycamel::ReaderWriterQueue;
 
 struct SendThreadState;
 class ConnectionInstance;
@@ -26,15 +20,14 @@ public:
 
     const int nextQueue() {
         int id = queueID++;
-        if (queueID >= (threadCount - 1))
+        if (queueID >= threadCount)
             queueID = 0;
         return id;
     }
 
 private:
-    vector<ReaderWriterQueue<ConnectionPtr>* > queues;
-    vector<SendThreadState*> threads;
-    vector<std::thread*> runningThreads;
+    SendThreadState** threads;
+    std::thread** runningThreads;
     int threadCount;
     int queueID;
 };

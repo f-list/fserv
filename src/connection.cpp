@@ -48,14 +48,15 @@ ConnectionInstance::ConnectionInstance()
         globalModerator(false),
         protocol(PROTOCOL_UNKNOWN),
         closed(false),
+        socketClosed(false),
         delayClose(false),
         status("online"),
         gender("None"),
         writeQueue(MAX_SEND_QUEUE_ITEMS),
         writePosition(0),
-        sendQueue(-1),
+        sendQueueID(-1),
         writeNotified(false),
-        writeEvent2(nullptr),
+        writeEvent(nullptr),
         fileDescriptor(-1),
         loop(nullptr),
         pingEvent(nullptr),
@@ -66,6 +67,10 @@ ConnectionInstance::ConnectionInstance()
 }
 
 ConnectionInstance::~ConnectionInstance() {
+    LOG(INFO) << "Destroying connection instance.";
+    if (writeEvent || readEvent || timerEvent) {
+        LOG(FATAL) << "[BUG] Deleting a connection with active event pointers.";
+    }
     if (!closed) {
         LOG(FATAL) << "[BUG] Deleting a connection not marked as closed.";
     }
@@ -88,11 +93,7 @@ bool ConnectionInstance::send(MessagePtr message) {
 
     writeQueue.try_emplace(message);
 
-    if (!writeNotified) {
-        Server::notifySend(this);
-        // TODO: Push an entry to some send notification queue here.
-        writeNotified = true;
-    }
+    Server::notifySend(this);
     return true;
 }
 
@@ -105,10 +106,7 @@ bool ConnectionInstance::sendRaw(string &message) {
 
     writeQueue.try_emplace(outMessage);
 
-    if (!writeNotified) {
-        Server::notifySend(this);
-        writeNotified = true;
-    }
+    Server::notifySend(this);
     return true;
 }
 

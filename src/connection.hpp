@@ -128,6 +128,7 @@ public:
     ProtocolVersion protocol;
     struct sockaddr_in clientAddress;
     atomic<bool> closed;
+    atomic<bool> socketClosed;
     bool delayClose;
 
     string statusMessage;
@@ -152,9 +153,9 @@ public:
     //Send
     messagelist_t writeQueue;
     size_t writePosition;
-    int sendQueue;
+    int sendQueueID;
     atomic<bool> writeNotified;
-    atomic<ev_io*> writeEvent2; //Investigate removal of atomic.
+    atomic<ev_io*> writeEvent; //Investigate removal of atomic.
     int fileDescriptor;
 
 
@@ -177,9 +178,12 @@ protected:
         if (__sync_sub_and_fetch(&p->refCount, 1) <= 0) {
             delete p;
         }
+
     }
 
-    friend inline void intrusive_ptr_add_ref(ConnectionInstance* p) { __sync_fetch_and_add(&p->refCount, 1); }
+    friend inline void intrusive_ptr_add_ref(ConnectionInstance* p) {
+        __sync_fetch_and_add(&p->refCount, 1);
+    }
 };
 
 namespace std {

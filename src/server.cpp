@@ -60,6 +60,7 @@
 struct ev_loop* Server::server_loop = nullptr;
 ev_async* Server::server_async = nullptr;
 ev_async* Server::http_async = nullptr;
+ev_async* Server::close_async = nullptr;
 ev_timer* Server::server_timer = nullptr;
 ev_io* Server::server_listen = nullptr;
 ev_io* Server::rtb_listen = nullptr;
@@ -356,7 +357,7 @@ void Server::listenCallback(struct ev_loop* loop, ev_io* w, int revents) {
         newcon->readEvent = read;
 
         newcon->fileDescriptor = newfd;
-        newcon->sendQueue = sendThreads->nextQueue();
+        newcon->sendQueueID = sendThreads->nextQueue();
     }
 }
 
@@ -540,6 +541,9 @@ void Server::prepareShutdownConnection(ConnectionInstance* instance) {
             delete req;
     }
     instance->closed = true;
+    if (!instance->socketClosed) {
+        sendThreads->notifyClose(instance);
+    }
     ev_io_stop(server_loop, instance->readEvent);
     ev_timer_stop(server_loop, instance->pingEvent);
     ev_timer_stop(server_loop, instance->timerEvent);
@@ -559,9 +563,6 @@ void Server::shutdownConnection(ConnectionInstance* instance) {
     ev_io_stop(server_loop, instance->readEvent);
     delete instance->readEvent;
     instance->readEvent = nullptr;
-
-    delete instance->writeEvent2;
-    instance->writeEvent2 = nullptr;
 }
 
 void Server::runTesting() {
@@ -660,6 +661,38 @@ void Server::sendWakeup() {
 void Server::sendHTTPWakeup() {
     if (server_loop && http_async)
         ev_async_send(server_loop, http_async);
+}
+
+static queue<ConnectionPtr> closeQueue;
+static pthread_mutex_t closeMutex = PTHREAD_MUTEX_INITIALIZER;
+
+void Server::sendCloseWakeup(ConnectionInstance* instance) {
+    MUT_LOCK(closeMutex);
+    ConnectionPtr con(instance);
+    closeQueue.push(con);
+    MUT_UNLOCK(closeMutex);
+    if (server_loop && close_async)
+        ev_async_send(server_loop, close_async);
+}
+
+
+void Server::processClosedWakeup(struct ev_loop* loop, ev_async* w, int revents) {
+    auto getQueuedItem = []() {
+        ConnectionPtr con(nullptr);
+        MUT_LOCK(closeMutex);
+        if (closeQueue.size() > 0) {
+            con = closeQueue.front();
+            closeQueue.pop();
+        }
+        MUT_UNLOCK(closeMutex);
+        return con;
+    };
+
+    auto con = getQueuedItem();
+    while (con) {
+        prepareShutdownConnection(con.get());
+        con = getQueuedItem();
+    }
 }
 
 int Server::bindAndListen() {
@@ -1219,6 +1252,9 @@ void Server::initAsyncLoop() {
     http_async = new ev_async;
     ev_async_init(http_async, Server::processHTTPWakeup);
     ev_async_start(server_loop, http_async);
+    close_async = new ev_async;
+    ev_async_init(close_async, Server::processClosedWakeup);
+    ev_async_start(server_loop, close_async);
 }
 
 void Server::shutdownAsyncLoop() {
