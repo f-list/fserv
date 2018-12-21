@@ -91,7 +91,7 @@ bool ConnectionInstance::send(MessagePtr message) {
     if (closed)
         return false;
 
-    writeQueue.try_emplace(message);
+    writeQueue.try_emplace(message.get());
 
     Server::notifySend(this);
     return true;
@@ -101,7 +101,7 @@ bool ConnectionInstance::sendRaw(string &message) {
     if (closed)
         return false;
 
-    MessagePtr outMessage(new MessageBuffer());
+    MessageBuffer* outMessage = new MessageBuffer();
     outMessage->set(message.data(), message.length());
 
     writeQueue.try_emplace(outMessage);
