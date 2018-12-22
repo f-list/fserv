@@ -1,4 +1,4 @@
-This license applies to all the code in this repository except that written by third
+This license applies to all the code in this directory except that written by third
 parties, namely the files in benchmarks/ext, which have their own licenses, and Jeff
 Preshing's semaphore implementation (used in the blocking queue) which has a zlib
 license (embedded in atomicops.h).

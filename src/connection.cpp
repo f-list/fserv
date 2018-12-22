@@ -67,11 +67,7 @@ ConnectionInstance::ConnectionInstance()
 }
 
 ConnectionInstance::~ConnectionInstance() {
-    LOG(INFO) << "Destroying connection instance.";
-    if (writeEvent || readEvent || timerEvent) {
-        LOG(FATAL) << "[BUG] Deleting a connection with active event pointers.";
-    }
-    if (!closed) {
+    if (!closed || !socketClosed) {
         LOG(FATAL) << "[BUG] Deleting a connection not marked as closed.";
     }
     if (debugL) {

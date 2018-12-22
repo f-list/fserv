@@ -34,8 +34,6 @@
 using std::string;
 using boost::intrusive_ptr;
 
-class StreamedList;
-
 class MessageBuffer;
 typedef intrusive_ptr<MessageBuffer> MessagePtr;
 

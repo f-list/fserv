@@ -22,12 +22,10 @@ typedef struct SendThreadState {
 } SendThreadState;
 
 static void addActive(ConnectionInstance* con) {
-    LOG(INFO) << "Adding connection " << con << " to active set.";
     currentState->activeMembers.insert(con);
 }
 
 static void removeActive(ConnectionInstance* con) {
-    LOG(INFO) << "Removing connection " << con << " from active set.";
     currentState->activeMembers.erase(con);
 }
 
@@ -48,7 +46,7 @@ static void writeCallback(struct ev_loop* loop, ev_io* w, int wevents) {
     auto con = static_cast<ConnectionInstance*> (w->data);
 
     if (con->closed) {
-        LOG(INFO) << "Writing callback on closed con " << con;
+        DLOG(INFO) << "Writing callback on closed con " << con;
         return;
     }
 
