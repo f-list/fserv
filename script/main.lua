@@ -33,6 +33,7 @@
 event = {}
 rtb = {}
 httpcb = {}
+shorteners = {}
 
 httpcb.handle_report = function(con, status, resp, extras)
     if status ~= 200 then
@@ -54,7 +55,6 @@ function broadcastChannelOps(event, message, channel)
 end
 
 function hasShortener(input)
-    local shorteners = {}
     for _, v in ipairs(shorteners) do
         if string.find(input, v, 1, true) then
             return true
@@ -1991,6 +1991,8 @@ end
 		that is not entirely disposable.
 --]]
 function chat_init()
+    shorteners = s.getConfigStringList("blacklist_phrases")
+
     const.MSG_MAX = s.getConfigDouble("msg_max")
     const.PRI_MAX = s.getConfigDouble("priv_max")
     const.LRP_MAX = s.getConfigDouble("lfrp_max")

@@ -137,6 +137,12 @@ function RSTTest()
     end)
 end
 
+function BlacklistTest()
+    print("Ensuring that url shortener detection and blacklisting works.")
+    testing.assert(true, hasShortener("I think newts are not cute."))
+    testing.assert(false, hasShortener("what is this?"))
+end
+
 tests = {
     CBUTest,
     CKUTest,
@@ -145,7 +151,8 @@ tests = {
     CORTest,
     CSOTest,
     RMOTest,
-    RSTTest
+    RSTTest,
+    BlacklistTest
 }
 
 function runTests()
