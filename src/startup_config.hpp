@@ -27,9 +27,11 @@
 #define STARTUP_CONFIG_H
 
 #include <string>
+#include <vector>
 #include <tr1/unordered_map>
 
 using std::string;
+using std::vector;
 using std::tr1::unordered_map;
 
 struct lua_State;
@@ -45,6 +47,7 @@ public:
     static bool getBool(const char* name);
     static bool getDouble(const char* name, double& value);
     static double getDouble(const char* name);
+    static bool getStringList(const char* name, vector<string>& value);
 
 private:
 
@@ -55,6 +58,7 @@ private:
     static unordered_map<string, string> stringMap;
     static unordered_map<string, bool> boolMap;
     static unordered_map<string, double> doubleMap;
+    static unordered_map<string, vector<string> > stringListMap;
 
 };
 

@@ -34,6 +34,15 @@
 unordered_map<string, string> StartupConfig::stringMap;
 unordered_map<string, bool> StartupConfig::boolMap;
 unordered_map<string, double> StartupConfig::doubleMap;
+unordered_map<string, vector<string> > StartupConfig::stringListMap;
+
+static void processStringList(lua_State* L, vector<string>& target) {
+    lua_pushnil(L);
+    while (lua_next(L, -2)) {
+        target.push_back(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+}
 
 void StartupConfig::init() {
     DLOG(INFO) << "Loading startup config.";
@@ -52,26 +61,27 @@ void StartupConfig::init() {
         }
 
         int type = lua_type(L, -1);
+        const char* key = lua_tostring(L, -2);
         switch (type) {
-            case LUA_TSTRING:
-            {
+            case LUA_TSTRING: {
                 const char* value = lua_tostring(L, -1);
-                const char* key = lua_tostring(L, -2);
                 stringMap[key] = value;
                 break;
             }
-            case LUA_TBOOLEAN:
-            {
+            case LUA_TBOOLEAN: {
                 bool value = lua_toboolean(L, -1);
-                const char* key = lua_tostring(L, -2);
                 boolMap[key] = value;
                 break;
             }
-            case LUA_TNUMBER:
-            {
+            case LUA_TNUMBER: {
                 double value = lua_tonumber(L, -1);
-                const char* key = lua_tostring(L, -2);
                 doubleMap[key] = value;
+                break;
+            }
+            case LUA_TTABLE: {
+                vector<string> value;
+                processStringList(L, value);
+                stringListMap[key] = value;
                 break;
             }
             default:
@@ -84,21 +94,20 @@ void StartupConfig::init() {
     L = 0;
 }
 
-bool StartupConfig::getBool(const char* name, bool& value) {
-    bool found = false;
-    string key = name;
+bool StartupConfig::getBool(const char* name, bool &value) {
+    string key(name);
     if (boolMap.count(key) != 0) {
         value = boolMap[key];
-        found = true;
+        return true;
     } else {
         LOG(DFATAL) << "Could not find boolean config value '" << key << "'";
     }
-    return found;
+    return false;
 }
 
 bool StartupConfig::getBool(const char* name) {
     bool ret = false;
-    string key = name;
+    string key(name);
     if (boolMap.count(key) != 0) {
         ret = boolMap[key];
     } else {
@@ -107,21 +116,20 @@ bool StartupConfig::getBool(const char* name) {
     return ret;
 }
 
-bool StartupConfig::getDouble(const char* name, double& value) {
-    bool found = false;
-    string key = name;
+bool StartupConfig::getDouble(const char* name, double &value) {
+    string key(name);
     if (doubleMap.count(key) != 0) {
         value = doubleMap[key];
-        found = true;
+        return true;
     } else {
         LOG(DFATAL) << "Could not find double config value '" << key << "'";
     }
-    return found;
+    return false;
 }
 
 double StartupConfig::getDouble(const char* name) {
     double ret = 0;
-    string key = name;
+    string key(name);
     if (doubleMap.count(key) != 0) {
         ret = doubleMap[key];
     } else {
@@ -130,25 +138,35 @@ double StartupConfig::getDouble(const char* name) {
     return ret;
 }
 
-bool StartupConfig::getString(const char* name, string& value) {
-    bool found = false;
-    string key = name;
+bool StartupConfig::getString(const char* name, string &value) {
+    string key(name);
     if (stringMap.count(key) != 0) {
         value = stringMap[key];
-        found = true;
+        return true;
     } else {
         LOG(DFATAL) << "Could not find string config value '" << key << "'";
     }
-    return found;
+    return false;
 }
 
 string StartupConfig::getString(const char* name) {
     string ret;
-    string key = name;
+    string key(name);
     if (stringMap.count(key) != 0) {
         ret = stringMap[key];
     } else {
         LOG(DFATAL) << "Could not find string config value '" << key << "', returning empty string";
     }
     return ret;
+}
+
+bool StartupConfig::getStringList(const char* name, vector<string> &value) {
+    string key(name);
+    if (stringListMap.count(key) != 0) {
+        value = stringListMap[key];
+        return true;
+    } else {
+        LOG(DFATAL) << "Could not find string list config value '" << key << "', returning empty list'";
+    }
+    return false;
 }
