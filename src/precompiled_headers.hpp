@@ -28,11 +28,11 @@
 
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
-#include <map>
 #include <string>
 #include <list>
 #include <queue>
 #include <deque>
+#include <vector>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/functional/hash.hpp>
 #include <stdlib.h>

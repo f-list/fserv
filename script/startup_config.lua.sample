@@ -14,6 +14,9 @@ saveinterval=300
 websocketorigin="http://www.f-list.net"
 websockethost="www.f-list.net"
 
+-- Trusted load balancer hosts
+load_balancers={"127.0.0.1", "10.20.1.1"}
+
 -- Logging
 log_start=false
 log_socket_path="/tmp/fserv_log.sock"

@@ -64,6 +64,7 @@ ev_io* Server::server_listen = nullptr;
 ev_io* Server::rtb_listen = nullptr;
 ev_prepare* Server::server_prepare = nullptr;
 ChatLogThread* Server::chatLogger = nullptr;
+std::tr1::unordered_set<uint32_t> Server::validLBs;
 
 lua_State* Server::sL = nullptr;
 ev_tstamp Server::luaTimer = 0;
@@ -280,6 +281,24 @@ void Server::connectionTimerCallback(struct ev_loop* loop, ev_timer* w, int reve
     }
 }
 
+bool Server::parseLBList() {
+    bool allValid = true;
+    validLBs.clear();
+    std::vector<std::string> lbs;
+    StartupConfig::getStringList("load_balancers", lbs);
+    struct in_addr address{};
+    for(auto& lb : lbs) {
+        auto valid = inet_pton(AF_INET, lb.c_str(), &address);
+        if(valid != 1) {
+            LOG(DFATAL) << "Invalid load balancer address provided: " << lb;
+            allValid = false;
+            continue;
+        }
+        validLBs.insert(address.s_addr);
+    }
+    return allValid;
+}
+
 void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents) {
     ConnectionPtr con(static_cast<ConnectionInstance*> (w->data));
 
@@ -326,8 +345,8 @@ void Server::handshakeCallback(struct ev_loop* loop, ev_io* w, int revents) {
                     return;
 
             }
-            // Only localhost is allowed to proxy for other clients.
-            if (ntohl(con->clientAddress.sin_addr.s_addr) == 0x7f000001) {
+            if(validLBs.count(con->clientAddress.sin_addr.s_addr) > 0) {
+                // Copy real IP into client address struct
                 if (inet_pton(AF_INET, ip.c_str(), &con->clientAddress.sin_addr) != 1) {
                     LOG(WARNING) << "Could not determine the endpoint address from the TLS proxy.";
                     prepareShutdownConnection(con.get());
@@ -640,6 +659,7 @@ void Server::run() {
     //From TCMalloc this is (1000.0 / rate) * released_pages(minimum of one)
     MallocExtension::instance()->SetMemoryReleaseRate(100);
 
+    parseLBList();
     ServerState::loadBans();
     ServerState::loadOps();
     ServerState::loadChannels();
