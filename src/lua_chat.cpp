@@ -1063,7 +1063,7 @@ void LuaChat::j2lParseItem(lua_State* L, const char* key, json_t* json, int inde
             size_t len = json_array_size(json);
             for (size_t i = 0; i < len; ++i) {
                 json_t* item = json_array_get(json, i);
-                j2lParseItem(L, 0, item, i);
+                j2lParseItem(L, 0, item, i+1);
             }
             if (index == -1) {
                 string newname = "array_";
