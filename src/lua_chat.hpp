@@ -48,6 +48,7 @@ public:
     //static int setConfigNumber(lua_State* L);
     static int getConfigString(lua_State* L);
     //static int setConfigString(lua_State* L);
+    static int getConfigStringList(lua_State* L);
 
     static int getTime(lua_State* L);
     static int getUserCount(lua_State* L);

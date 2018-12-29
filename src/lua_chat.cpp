@@ -51,6 +51,7 @@ static const luaL_Reg luachat_funcs[] = {
         {"getConfigBool",         LuaChat::getConfigBool},
         {"getConfigDouble",       LuaChat::getConfigDouble},
         {"getConfigString",       LuaChat::getConfigString},
+        {"getConfigStringList",   LuaChat::getConfigStringList},
         {"getTime",               LuaChat::getTime},
         {"getUserCount",          LuaChat::getUserCount},
         {"sendUserList",          LuaChat::sendUserList},
@@ -308,6 +309,31 @@ int LuaChat::getConfigString(lua_State* L) {
     lua_pop(L, 1);
 
     lua_pushstring(L, StartupConfig::getString(key).c_str());
+    return 1;
+}
+
+/**
+ * Returns the value of the config key, or nil if not found.
+ * @param string key
+ * @returns table[string]/nil value.
+ */
+int LuaChat::getConfigStringList(lua_State* L) {
+    luaL_checkany(L, 1);
+    const char* key = luaL_checkstring(L, 1);
+    lua_pop(L, 1);
+
+    std::vector<string> values;
+    bool found = StartupConfig::getStringList(key, values);
+    if(!found) {
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_newtable(L);
+    size_t len = values.size();
+    for(size_t i = 0; i < len; ++i) {
+        lua_pushstring(L, values[i].c_str());
+        lua_rawseti(L, -2, i+1);
+    }
     return 1;
 }
 
@@ -1063,7 +1089,7 @@ void LuaChat::j2lParseItem(lua_State* L, const char* key, json_t* json, int inde
             size_t len = json_array_size(json);
             for (size_t i = 0; i < len; ++i) {
                 json_t* item = json_array_get(json, i);
-                j2lParseItem(L, 0, item, i);
+                j2lParseItem(L, 0, item, i+1);
             }
             if (index == -1) {
                 string newname = "array_";
