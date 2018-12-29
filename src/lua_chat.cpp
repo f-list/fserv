@@ -831,6 +831,7 @@ int LuaChat::reload(lua_State* L) {
     ServerState::loadBans();
     ServerState::loadOps();
     StartupConfig::init();
+    Server::parseLBList();
     return 0;
 }
 

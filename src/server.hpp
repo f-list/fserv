@@ -37,11 +37,13 @@
 #include "ferror.hpp"
 
 #include <string>
+#include <tr1/unordered_set>
 
 class ConnectionInstance;
 class HTTPReply;
 
 using std::string;
+using std::tr1::unordered_set;
 
 class Server {
 public:
@@ -54,6 +56,7 @@ public:
     static FReturnCode reloadLuaState(string& output);
     static void startShutdown();
     static double getEventTime();
+    static bool parseLBList();
 
     static unsigned long long getAcceptedConnections() {
         return statAcceptedConnections;
@@ -127,6 +130,8 @@ private:
     static bool luaCanTimeout;
 
     static ChatLogThread* chatLogger;
+
+    static unordered_set<uint32_t> validLBs;
 
     // Stats
     static unsigned long long statAcceptedConnections;
