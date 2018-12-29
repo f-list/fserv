@@ -66,3 +66,6 @@ profile_flood=10
 find_flood=10
 staffcall_flood=120
 ignore_flood=30
+
+-- Blacklist phrases
+blacklist_phrases={"newts are not cute"}
