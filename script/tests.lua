@@ -2,6 +2,7 @@ role_names = { "owner", "admin", "global", "super", "cop", "normal" }
 
 OK = const.FERR_OK
 NOT_OP = const.FERR_NOT_OP
+DOP = const.FERR_DENIED_ON_OP
 
 cons = {}
 
@@ -43,12 +44,29 @@ function channelTearDown()
     testing.killChannel("test")
 end
 
+DOP_ALLOWED = { { "public", "normal", OK }, { "private", "normal", OK }, { "public", "owner", DOP },
+                { "public", "admin", DOP }, { "public", "global", DOP }, { "public", "cop", DOP },
+                { "public", "super", DOP }, { "private", "owner", DOP }, { "private", "global", DOP },
+                { "private", "admin", OK }, { "private", "cop", OK } }
+DOPO_ALLOWED = { { "public", "normal", OK }, { "private", "normal", OK }, { "public", "owner", DOP },
+                 { "public", "admin", DOP }, { "public", "global", DOP }, { "public", "cop", DOP },
+                 { "public", "super", DOP }, { "private", "owner", OK }, { "private", "global", OK },
+                 { "private", "admin", OK }, { "private", "cop", OK } }
 CALL_ALLOWED = { { "public", "normal", OK }, { "private", "normal", OK } }
 PUBLIC_ALLOWED = { { "public", "normal", OK }, { "private", "normal", NOT_OP } }
 NONE_ALLOWED = { { "public", "normal", NOT_OP }, { "private", "normal", NOT_OP } }
 
 PRIV_CALL_ALLOWED = { { "private", "normal", OK } }
 PRIV_NONE_ALLOWED = { { "private", "normal", NOT_OP } }
+
+DopMatrix = {
+    owner = DOP_ALLOWED,
+    admin = DOPO_ALLOWED,
+    global = DOPO_ALLOWED,
+    super = PUBLIC_ALLOWED,
+    cop = DOP_ALLOWED,
+    normal = NONE_ALLOWED
+}
 
 NormalMatrix = {
     owner = CALL_ALLOWED,
@@ -81,7 +99,7 @@ function ChannelTest(callEvent, matrix, paramsFunc)
     for role, testParams in pairs(matrix) do
         for _, params in ipairs(testParams) do
             channelSetUp()
-            print("Running " .. callEvent .. " event with role " .. role .. " on channel " .. params[1])
+            print("[" .. callEvent .. "] R[" .. role .. "] C[" .. params[1] .. "] T[" .. params[2] .. "] E[" .. params[3] .. "]")
             local ret = event[callEvent](cons[role], paramsFunc(params[1], params[2]))
             testing.assert(ret, params[3])
             channelTearDown()
@@ -90,19 +108,19 @@ function ChannelTest(callEvent, matrix, paramsFunc)
 end
 
 function CBUTest()
-    ChannelTest("CBU", NormalMatrix, function(channel, target)
+    ChannelTest("CBU", DopMatrix, function(channel, target)
         return { channel = channel, character = target }
     end)
 end
 
 function CKUTest()
-    ChannelTest("CKU", NormalMatrix, function(channel, target)
+    ChannelTest("CKU", DopMatrix, function(channel, target)
         return { channel = channel, character = target }
     end)
 end
 
 function CTUTest()
-    ChannelTest("CTU", NormalMatrix, function(channel, target)
+    ChannelTest("CTU", DopMatrix, function(channel, target)
         return { channel = channel, character = target, length = 600 }
     end)
 end

@@ -358,12 +358,17 @@ function(con, args)
 
     local targetonline, char = u.getConnection(string.lower(args.character))
     local chantype = c.getType(chan)
-    if chantype == "public" then
-        -- V: 2018-07-25
-        if targetonline == true and (c.isMod(chan, char) == true or
-                u.hasAnyRole(char, { "admin", "global", "super-cop", "cop" })) then
+
+    if targetonline == true then
+        -- V: 2018-12-26
+        if chantype == "public" and (c.isMod(chan, char) == true or u.hasAnyRole(char, { "admin", "global", "super-cop", "cop" })) then
+            return const.FERR_DENIED_ON_OP
+        elseif staff_override == false and (c.isOwner(chan, char) == true or u.hasRole(char, "global")) then
             return const.FERR_DENIED_ON_OP
         end
+    end
+
+    if chantype == "public" then
         s.logAction(con, "CBU", args)
     elseif chantype == "private" then
         c.removeInvite(chan, string.lower(args.character))
@@ -518,8 +523,10 @@ function(con, args)
         return const.FERR_USER_NOT_FOUND
     end
 
+    local staff_override = public_staff_override(con, chan)
+
     -- V: 2018-07-25
-    if c.isMod(chan, con) ~= true and public_staff_override(con, chan) ~= true then
+    if c.isMod(chan, con) ~= true and staff_override ~= true then
         return const.FERR_NOT_OP
     end
 
@@ -527,12 +534,16 @@ function(con, args)
         return const.FERR_USER_NOT_IN_CHANNEL
     end
 
+
     local chantype = c.getType(chan)
+    -- V: 2018-12-26
+    if chantype == "public" and (c.isMod(chan, char) == true or u.hasAnyRole(char, { "admin", "global", "super-cop", "cop" })) then
+        return const.FERR_DENIED_ON_OP
+    elseif staff_override == false and (c.isOwner(chan, char) == true or u.hasRole(char, "global")) then
+        return const.FERR_DENIED_ON_OP
+    end
+
     if chantype == "public" then
-        -- V: 2018-07-25
-        if c.isMod(chan, char) == true or u.hasAnyRole(char, { "admin", "global", "super-cop", "cop" }) then
-            return const.FERR_DENIED_ON_OP
-        end
         s.logAction(con, "CKU", args)
     elseif chantype == "private" then
         c.removeInvite(chan, string.lower(args.character))
@@ -766,17 +777,21 @@ function(con, args)
 
     local targetonline, char = u.getConnection(string.lower(args.character))
     local chantype = c.getType(chan)
-    if chantype == "public" then
-        -- V: 2018-07-25
-        if targetonline == true and (c.isMod(chan, char) == true or u.hasAnyRole(char, { "admin", "global", "super-cop", "cop" })) then
+    
+    if targetonline == true then
+        -- V: 2018-12-26
+        if chantype == "public" and (c.isMod(chan, char) == true or u.hasAnyRole(char, { "admin", "global", "super-cop", "cop" })) then
+            return const.FERR_DENIED_ON_OP
+        elseif staff_override == false and (c.isOwner(chan, char) == true or u.hasRole(char, "global")) then
             return const.FERR_DENIED_ON_OP
         end
+    end
+
+    if chantype == "public" then
         s.logAction(con, "CTU", args)
     elseif chantype == "private" then
         c.removeInvite(chan, string.lower(args.character))
     end
-
-
 
     if targetonline == false then
         char = args.character
