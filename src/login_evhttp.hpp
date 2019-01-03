@@ -72,7 +72,7 @@ private:
     static queue<LoginRequest*> requestQueue;
     static unsigned int maxLoginSlots;
     static std::atomic<bool> doRun;
-    static struct ev_loop* login_loop;
-    static ev_async* login_async;
+    static std::atomic<struct ev_loop*> login_loop;
+    static std::atomic<ev_async*> login_async;
 };
 #endif //LOGIN_EV_HTTP_H
