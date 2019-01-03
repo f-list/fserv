@@ -33,15 +33,17 @@ using std::stringstream;
 
 #define HTTP_MUTEX_TIMEOUT 250000000
 
+#define LMOA(x) x.load(std::memory_order_acquire)
+
 pthread_mutex_t HTTPClient::replyMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t HTTPClient::requestMutex = PTHREAD_MUTEX_INITIALIZER;
 queue<HTTPRequest*> HTTPClient::requestQueue;
 queue<HTTPReply*> HTTPClient::replyQueue;
-struct ev_loop* HTTPClient::loop = nullptr;
+std::atomic<struct ev_loop*> HTTPClient::loop(nullptr);
 ev_timer* HTTPClient::timer = nullptr;
-ev_async* HTTPClient::async = nullptr;
+std::atomic<ev_async*> HTTPClient::async(nullptr);
 CURLM* HTTPClient::multiHandle = nullptr;
-CURL* HTTPClient::escapeHandle = nullptr;
+std::atomic<CURL*> HTTPClient::escapeHandle(nullptr);
 std::atomic<bool> HTTPClient::doRun(true);
 
 string &HTTPRequest::postString() {
@@ -74,8 +76,7 @@ int HTTPClient::curlSocketCallback(CURL* easy, curl_socket_t socket, int what, H
         if (request == nullptr) {
             LOG(ERROR) << "No request assigned to curl socket.";
             return 0;
-        }
-        if (request) {
+        } else {
             DLOG(INFO) << "Destroying IO on request.";
             request->stopIO();
         }
@@ -85,9 +86,9 @@ int HTTPClient::curlSocketCallback(CURL* easy, curl_socket_t socket, int what, H
             curl_easy_getinfo(easy, CURLINFO_PRIVATE, &request);
             ev_io* io = new ev_io;
             io->data = request;
-            request->setIO(loop, io);
+            request->setIO(LMOA(loop), io);
             ev_io_init(io, HTTPClient::readwriteCallback, socket, ev_want);
-            ev_io_start(loop, io);
+            ev_io_start(LMOA(loop), io);
             curl_multi_assign(multiHandle, socket, request);
         } else {
             curl_multi_assign(multiHandle, socket, request);
@@ -159,13 +160,13 @@ void HTTPClient::timeoutCallback(struct ev_loop* loop, ev_timer* w, int events) 
 
 int HTTPClient::curlTimerCallback(CURLM* multi, long timeoutMS, void* userp) {
     DLOG(INFO) << "CURL timer callback with timeout of: " << timeoutMS << "ms.";
-    ev_timer_stop(loop, timer);
+    ev_timer_stop(LMOA(loop), timer);
     if (timeoutMS > 0) {
         double timeout = timeoutMS / 1000.0;
         ev_timer_set(timer, timeout, 0.);
-        ev_timer_start(loop, timer);
+        ev_timer_start(LMOA(loop), timer);
     } else {
-        timeoutCallback(loop, timer, 0);
+        timeoutCallback(LMOA(loop), timer, 0);
     }
     return 0;
 }
@@ -223,7 +224,7 @@ size_t HTTPClient::curlWriteCallback(void* data, size_t size, size_t count, HTTP
 
 
 void HTTPClient::init() {
-    escapeHandle = curl_easy_init();
+    escapeHandle.store(curl_easy_init(), std::memory_order_release);
     multiHandle = curl_multi_init();
     curl_multi_setopt(multiHandle, CURLMOPT_SOCKETFUNCTION, HTTPClient::curlSocketCallback);
     curl_multi_setopt(multiHandle, CURLMOPT_TIMERFUNCTION, HTTPClient::curlTimerCallback);
@@ -232,24 +233,30 @@ void HTTPClient::init() {
     curl_multi_setopt(multiHandle, CURLMOPT_PIPELINING, 1L);
     curl_multi_setopt(multiHandle, CURLMOPT_MAX_PIPELINE_LENGTH, 2L);
 
-    loop = ev_loop_new(EVFLAG_AUTO);
+    auto local_loop = ev_loop_new(EVFLAG_AUTO);
+    auto local_async = new ev_async;
     timer = new ev_timer;
     ev_timer_init(timer, HTTPClient::timeoutCallback, 0., 0.);
-    async = new ev_async;
-    ev_async_init(async, HTTPClient::processQueue);
-    ev_async_start(loop, async);
+    ev_async_init(local_async, HTTPClient::processQueue);
+    ev_async_start(local_loop, local_async);
+    loop.store(local_loop, std::memory_order_release);
+    async.store(local_async, std::memory_order_release);
 }
 
 void* HTTPClient::runThread(void* param) {
     init();
 
-    ev_loop(loop, 0);
+    ev_loop(LMOA(loop), 0);
 
-    ev_timer_stop(loop, timer);
+    auto local_loop = LMOA(loop);
+    auto local_async = LMOA(async);
+
+    ev_timer_stop(local_loop, timer);
     delete timer;
     timer = 0;
-    ev_loop_destroy(loop);
-    loop = 0;
+    ev_async_stop(local_loop, local_async);
+    ev_loop_destroy(local_loop);
+    loop.store(nullptr, std::memory_order_release);
 
     // This is almost certain to leak memory.
     curl_multi_cleanup(multiHandle);
@@ -258,8 +265,8 @@ void* HTTPClient::runThread(void* param) {
 }
 
 void HTTPClient::sendWakeup() {
-    if (doRun && loop) {
-        ev_async_send(loop, async);
+    if (doRun && LMOA(loop)) {
+        ev_async_send(LMOA(loop), LMOA(async));
     }
 }
 

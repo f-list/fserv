@@ -42,8 +42,8 @@ queue<LoginRequest*> LoginEvHTTPClient::requestQueue;
 queue<LoginReply*> LoginEvHTTPClient::replyQueue;
 unsigned int LoginEvHTTPClient::maxLoginSlots = 30;
 std::atomic<bool> LoginEvHTTPClient::doRun(true);
-struct ev_loop* LoginEvHTTPClient::login_loop = 0;
-ev_async* LoginEvHTTPClient::login_async = 0;
+std::atomic<struct ev_loop*> LoginEvHTTPClient::login_loop(nullptr);
+std::atomic<ev_async*> LoginEvHTTPClient::login_async(nullptr);
 
 void LoginEvHTTPClient::responseCallback(HTTPReply* reply) {
     LoginReply* loginReply = new LoginReply();
@@ -73,7 +73,7 @@ void LoginEvHTTPClient::processLogin(LoginRequest* request) {
 
 void LoginEvHTTPClient::processQueue(struct ev_loop* loop, ev_async* w, int revents) {
     if (!doRun) {
-        ev_unloop(login_loop, EVUNLOOP_ONE);
+        ev_unloop(login_loop.load(std::memory_order_acquire), EVUNLOOP_ONE);
         return;
     }
 
@@ -88,28 +88,28 @@ void LoginEvHTTPClient::processQueue(struct ev_loop* loop, ev_async* w, int reve
 void* LoginEvHTTPClient::runThread(void* param) {
     DLOG(INFO) << "Loginservice: Starting";
 
-    login_loop = ev_loop_new(EVFLAG_AUTO);
-
-    login_async = new ev_async;
-    ev_async_init(login_async, LoginEvHTTPClient::processQueue);
-    ev_async_start(login_loop, login_async);
-    __sync_synchronize();
+    auto loop = ev_loop_new(EVFLAG_AUTO);
+    auto async = new ev_async;
+    ev_async_init(async, LoginEvHTTPClient::processQueue);
+    ev_async_start(loop, async);
+    login_async.store(async, std::memory_order_release);
+    login_loop.store(loop, std::memory_order_release);
 
     ev_loop(login_loop, 0);
 
     //Cleanup
-    ev_async_stop(login_loop, login_async);
-    delete login_async;
-    login_async = 0;
-    
-    ev_loop_destroy(login_loop);
-    login_loop = 0;
+    login_async.store(nullptr, std::memory_order_release);
+    delete async;
+    ev_async_stop(loop, async);
+
+    login_loop.store(nullptr, std::memory_order_release);
+    ev_loop_destroy(loop);
     DLOG(INFO) << "Loginservice: Ending.";
     pthread_exit(NULL);
 }
 
 void LoginEvHTTPClient::sendWakeup() {
-    if (login_loop && login_async) {
+    if (login_loop.load(std::memory_order_acquire) && login_async.load(std::memory_order_acquire)) {
         //DLOG(INFO) << "Sending a wakeup to the login thread.";
         ev_async_send(login_loop, login_async);
     }

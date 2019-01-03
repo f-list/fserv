@@ -254,14 +254,14 @@ public:
 
     static void stopThread() {
         doRun = false;
-        ev_async_send(loop, async);
+        ev_async_send(loop.load(std::memory_order_acquire), async.load(std::memory_order_acquire));
         LOG(INFO) << "Stopping HTTP thread.";
     }
 
     static void sendWakeup();
 
     static bool escapeSegment(string &input) {
-        const char* result = curl_easy_escape(escapeHandle, input.c_str(), input.length());
+        const char* result = curl_easy_escape(escapeHandle.load(std::memory_order_acquire), input.c_str(), input.length());
         if (result) {
             input.assign(result);
             curl_free((void*) result);
@@ -302,10 +302,10 @@ private:
     static pthread_mutex_t replyMutex;
 
     static CURLM* multiHandle;
-    static CURL* escapeHandle;
-    static struct ev_loop* loop;
+    static std::atomic<CURL*> escapeHandle;
+    static std::atomic<struct ev_loop*> loop;
     static ev_timer* timer;
-    static ev_async* async;
+    static std::atomic<ev_async*> async;
     static std::atomic<bool> doRun;
 
 };
