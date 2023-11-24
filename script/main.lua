@@ -1789,7 +1789,7 @@ function(con, args)
 
     local isadmin = false
     -- V: 2018-07-25
-    if args.account.admin == "1" or lname == "kira" then
+    if args.account.admin == "1" then
         u.setAdmin(con, true)
         isadmin = true
     end
