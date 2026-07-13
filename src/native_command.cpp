@@ -288,11 +288,15 @@ FReturnCode NativeCommand::SearchCommand(intrusive_ptr< ConnectionInstance >& co
     if (!rootnode)
         return FERR_BAD_SYNTAX;
     json_t* kinksnode = json_object_get(rootnode, "kinks");
-    if (!json_is_array(kinksnode))
+    if (!json_is_array(kinksnode)) {
+        json_decref(rootnode);
         return FERR_BAD_SYNTAX;
+    }
 
-    if (json_array_size(kinksnode) > 5)
+    if (json_array_size(kinksnode) > 5) {
+        json_decref(rootnode);
         return FERR_TOO_MANY_SEARCH_TERMS;
+    }
 
     json_t* gendersnode = json_object_get(rootnode, "genders");
     if (json_is_array(gendersnode))
@@ -322,10 +326,13 @@ FReturnCode NativeCommand::SearchCommand(intrusive_ptr< ConnectionInstance >& co
         SearchFilterListF(kinksnode, tosearch);
 
     int num_found = tosearch.size();
-    if (num_found == 0)
+    if (num_found == 0) {
+        json_decref(rootnode);
         return FERR_NO_SEARCH_RESULTS;
-    else if (num_found > 350)
+    } else if (num_found > 350) {
+        json_decref(rootnode);
         return FERR_TOO_MANY_SEARCH_RESULTS;
+    }
 
     json_t* newroot = json_object();
     json_t* chararray = json_array();
@@ -335,7 +342,7 @@ FReturnCode NativeCommand::SearchCommand(intrusive_ptr< ConnectionInstance >& co
                 );
     }
     json_object_set_new_nocheck(newroot, "characters", chararray);
-    json_object_set_new_nocheck(newroot, "kinks", kinksnode);
+    json_object_set_new_nocheck(newroot, "kinks", json_incref(kinksnode));
     string message("FKS ");
     const char* fksstr = json_dumps(newroot, JSON_COMPACT);
     message += fksstr;
